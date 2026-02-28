@@ -25,8 +25,7 @@ class Settings(BaseModel):
 
 settings = Settings()
 
-# Debug: Print settings to verify they're loaded
-print(f"API_SECRET: {settings.API_SECRET}")
+# Avoid logging secrets
 print(f"ENVIRONMENT: {settings.ENVIRONMENT}")
 
 # Initialize FastAPI
