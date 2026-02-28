@@ -14,6 +14,17 @@ class SignRecognizeRequest(BaseModel):
     handedness: str = "Right"   # "Left" | "Right"
 
 
+class BatchSignRecognizeRequest(BaseModel):
+    # Array of sign segments, each with frames
+    # Each segment: N frames (typically 8), each frame: 21 landmarks × [x, y, z]
+    segments: list[dict]  # Each dict has "frames" and "handedness"
+
+
+class BatchSignRecognizeResponse(BaseModel):
+    words: list[str]  # Recognized words for each segment
+    confidence: float  # Average confidence
+
+
 class GlossToEnglishRequest(BaseModel):
     words: list[str]            # e.g. ["HELLO", "NAME", "YOU"]
 
@@ -74,3 +85,39 @@ async def convert_gloss(req: GlossToEnglishRequest):
         return {"text": text, "gloss": req.words}
     except Exception as e:
         raise HTTPException(500, detail=str(e))
+
+
+@router.post("/sign-batch")
+async def recognize_sign_batch(req: BatchSignRecognizeRequest):
+    """
+    Identify multiple ASL signs from MediaPipe landmark sequences in one API call.
+    
+    This batches sign recognition to reduce API calls and avoid rate limits.
+    Accepts 1-5 sign segments, each with frames.
+    """
+    if not req.segments or len(req.segments) == 0:
+        raise HTTPException(400, detail="Need at least 1 segment")
+    
+    if len(req.segments) > 5:
+        raise HTTPException(400, detail="Max 5 segments per batch")
+    
+    words = []
+    total_confidence = 0.0
+    
+    for i, segment in enumerate(req.segments):
+        frames = segment.get("frames", [])
+        handedness = segment.get("handedness", "Right")
+        
+        if len(frames) < 5:
+            words.append("UNKNOWN")
+            continue
+            
+        try:
+            word, confidence = await recognize_sign_from_landmarks(frames, handedness)
+            words.append(word)
+            total_confidence += confidence
+        except Exception as e:
+            words.append("UNKNOWN")
+    
+    avg_confidence = total_confidence / len(req.segments) if req.segments else 0.0
+    return {"words": words, "confidence": avg_confidence}
