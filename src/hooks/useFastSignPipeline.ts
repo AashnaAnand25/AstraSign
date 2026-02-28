@@ -57,6 +57,9 @@ export function useFastSignPipeline(
 
   const recognizerRef = useRef<GestureRecognizer | null>(null);
   const detectionStartTime = useRef<number>(0);
+  const rafRef = useRef<number | null>(null);
+  const gestureCountsRef = useRef<Record<string, number>>({});
+  const lastTopGestureRef = useRef<string | null>(null);
 
   // Initialize MediaPipe Gesture Recognizer
   useEffect(() => {
@@ -65,14 +68,31 @@ export function useFastSignPipeline(
     async function init() {
       try {
         const vision = await FilesetResolver.forVisionTasks(WASM_PATH);
-        const recognizer = await GestureRecognizer.createFromOptions(vision, {
-          baseOptions: { modelAssetPath: MODEL_URL, delegate: "GPU" },
-          runningMode: "VIDEO",
-          numHands: 1,
-        });
+
+        // GPU delegate can fail on some machines/browsers. Fallback to CPU.
+        let recognizer: GestureRecognizer | null = null;
+        try {
+          recognizer = await GestureRecognizer.createFromOptions(vision, {
+            baseOptions: {
+              modelAssetPath: MODEL_URL,
+              delegate: "GPU",
+            },
+            runningMode: "VIDEO",
+            numHands: 1,
+          });
+        } catch {
+          recognizer = await GestureRecognizer.createFromOptions(vision, {
+            baseOptions: {
+              modelAssetPath: MODEL_URL,
+              delegate: "CPU",
+            },
+            runningMode: "VIDEO",
+            numHands: 1,
+          });
+        }
 
         if (!mounted) {
-          recognizer.close();
+          recognizer?.close();
           return;
         }
 
@@ -87,6 +107,7 @@ export function useFastSignPipeline(
 
     return () => {
       mounted = false;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       recognizerRef.current?.close();
     };
   }, []);
@@ -98,8 +119,9 @@ export function useFastSignPipeline(
     const video = videoRef.current;
     if (!video) return;
 
+    gestureCountsRef.current = {};
+    lastTopGestureRef.current = null;
     let frameCount = 0;
-    const gestureCounts: Record<string, number> = {};
 
     const detectLoop = () => {
       if (!isDetectingSign) return;
@@ -107,31 +129,52 @@ export function useFastSignPipeline(
       try {
         const result = recognizerRef.current!.recognizeForVideo(video, Date.now());
         
-        if (result.gestures.length > 0 && result.gestures[0].length > 0) {
+        if (result.gestures && result.gestures.length > 0 && result.gestures[0].length > 0) {
           const gesture = result.gestures[0][0].categoryName;
           const confidence = result.gestures[0][0].score;
-          
+
           if (confidence > 0.5 && GESTURE_MAP[gesture]) {
-            gestureCounts[gesture] = (gestureCounts[gesture] || 0) + 1;
-            setDetectedGesture(`${GESTURE_MAP[gesture]} (${Math.round(confidence * 100)}%)`);
+            const counts = gestureCountsRef.current;
+            counts[gesture] = (counts[gesture] || 0) + 1;
+
+            // Update UI at a lower frequency to avoid flicker.
+            if (frameCount % 6 === 0) {
+              let top: string | null = null;
+              let topCount = 0;
+              for (const [g, c] of Object.entries(counts)) {
+                if (c > topCount) {
+                  top = g;
+                  topCount = c;
+                }
+              }
+              if (top && top !== lastTopGestureRef.current) {
+                lastTopGestureRef.current = top;
+                setDetectedGesture(GESTURE_MAP[top]);
+              }
+            }
           }
+        } else {
+          setDetectedGesture(null);
         }
       } catch (e) {
-        // Ignore frame errors
+        // Ignore intermittent frame errors.
       }
 
       frameCount++;
-      if (frameCount < 60) { // ~2 seconds at 30fps
-        requestAnimationFrame(detectLoop);
-      }
+      rafRef.current = requestAnimationFrame(detectLoop);
     };
 
     detectLoop();
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [isDetectingSign, videoRef]);
 
   const beginRecording = useCallback(() => {
     setIsDetectingSign(true);
     detectionStartTime.current = Date.now();
+    gestureCountsRef.current = {};
+    lastTopGestureRef.current = null;
     setDetectedGesture(null);
     setStatus("Hold the sign steady…");
   }, []);
@@ -149,8 +192,27 @@ export function useFastSignPipeline(
       return;
     }
 
-    // Final recognition
+    // Final recognition (use stabilized / majority-vote result first)
     try {
+      const counts = gestureCountsRef.current;
+      let top: string | null = null;
+      let topCount = 0;
+      for (const [g, c] of Object.entries(counts)) {
+        if (c > topCount) {
+          top = g;
+          topCount = c;
+        }
+      }
+
+      if (top && GESTURE_MAP[top]) {
+        const word = GESTURE_MAP[top];
+        setGlossWords((prev) => [...prev, word]);
+        setStatus(`✓ ${word} — add more or tap Translate`);
+        setIsRecognizing(false);
+        setDetectedGesture(null);
+        return;
+      }
+
       const result = recognizer.recognizeForVideo(video, Date.now());
       
       if (result.gestures.length > 0 && result.gestures[0].length > 0) {

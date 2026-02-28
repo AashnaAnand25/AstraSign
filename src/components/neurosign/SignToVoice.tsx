@@ -15,6 +15,7 @@ import { ArrowLeft, Settings, Mic, MicOff, Volume2, Trash2, Undo2 } from "lucide
 import { useAccessibility } from "@/accessibility/AccessibilityProvider";
 import { useHandTracking } from "@/hooks/useHandTracking";
 import { useFastSignPipeline } from "@/hooks/useFastSignPipeline";
+import type { Landmark } from "@/hooks/useHandTracking";
 
 interface Props {
   onBack: () => void;
@@ -126,7 +127,7 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
   }, []);
 
   // ── Draw hand skeleton on canvas overlay ────────────────────────────────────
-  const drawSkeleton = useCallback((lms: any[] | null) => {
+  const drawSkeleton = useCallback((lms: Landmark[] | null) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -137,8 +138,8 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
     const w = canvas.width;
     const h = canvas.height;
     // Mirror x to match the horizontally-flipped video feed
-    const px = (lm: any) => (1 - lm.x) * w;
-    const py = (lm: any) => lm.y * h;
+    const px = (lm: Landmark) => (1 - lm.x) * w;
+    const py = (lm: Landmark) => lm.y * h;
 
     ctx.strokeStyle = isDetectingSign ? "rgba(0,255,240,0.80)" : "rgba(0,255,240,0.45)";
     ctx.lineWidth = 2;
@@ -314,7 +315,12 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
       {/* Status bar */}
       <div className="relative z-10 mx-4 mt-2 px-3 py-1.5 rounded-xl"
            style={{ background: "hsl(240 10% 8%)", border: "1px solid hsl(240 10% 14%)" }}>
-        <p className="text-[10px] text-muted-foreground tracking-wide truncate">{status}</p>
+        <p className="text-[10px] text-muted-foreground tracking-wide truncate">
+          {status}
+          {detectedGesture && (
+            <span className="ml-2 text-neon-cyan">({detectedGesture})</span>
+          )}
+        </p>
       </div>
 
       {/* Gloss chips */}
