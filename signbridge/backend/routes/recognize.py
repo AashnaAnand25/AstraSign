@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from services.openai_service import recognize_sign_from_landmarks, gloss_to_english
+from services.openai_service import recognize_sign_from_landmarks, recognize_signs_batch, gloss_to_english
 
 router = APIRouter()
 
@@ -90,9 +90,10 @@ async def convert_gloss(req: GlossToEnglishRequest):
 @router.post("/sign-batch")
 async def recognize_sign_batch(req: BatchSignRecognizeRequest):
     """
-    Identify multiple ASL signs from MediaPipe landmark sequences in one API call.
+    Identify multiple ASL signs from MediaPipe landmark sequences in ONE API call.
     
     This batches sign recognition to reduce API calls and avoid rate limits.
+    Processes all signs in a single Gemini API call.
     Accepts 1-5 sign segments, each with frames.
     """
     if not req.segments or len(req.segments) == 0:
@@ -101,23 +102,18 @@ async def recognize_sign_batch(req: BatchSignRecognizeRequest):
     if len(req.segments) > 5:
         raise HTTPException(400, detail="Max 5 segments per batch")
     
-    words = []
-    total_confidence = 0.0
-    
-    for i, segment in enumerate(req.segments):
+    # Prepare segments for batch processing
+    segment_tuples = []
+    for segment in req.segments:
         frames = segment.get("frames", [])
         handedness = segment.get("handedness", "Right")
-        
-        if len(frames) < 5:
-            words.append("UNKNOWN")
-            continue
-            
-        try:
-            word, confidence = await recognize_sign_from_landmarks(frames, handedness)
-            words.append(word)
-            total_confidence += confidence
-        except Exception as e:
-            words.append("UNKNOWN")
+        segment_tuples.append((frames, handedness))
     
-    avg_confidence = total_confidence / len(req.segments) if req.segments else 0.0
-    return {"words": words, "confidence": avg_confidence}
+    try:
+        # Process all signs in ONE Gemini API call
+        results = await recognize_signs_batch(segment_tuples)
+        words = [word for word, _ in results]
+        avg_confidence = sum(conf for _, conf in results) / len(results) if results else 0.0
+        return {"words": words, "confidence": avg_confidence}
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))

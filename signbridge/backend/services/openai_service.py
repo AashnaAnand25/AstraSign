@@ -191,17 +191,63 @@ async def recognize_sign_from_landmarks(
         raise Exception(f"Sign recognition failed: {str(e)}")
 
 
+async def recognize_signs_batch(
+    segments: list[tuple[list[list[list[float]]], str]]
+) -> list[tuple[str, float]]:
+    """
+    Identify multiple ASL signs from landmark sequences in ONE Gemini API call.
+    
+    segments - list of (frames, handedness) tuples
+    Returns list of (word, confidence) tuples
+    """
+    if not segments:
+        return []
+    
+    # Build descriptions for all signs
+    descriptions = []
+    for i, (frames, handedness) in enumerate(segments):
+        if len(frames) < 5:
+            descriptions.append(f"SIGN {i+1}: UNKNOWN (too few frames)")
+        else:
+            desc = _build_sign_description(frames, handedness)
+            descriptions.append(f"SIGN {i+1}:\n{desc}")
+    
+    # Send all signs in one API call
+    try:
+        raw = await gemini_chat(
+            system=(
+                "You are an ASL sign recognition expert. Identify multiple signs from hand-pose data.\n\n"
+                "Respond with EXACTLY this format (one per sign):\n"
+                "SIGN 1: HELLO\n"
+                "SIGN 2: THANK\n"
+                "SIGN 3: YOU\n\n"
+                "Common signs: HELLO, THANK YOU, PLEASE, SORRY, HELP, LOVE, YOU, ME, YES, NO, "
+                "STOP, GO, GOOD, BAD, FRIEND, FAMILY, NAME, WATER, EAT, DRINK, WANT, NEED, "
+                "LIKE, HATE, HOW, WHAT, WHERE, WHEN, WHO, WHY, HAPPY, SAD.\n\n"
+                "Use UNKNOWN if you cannot identify a sign."
+            ),
+            user="\n---\n".join(descriptions),
+            max_tokens=100,
+        )
+        
+        # Parse the response
+        results = []
+        for i in range(len(segments)):
+            # Look for "SIGN i+1: WORD" pattern
+            pattern = rf"SIGN {i+1}:?\s*([A-Z_]+)"
+            match = re.search(pattern, raw.upper())
+            if match:
+                word = re.sub(r"[^A-Z]", "", match.group(1)) or "UNKNOWN"
+                results.append((word, 0.85))
+            else:
+                results.append(("UNKNOWN", 0.0))
+        
+        return results
+    except Exception as e:
+        raise Exception(f"Batch sign recognition failed: {str(e)}")
+
+
 async def gloss_to_english(words: list[str]) -> str:
-    """
-    Convert an ASL gloss word list into a natural English sentence.
-
-    ASL gloss uses topic-comment structure, drops articles/copulas, and uses
-    base verb forms.  GPT-4o-mini converts it to fluent English for TTS.
-    """
-    if not words:
-        return ""
-
-    gloss = " ".join(w.upper() for w in words)
 
     try:
         return await gemini_chat(
