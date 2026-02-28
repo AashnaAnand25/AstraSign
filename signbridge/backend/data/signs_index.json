@@ -1,0 +1,1312 @@
+{
+  "HELLO": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/hello.mp4",
+    "description": "Wave hand with palm facing forward"
+  },
+  "THANK": {
+    "type": "sign", 
+    "video_url": "https://example.com/videos/thank.mp4",
+    "description": "Touch chin and move hand forward"
+  },
+  "PLEASE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/please.mp4", 
+    "description": "Circular motion on chest"
+  },
+  "SORRY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/sorry.mp4",
+    "description": "Make fist and rub in circular motion on chest"
+  },
+  "YES": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/yes.mp4",
+    "description": "Make fist and nod up and down"
+  },
+  "NO": {
+    "type": "sign", 
+    "video_url": "https://example.com/videos/no.mp4",
+    "description": "Extend index and middle fingers and wave side to side"
+  },
+  "HELP": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/help.mp4",
+    "description": "Place fist on palm and lift up"
+  },
+  "EAT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/eat.mp4", 
+    "description": "Bring fingers to mouth repeatedly"
+  },
+  "DRINK": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/drink.mp4",
+    "description": "Make C shape and bring to mouth"
+  },
+  "WATER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/water.mp4",
+    "description": "W shape motion tapping chin"
+  },
+  "FOOD": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/food.mp4",
+    "description": "Bring fingers to mouth and tap"
+  },
+  "HOME": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/home.mp4",
+    "description": "Touch fingers to chin then touch cheek"
+  },
+  "SCHOOL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/school.mp4", 
+    "description": "Clap hands together twice"
+  },
+  "FRIEND": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/friend.mp4",
+    "description": "Hook index fingers together"
+  },
+  "FAMILY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/family.mp4",
+    "description": "F hands circle around each other"
+  },
+  "MOTHER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/mother.mp4",
+    "description": "Tap thumb on chin"
+  },
+  "FATHER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/father.mp4", 
+    "description": "Tap thumb on forehead"
+  },
+  "BROTHER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/brother.mp4",
+    "description": "B hand touches forehead then slides down"
+  },
+  "SISTER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/sister.mp4",
+    "description": "S hand touches jaw then slides down"
+  },
+  "LOVE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/love.mp4",
+    "description": "Cross arms over chest"
+  },
+  "LIKE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/like.mp4",
+    "description": "Middle finger touches chest and pulls out"
+  },
+  "WANT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/want.mp4",
+    "description": "Pull hands toward chest with clawed fingers"
+  },
+  "NEED": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/need.mp4",
+    "description": "X hand touches chest and pulls forward"
+  },
+  "GO": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/go.mp4",
+    "description": "Point index fingers and move forward"
+  },
+  "COME": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/come.mp4",
+    "description": "Beckon motion with index finger"
+  },
+  "STOP": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/stop.mp4",
+    "description": "Chop motion with hand edge"
+  },
+  "WAIT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/wait.mp4",
+    "description": "Wiggle fingers in the air"
+  },
+  "TIME": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/time.mp4",
+    "description": "Tap wrist as if checking watch"
+  },
+  "TODAY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/today.mp4",
+    "description": "Y hand motion from chin forward"
+  },
+  "TOMORROW": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/tomorrow.mp4",
+    "description": "A hand circles and moves forward"
+  },
+  "YESTERDAY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/yesterday.mp4",
+    "description": "Y hand circles backward over shoulder"
+  },
+  "MORNING": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/morning.mp4",
+    "description": "C hand rests on arm and lifts up"
+  },
+  "NIGHT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/night.mp4",
+    "description": "Move hands down as sun setting"
+  },
+  "GOOD": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/good.mp4",
+    "description": "Flat hand moves from mouth outward"
+  },
+  "BAD": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/bad.mp4",
+    "description": "Flat hand moves away from mouth"
+  },
+  "HAPPY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/happy.mp4",
+    "description": "Brush chest upward with flat hands"
+  },
+  "SAD": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/sad.mp4",
+    "description": "Draw tears down from eyes"
+  },
+  "ANGRY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/angry.mp4",
+    "description": "Claw hands pull down from stomach"
+  },
+  "SCARED": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/scared.mp4",
+    "description": "Hands shake near body"
+  },
+  "TIRED": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/tired.mp4",
+    "description": "Claw hands pull down on chest"
+  },
+  "SICK": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/sick.mp4",
+    "description": "Middle finger touches forehead and stomach"
+  },
+  "HURT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/hurt.mp4",
+    "description": "Index fingers point at each other and move apart"
+  },
+  "DOCTOR": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/doctor.mp4",
+    "description": "Tap wrist then tap middle of forehead"
+  },
+  "HOSPITAL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/hospital.mp4",
+    "description": "H hand crosses over chest"
+  },
+  "MEDICINE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/medicine.mp4",
+    "description": "Middle finger rubs palm in circular motion"
+  },
+  "CAR": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/car.mp4",
+    "description": "S hands grip steering wheel and turn"
+  },
+  "BUS": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/bus.mp4",
+    "description": "S hand motions side to side as steering large wheel"
+  },
+  "TRAIN": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/train.mp4",
+    "description": "S hand pulls down twice as train whistle"
+  },
+  "AIRPLANE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/airplane.mp4",
+    "description": "I hand flies forward like plane"
+  },
+  "STORE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/store.mp4",
+    "description": "Both hands make S shape and twist"
+  },
+  "MONEY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/money.mp4",
+    "description": "Rub thumb and index finger together"
+  },
+  "BUY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/buy.mp4",
+    "description": "K hand motion outward as giving money"
+  },
+  "SELL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/sell.mp4",
+    "description": "K hand motion inward as receiving money"
+  },
+  "WORK": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/work.mp4",
+    "description": "S fist taps back of wrist twice"
+  },
+  "JOB": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/job.mp4",
+    "description": "Both hands make job motion"
+  },
+  "OFFICE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/office.mp4",
+    "description": "O hand moves in square shape"
+  },
+  "COMPUTER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/computer.mp4",
+    "description": "Both C hands tap as if typing"
+  },
+  "PHONE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/phone.mp4",
+    "description": "Y hand to ear and mouth"
+  },
+  "EMAIL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/email.mp4",
+    "description": "Both E hands tap each other"
+  },
+  "INTERNET": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/internet.mp4",
+    "description": "I hands weave around each other"
+  },
+  "BOOK": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/book.mp4",
+    "description": "Open hands as if opening book"
+  },
+  "READ": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/read.mp4",
+    "description": "V hand moves from eyes downward"
+  },
+  "WRITE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/write.mp4",
+    "description": "W hand motion as if writing"
+  },
+  "PAPER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/paper.mp4",
+    "description": "Both P hands tap together"
+  },
+  "PEN": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/pen.mp4",
+    "description": "Index finger extended as pen"
+  },
+  "LEARN": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/learn.mp4",
+    "description": "L hand pulls from forehead and opens"
+  },
+  "TEACH": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/teach.mp4",
+    "description": "Both hands flip out from chest"
+  },
+  "KNOW": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/know.mp4",
+    "description": "B hand touches forehead"
+  },
+  "UNDERSTAND": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/understand.mp4",
+    "description": "Both C hands flip up to V hands"
+  },
+  "THINK": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/think.mp4",
+    "description": "Index finger circles temple"
+  },
+  "QUESTION": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/question.mp4",
+    "description": "Index finger circles in air"
+  },
+  "ANSWER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/answer.mp4",
+    "description": "Y hand moves from mouth outward"
+  },
+  "TRUE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/true.mp4",
+    "description": "Index finger moves from mouth forward"
+  },
+  "FALSE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/false.mp4",
+    "description": "Bent hand moves from mouth and flips down"
+  },
+  "WRONG": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/wrong.mp4",
+    "description": "W hand flips down"
+  },
+  "CORRECT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/correct.mp4",
+    "description": "Both F hands tap together"
+  },
+  "MISTAKE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/mistake.mp4",
+    "description": "F hand flicks nose twice"
+  },
+  "PROBLEM": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/problem.mp4",
+    "description": "Both P hands twist as if confused"
+  },
+  "SOLUTION": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/solution.mp4",
+    "description": "Both hands separate and move apart"
+  },
+  "BECAUSE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/because.mp4",
+    "description": "Both hands pull down as if explaining"
+  },
+  "WHY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/why.mp4",
+    "description": "W hand circles forward"
+  },
+  "HOW": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/how.mp4",
+    "description": "H hand circles forward"
+  },
+  "WHAT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/what.mp4",
+    "description": "W hands wiggle fingers"
+  },
+  "WHO": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/who.mp4",
+    "description": "W hand circles at mouth"
+  },
+  "WHICH": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/which.mp4",
+    "description": "W hand circles side to side"
+  },
+  "NUMBER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/number.mp4",
+    "description": "Both N hands tap together"
+  },
+  "COLOR": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/color.mp4",
+    "description": "Both C hands wiggle fingers"
+  },
+  "SIZE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/size.mp4",
+    "description": "Both S hands move apart"
+  },
+  "SHAPE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/shape.mp4",
+    "description": "Both H hands form circle"
+  },
+  "BIG": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/big.mp4",
+    "description": "Both B hands move apart"
+  },
+  "SMALL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/small.mp4",
+    "description": "Both hands close together"
+  },
+  "LONG": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/long.mp4",
+    "description": "Both L hands pull apart"
+  },
+  "SHORT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/short.mp4",
+    "description": "Both hands move close together"
+  },
+  "TALL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/tall.mp4",
+    "description": "Flat hand moves upward"
+  },
+  "FAST": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/fast.mp4",
+    "description": "Both F hands flick forward"
+  },
+  "SLOW": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/slow.mp4",
+    "description": "Both hands move slowly forward"
+  },
+  "HOT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/hot.mp4",
+    "description": "Both H hands pull away from mouth"
+  },
+  "COLD": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/cold.mp4",
+    "description": "Both C hands shiver"
+  },
+  "WARM": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/warm.mp4",
+    "description": "Both W hands pull from mouth slightly"
+  },
+  "COOL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/cool.mp4",
+    "description": "Both C hands fan outward"
+  },
+  "NEW": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/new.mp4",
+    "description": "Both N hands pull upward"
+  },
+  "OLD": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/old.mp4",
+    "description": "Both O hands pull downward"
+  },
+  "YOUNG": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/young.mp4",
+    "description": "Both Y hands pull upward from chin"
+  },
+  "CHILD": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/child.mp4",
+    "description": "Pat head with flat hand"
+  },
+  "ADULT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/adult.mp4",
+    "description": "Flat hand moves from shoulder downward"
+  },
+  "MAN": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/man.mp4",
+    "description": "Flat hand taps forehead then moves down"
+  },
+  "WOMAN": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/woman.mp4",
+    "description": "Thumb touches jaw then moves down"
+  },
+  "BOY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/boy.mp4",
+    "description": "Flat hand taps forehead"
+  },
+  "GIRL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/girl.mp4",
+    "description": "Thumb touches jaw"
+  },
+  "BABY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/baby.mp4",
+    "description": "Rock arms as if holding baby"
+  },
+  "PEOPLE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/people.mp4",
+    "description": "Both P hands move down in rows"
+  },
+  "PERSON": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/person.mp4",
+    "description": "P hand moves downward"
+  },
+  "EVERYONE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/everyone.mp4",
+    "description": "Both A hands circle then point forward"
+  },
+  "SOMEONE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/someone.mp4",
+    "description": "A hand circles then points forward"
+  },
+  "NOBODY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/nobody.mp4",
+    "description": "A hand circles then points down"
+  },
+  "ANYONE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/anyone.mp4",
+    "description": "A hand circles side to side"
+  },
+  "EVERYTHING": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/everything.mp4",
+    "description": "Both A hands circle then sweep forward"
+  },
+  "SOMETHING": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/something.mp4",
+    "description": "A hand circles then sweep forward"
+  },
+  "NOTHING": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/nothing.mp4",
+    "description": "A hand circles then sweep down"
+  },
+  "ANYTHING": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/anything.mp4",
+    "description": "A hand circles side to side"
+  },
+  "ALWAYS": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/always.mp4",
+    "description": "Both A hands circle upward"
+  },
+  "NEVER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/never.mp4",
+    "description": "Both A hands circle downward"
+  },
+  "SOMETIMES": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/sometimes.mp4",
+    "description": "Both A hands circle side to side"
+  },
+  "OFTEN": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/often.mp4",
+    "description": "Both O hands tap repeatedly"
+  },
+  "RARELY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/rarely.mp4",
+    "description": "Both R hands tap slowly"
+  },
+  "USUALLY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/usually.mp4",
+    "description": "Both U hands tap repeatedly"
+  },
+  "MAYBE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/maybe.mp4",
+    "description": "Both M hands shake"
+  },
+  "PERHAPS": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/perhaps.mp4",
+    "description": "Both P hands shake"
+  },
+  "PROBABLY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/probably.mp4",
+    "description": "Both P hands nod up and down"
+  },
+  "DEFINITELY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/definitely.mp4",
+    "description": "Both D hands punch forward"
+  },
+  "REALLY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/really.mp4",
+    "description": "Both R hands emphasize"
+  },
+  "VERY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/very.mp4",
+    "description": "Both V hands emphasize"
+  },
+  "QUITE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/quite.mp4",
+    "description": "Both Q hands tap"
+  },
+  "PRETTY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/pretty.mp4",
+    "description": "Both P hands tap gently"
+  },
+  "BEAUTIFUL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/beautiful.mp4",
+    "description": "Both B hands sweep down face"
+  },
+  "HANDSOME": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/handsome.mp4",
+    "description": "Both H hands sweep down face"
+  },
+  "CUTE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/cute.mp4",
+    "description": "Both C hands tap chin"
+  },
+  "NICE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/nice.mp4",
+    "description": "Both N hands sweep forward"
+  },
+  "KIND": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/kind.mp4",
+    "description": "Both K hands tap heart"
+  },
+  "SWEET": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/sweet.mp4",
+    "description": "Both S hands tap chin"
+  },
+  "FUNNY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/funny.mp4",
+    "description": "Both F hands wiggle"
+  },
+  "INTERESTING": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/interesting.mp4",
+    "description": "Both I hands circle"
+  },
+  "BORING": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/boring.mp4",
+    "description": "Both B hands drag down"
+  },
+  "EXCITING": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/exciting.mp4",
+    "description": "Both E hands shake"
+  },
+  "AMAZING": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/amazing.mp4",
+    "description": "Both A hands sweep outward"
+  },
+  "WONDERFUL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/wonderful.mp4",
+    "description": "Both W hands sweep outward"
+  },
+  "TERRIBLE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/terrible.mp4",
+    "description": "Both T hands shake"
+  },
+  "AWFUL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/awful.mp4",
+    "description": "Both A hands shake"
+  },
+  "HORRIBLE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/horrible.mp4",
+    "description": "Both H hands shake"
+  },
+  "SCARY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/scary.mp4",
+    "description": "Both S hands shake"
+  },
+  "DANGEROUS": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/dangerous.mp4",
+    "description": "Both D hands point threateningly"
+  },
+  "SAFE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/safe.mp4",
+    "description": "Both S hands cross over chest"
+  },
+  "EASY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/easy.mp4",
+    "description": "Both E hands flip out"
+  },
+  "DIFFICULT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/difficult.mp4",
+    "description": "Both D hands struggle"
+  },
+  "HARD": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/hard.mp4",
+    "description": "Both H hands pound"
+  },
+  "SIMPLE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/simple.mp4",
+    "description": "Both S hands flip out"
+  },
+  "COMPLEX": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/complex.mp4",
+    "description": "Both C hands intertwine"
+  },
+  "IMPORTANT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/important.mp4",
+    "description": "Both I hands emphasize"
+  },
+  "SPECIAL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/special.mp4",
+    "description": "Both S hands emphasize"
+  },
+  "NORMAL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/normal.mp4",
+    "description": "Both N hands move normally"
+  },
+  "REGULAR": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/regular.mp4",
+    "description": "Both R hands move regularly"
+  },
+  "UNUSUAL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/unusual.mp4",
+    "description": "Both U hands move unusually"
+  },
+  "STRANGE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/strange.mp4",
+    "description": "Both S hands move strangely"
+  },
+  "WEIRD": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/weird.mp4",
+    "description": "Both W hands move weirdly"
+  },
+  "DIFFERENT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/different.mp4",
+    "description": "Both D hands move apart"
+  },
+  "SAME": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/same.mp4",
+    "description": "Both S hands move together"
+  },
+  "EQUAL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/equal.mp4",
+    "description": "Both E hands balance"
+  },
+  "BETTER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/better.mp4",
+    "description": "Both B hands move upward"
+  },
+  "WORSE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/worse.mp4",
+    "description": "Both W hands move downward"
+  },
+  "BEST": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/best.mp4",
+    "description": "Both B hands move highest"
+  },
+  "WORST": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/worst.mp4",
+    "description": "Both W hands move lowest"
+  },
+  "MORE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/more.mp4",
+    "description": "Both M hands pile up"
+  },
+  "LESS": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/less.mp4",
+    "description": "Both L hands reduce"
+  },
+  "MOST": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/most.mp4",
+    "description": "Both M hands pile highest"
+  },
+  "LEAST": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/least.mp4",
+    "description": "Both L hands reduce lowest"
+  },
+  "ENOUGH": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/enough.mp4",
+    "description": "Both E hands tap and stop"
+  },
+  "MUCH": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/much.mp4",
+    "description": "Both M hands spread wide"
+  },
+  "MANY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/many.mp4",
+    "description": "Both M hands count"
+  },
+  "FEW": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/few.mp4",
+    "description": "Both F hands count few"
+  },
+  "LITTLE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/little.mp4",
+    "description": "Both L hands show little"
+  },
+  "LOT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/lot.mp4",
+    "description": "Both L hands show lot"
+  },
+  "ALL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/all.mp4",
+    "description": "Both A hands sweep wide"
+  },
+  "NONE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/none.mp4",
+    "description": "Both N hands sweep down"
+  },
+  "SOME": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/some.mp4",
+    "description": "Both S hands show some"
+  },
+  "ANY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/any.mp4",
+    "description": "Both A hands show any"
+  },
+  "EACH": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/each.mp4",
+    "description": "Both E hands point individually"
+  },
+  "EVERY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/every.mp4",
+    "description": "Both E hands sweep all"
+  },
+  "BOTH": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/both.mp4",
+    "description": "Both B hands show both"
+  },
+  "EITHER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/either.mp4",
+    "description": "Both E hands show choice"
+  },
+  "NEITHER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/neither.mp4",
+    "description": "Both N hands show neither"
+  },
+  "FIRST": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/first.mp4",
+    "description": "Both F hands show first"
+  },
+  "SECOND": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/second.mp4",
+    "description": "Both S hands show second"
+  },
+  "THIRD": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/third.mp4",
+    "description": "Both T hands show third"
+  },
+  "LAST": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/last.mp4",
+    "description": "Both L hands show last"
+  },
+  "NEXT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/next.mp4",
+    "description": "Both N hands show next"
+  },
+  "BEFORE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/before.mp4",
+    "description": "Both B hands show before"
+  },
+  "AFTER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/after.mp4",
+    "description": "Both A hands show after"
+  },
+  "DURING": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/during.mp4",
+    "description": "Both D hands show during"
+  },
+  "WHILE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/while.mp4",
+    "description": "Both W hands show while"
+  },
+  "UNTIL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/until.mp4",
+    "description": "Both U hands show until"
+  },
+  "SINCE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/since.mp4",
+    "description": "Both S hands show since"
+  },
+  "ALREADY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/already.mp4",
+    "description": "Both A hands show already"
+  },
+  "STILL": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/still.mp4",
+    "description": "Both S hands show still"
+  },
+  "YET": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/yet.mp4",
+    "description": "Both Y hands show yet"
+  },
+  "NOW": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/now.mp4",
+    "description": "Both N hands show now"
+  },
+  "THEN": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/then.mp4",
+    "description": "Both T hands show then"
+  },
+  "LATER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/later.mp4",
+    "description": "Both L hands show later"
+  },
+  "SOON": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/soon.mp4",
+    "description": "Both S hands show soon"
+  },
+  "EARLY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/early.mp4",
+    "description": "Both E hands show early"
+  },
+  "LATE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/late.mp4",
+    "description": "Both L hands show late"
+  },
+  "ONCE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/once.mp4",
+    "description": "Both O hands show once"
+  },
+  "TWICE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/twice.mp4",
+    "description": "Both T hands show twice"
+  },
+  "AGAIN": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/again.mp4",
+    "description": "Both A hands show again"
+  },
+  "ALSO": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/also.mp4",
+    "description": "Both A hands show also"
+  },
+  "OR": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/or.mp4",
+    "description": "Both O hands show or"
+  },
+  "AND": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/and.mp4",
+    "description": "Both A hands show and"
+  },
+  "BUT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/but.mp4",
+    "description": "Both B hands show but"
+  },
+  "IF": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/if.mp4",
+    "description": "Both I hands show if"
+  },
+  "UNLESS": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/unless.mp4",
+    "description": "Both U hands show unless"
+  },
+  "THERE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/there.mp4",
+    "description": "Both T hands show there"
+  },
+  "HERE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/here.mp4",
+    "description": "Both H hands show here"
+  },
+  "EVERYWHERE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/everywhere.mp4",
+    "description": "Both E hands show everywhere"
+  },
+  "NOWHERE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/nowhere.mp4",
+    "description": "Both N hands show nowhere"
+  },
+  "SOMEWHERE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/somewhere.mp4",
+    "description": "Both S hands show somewhere"
+  },
+  "ANYWHERE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/anywhere.mp4",
+    "description": "Both A hands show anywhere"
+  },
+  "OVER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/over.mp4",
+    "description": "Both O hands show over"
+  },
+  "UNDER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/under.mp4",
+    "description": "Both U hands show under"
+  },
+  "ABOVE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/above.mp4",
+    "description": "Both A hands show above"
+  },
+  "BELOW": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/below.mp4",
+    "description": "Both B hands show below"
+  },
+  "UP": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/up.mp4",
+    "description": "Both U hands show up"
+  },
+  "DOWN": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/down.mp4",
+    "description": "Both D hands show down"
+  },
+  "LEFT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/left.mp4",
+    "description": "Both L hands show left"
+  },
+  "FRONT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/front.mp4",
+    "description": "Both F hands show front"
+  },
+  "BACK": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/back.mp4",
+    "description": "Both B hands show back"
+  },
+  "SIDE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/side.mp4",
+    "description": "Both S hands show side"
+  },
+  "MIDDLE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/middle.mp4",
+    "description": "Both M hands show middle"
+  },
+  "CENTER": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/center.mp4",
+    "description": "Both C hands show center"
+  },
+  "TOP": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/top.mp4",
+    "description": "Both T hands show top"
+  },
+  "BOTTOM": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/bottom.mp4",
+    "description": "Both B hands show bottom"
+  },
+  "INSIDE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/inside.mp4",
+    "description": "Both I hands show inside"
+  },
+  "OUTSIDE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/outside.mp4",
+    "description": "Both O hands show outside"
+  },
+  "BETWEEN": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/between.mp4",
+    "description": "Both B hands show between"
+  },
+  "AMONG": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/among.mp4",
+    "description": "Both A hands show among"
+  },
+  "THROUGH": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/through.mp4",
+    "description": "Both T hands show through"
+  },
+  "ACROSS": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/across.mp4",
+    "description": "Both A hands show across"
+  },
+  "AROUND": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/around.mp4",
+    "description": "Both A hands show around"
+  },
+  "NEAR": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/near.mp4",
+    "description": "Both N hands show near"
+  },
+  "FAR": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/far.mp4",
+    "description": "Both F hands show far"
+  },
+  "CLOSE": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/close.mp4",
+    "description": "Both C hands show close"
+  },
+  "AWAY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/away.mp4",
+    "description": "Both A hands show away"
+  },
+  "TOWARD": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/toward.mp4",
+    "description": "Both T hands show toward"
+  },
+  "FROM": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/from.mp4",
+    "description": "Both F hands show from"
+  },
+  "TO": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/to.mp4",
+    "description": "Both T hands show to"
+  },
+  "WITH": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/with.mp4",
+    "description": "Both W hands show with"
+  },
+  "WITHOUT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/without.mp4",
+    "description": "Both W hands show without"
+  },
+  "ABOUT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/about.mp4",
+    "description": "Both A hands show about"
+  },
+  "FOR": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/for.mp4",
+    "description": "Both F hands show for"
+  },
+  "OF": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/of.mp4",
+    "description": "Both O hands show of"
+  },
+  "BY": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/by.mp4",
+    "description": "Both B hands show by"
+  },
+  "AT": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/at.mp4",
+    "description": "Both A hands show at"
+  },
+  "IN": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/in.mp4",
+    "description": "Both I hands show in"
+  },
+  "ON": {
+    "type": "sign",
+    "video_url": "https://example.com/videos/on.mp4",
+    "description": "Both O hands show on"
+  }
+}
