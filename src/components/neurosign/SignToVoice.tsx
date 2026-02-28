@@ -1,21 +1,20 @@
 /**
- * SignToVoice — ASL → Text → Voice screen
+ * SignToVoice — ASL → Text → Voice screen (LOCAL version)
  *
- * Real pipeline:
- *   Webcam → MediaPipe HandLandmarker → motion segmentation
- *   → POST /api/recognize/sign (GPT-4o)
+ * Local pipeline:
+ *   Webcam → MediaPipe Gesture Recognizer → instant recognition
  *   → accumulated ASL gloss
- *   → POST /api/recognize/gloss-to-english (GPT-4o-mini)
  *   → POST /api/speak (ElevenLabs)
  *   → audio playback
+ *   
+ * NO API calls for recognition — runs entirely in browser!
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { ArrowLeft, Settings, Mic, MicOff, Volume2, Trash2, Undo2 } from "lucide-react";
 import { useAccessibility } from "@/accessibility/AccessibilityProvider";
 import { useHandTracking } from "@/hooks/useHandTracking";
-import { useSignPipeline } from "@/hooks/useSignPipeline";
-import type { Landmark } from "@/hooks/useHandTracking";
+import { useFastSignPipeline } from "@/hooks/useFastSignPipeline";
 
 interface Props {
   onBack: () => void;
@@ -87,7 +86,7 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
   // MediaPipe hand tracking — runs inference on every video frame
   const { landmarks, isReady: mpReady, error: mpError } = useHandTracking(videoRef);
 
-  // Sign recognition pipeline — push-to-sign model
+  // Sign recognition pipeline — LOCAL gesture recognizer (no API calls)
   const {
     glossWords,
     isDetectingSign,
@@ -96,13 +95,13 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
     audioUrl,
     isTranslating,
     status,
+    detectedGesture,
     beginRecording,
-    addFrame,
     commitSegment,
     triggerTranslate,
     undoLastWord,
     clearGloss,
-  } = useSignPipeline();
+  } = useFastSignPipeline(videoRef);
 
   // ── Start webcam ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -126,13 +125,8 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
     return () => { if (stream) stream.getTracks().forEach((t) => t.stop()); };
   }, []);
 
-  // ── Feed landmarks to pipeline ──────────────────────────────────────────────
-  useEffect(() => {
-    if (isRecording && landmarks) addFrame(landmarks);
-  }, [landmarks, isRecording, addFrame]);
-
   // ── Draw hand skeleton on canvas overlay ────────────────────────────────────
-  const drawSkeleton = useCallback((lms: Landmark[] | null) => {
+  const drawSkeleton = useCallback((lms: any[] | null) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -143,8 +137,8 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
     const w = canvas.width;
     const h = canvas.height;
     // Mirror x to match the horizontally-flipped video feed
-    const px = (lm: Landmark) => (1 - lm.x) * w;
-    const py = (lm: Landmark) => lm.y * h;
+    const px = (lm: any) => (1 - lm.x) * w;
+    const py = (lm: any) => lm.y * h;
 
     ctx.strokeStyle = isDetectingSign ? "rgba(0,255,240,0.80)" : "rgba(0,255,240,0.45)";
     ctx.lineWidth = 2;
