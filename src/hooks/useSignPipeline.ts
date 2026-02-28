@@ -22,8 +22,10 @@ const MIN_SEGMENT_FRAMES = 10;
 const MAX_SEGMENT_FRAMES = 120;
 /** Evenly-spaced frames sent to the recognition API */
 const SAMPLE_FRAMES = 8;
-/** Minimum time between recognition calls (30 seconds for Gemini free tier) */
-const MIN_RECOGNITION_INTERVAL_MS = 30000;
+/** Batch size for sign recognition - collect N signs before API call */
+const BATCH_SIZE = 3;
+/** Cooldown between batches (45 seconds) */
+const BATCH_COOLDOWN_MS = 45000;
 
 // Sign queue for batching multiple signs
 interface QueuedSign {
@@ -48,8 +50,10 @@ export interface SignPipelineResult {
   isTranslating: boolean;
   /** Human-readable status */
   status: string;
-  /** Countdown timer for rate limit cooldown */
-  countdown: number;
+  /** Number of signs in queue waiting to be processed */
+  queueLength: number;
+  /** Time until next batch can be processed (seconds) */
+  timeUntilNextBatch: number;
 
   /** Call when the user starts signing (clears frame buffer) */
   beginRecording: () => void;
@@ -96,8 +100,8 @@ export function useSignPipeline(): SignPipelineResult {
     // Rate limiting: check if enough time has passed since last call
     const now = Date.now();
     const timeSinceLastCall = now - lastRecognitionTimeRef.current;
-    if (timeSinceLastCall < MIN_RECOGNITION_INTERVAL_MS) {
-      const waitTime = Math.ceil((MIN_RECOGNITION_INTERVAL_MS - timeSinceLastCall) / 1000);
+    if (timeSinceLastCall < BATCH_COOLDOWN_MS) {
+      const waitTime = Math.ceil((BATCH_COOLDOWN_MS - timeSinceLastCall) / 1000);
       setStatus(`Please wait ${waitTime}s between signs to avoid rate limits`);
       setPipelineState("idle");
       return;
@@ -243,7 +247,8 @@ export function useSignPipeline(): SignPipelineResult {
     audioUrl,
     isTranslating,
     status,
-    countdown,
+    queueLength: signQueueRef.current.length,
+    timeUntilNextBatch: Math.max(0, Math.ceil((BATCH_COOLDOWN_MS - (Date.now() - lastRecognitionTimeRef.current)) / 1000)),
     beginRecording,
     addFrame,
     commitSegment,
