@@ -1,12 +1,5 @@
-from openai import AsyncOpenAI
 import os, io, re, math
-
-# Check if API key is available
-api_key = os.getenv("OPENAI_API_KEY")
-if not api_key:
-    raise ValueError("OPENAI_API_KEY environment variable is not set")
-
-client = AsyncOpenAI(api_key=api_key)
+from services.gemini_service import chat as gemini_chat
 
 async def transcribe_audio(audio_bytes: bytes, filename: str) -> str:
     """Send audio to Whisper, get back transcript"""
@@ -34,7 +27,7 @@ async def convert_to_asl_grammar(text: str) -> list[str]:
     
     try:
         response = await client.chat.completions.create(
-            model="gpt-4o",
+            model="gemini-1.5-flash",
             messages=[
                 {
                     "role": "system",
@@ -167,31 +160,22 @@ async def recognize_sign_from_landmarks(
     description = _build_sign_description(frames, handedness)
 
     try:
-        response = await client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are an expert ASL (American Sign Language) sign recognition system.\n"
-                        "You receive hand-pose data extracted by MediaPipe and must identify the ASL sign.\n\n"
-                        "Common signs (not exhaustive):\n"
-                        "HELLO, THANK YOU, PLEASE, SORRY, HELP, LOVE, YOU, ME, YES, NO, STOP, GO,\n"
-                        "GOOD, BAD, FRIEND, FAMILY, MOTHER, FATHER, NAME, WATER, EAT, DRINK, SCHOOL,\n"
-                        "WORK, HOME, PLAY, LEARN, UNDERSTAND, KNOW, THINK, WANT, NEED, LIKE, HATE,\n"
-                        "HOW, WHAT, WHERE, WHEN, WHO, WHY, TIME, TODAY, MORE, FINISH, HAPPY, SAD,\n"
-                        "ANGRY, SCARED, TIRED, SICK, FINE, BEAUTIFUL, BOOK, CAR, HOUSE, MONEY.\n\n"
-                        "Respond with ONLY the single ASL word in UPPERCASE.\n"
-                        "If you cannot identify it with reasonable confidence, respond with UNKNOWN."
-                    ),
-                },
-                {"role": "user", "content": description},
-            ],
-            temperature=0.1,
+        raw = await gemini_chat(
+            system=(
+                "You are an expert ASL (American Sign Language) sign recognition system.\n"
+                "You receive hand-pose data extracted by MediaPipe and must identify the ASL sign.\n\n"
+                "Common signs (not exhaustive):\n"
+                "HELLO, THANK YOU, PLEASE, SORRY, HELP, LOVE, YOU, ME, YES, NO, STOP, GO,\n"
+                "GOOD, BAD, FRIEND, FAMILY, MOTHER, FATHER, NAME, WATER, EAT, DRINK, SCHOOL,\n"
+                "WORK, HOME, PLAY, LEARN, UNDERSTAND, KNOW, THINK, WANT, NEED, LIKE, HATE,\n"
+                "HOW, WHAT, WHERE, WHEN, WHO, WHY, TIME, TODAY, MORE, FINISH, HAPPY, SAD,\n"
+                "ANGRY, SCARED, TIRED, SICK, FINE, BEAUTIFUL, BOOK, CAR, HOUSE, MONEY.\n\n"
+                "Respond with ONLY the single ASL word in UPPERCASE.\n"
+                "If you cannot identify it with reasonable confidence, respond with UNKNOWN."
+            ),
+            user=description,
             max_tokens=20,
         )
-        raw = response.choices[0].message.content or ""
-        # Strip anything that isn't letters (quotes, punctuation, etc.)
         word = re.sub(r"[^A-Z]", "", raw.strip().upper()) or "UNKNOWN"
         return word, 0.85
     except Exception as e:
@@ -211,29 +195,21 @@ async def gloss_to_english(words: list[str]) -> str:
     gloss = " ".join(w.upper() for w in words)
 
     try:
-        response = await client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Convert ASL gloss (simplified sign labels) into one natural, fluent English sentence.\n"
-                        "ASL gloss drops articles/copulas and uses topic-comment word order.\n\n"
-                        "Examples:\n"
-                        "STORE I GO → \"I'm going to the store.\"\n"
-                        "NAME YOU → \"What's your name?\"\n"
-                        "HELLO FRIEND MEET HAPPY → \"Hello! It's so nice to meet you.\"\n"
-                        "THANK YOU HELP → \"Thank you for your help.\"\n"
-                        "WATER WANT → \"I'd like some water, please.\"\n"
-                        "SORRY LATE → \"I'm sorry I'm late.\"\n\n"
-                        "Respond with ONLY the English sentence — no explanation, no quotes."
-                    ),
-                },
-                {"role": "user", "content": f"ASL gloss: {gloss}"},
-            ],
-            temperature=0.3,
+        return await gemini_chat(
+            system=(
+                "Convert ASL gloss (simplified sign labels) into one natural, fluent English sentence.\n"
+                "ASL gloss drops articles/copulas and uses topic-comment word order.\n\n"
+                "Examples:\n"
+                "STORE I GO → \"I'm going to the store.\"\n"
+                "NAME YOU → \"What's your name?\"\n"
+                "HELLO FRIEND MEET HAPPY → \"Hello! It's so nice to meet you.\"\n"
+                "THANK YOU HELP → \"Thank you for your help.\"\n"
+                "WATER WANT → \"I'd like some water, please.\"\n"
+                "SORRY LATE → \"I'm sorry I'm late.\"\n\n"
+                "Respond with ONLY the English sentence — no explanation, no quotes."
+            ),
+            user=f"ASL gloss: {gloss}",
             max_tokens=120,
         )
-        return (response.choices[0].message.content or "").strip()
     except Exception as e:
         raise Exception(f"Gloss-to-English failed: {str(e)}")
