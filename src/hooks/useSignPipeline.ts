@@ -22,8 +22,14 @@ const MIN_SEGMENT_FRAMES = 10;
 const MAX_SEGMENT_FRAMES = 120;
 /** Evenly-spaced frames sent to the recognition API */
 const SAMPLE_FRAMES = 8;
-/** Minimum time between recognition calls to avoid Gemini rate limits (8 seconds) */
-const MIN_RECOGNITION_INTERVAL_MS = 8000;
+/** Minimum time between recognition calls (30 seconds for Gemini free tier) */
+const MIN_RECOGNITION_INTERVAL_MS = 30000;
+
+// Sign queue for batching multiple signs
+interface QueuedSign {
+  frames: Landmark[][];
+  timestamp: number;
+}
 
 type PipelineState = "idle" | "recognizing";
 
@@ -42,6 +48,8 @@ export interface SignPipelineResult {
   isTranslating: boolean;
   /** Human-readable status */
   status: string;
+  /** Countdown timer for rate limit cooldown */
+  countdown: number;
 
   /** Call when the user starts signing (clears frame buffer) */
   beginRecording: () => void;
@@ -76,9 +84,12 @@ export function useSignPipeline(): SignPipelineResult {
   const [isTranslating, setIsTranslating] = useState(false);
   const [isDetectingSign, setIsDetectingSign] = useState(false);
   const [status, setStatus]               = useState("Tap mic to start signing");
+  const [countdown, setCountdown]         = useState<number>(0);
 
   const frameBufferRef = useRef<Landmark[][]>([]);
   const lastRecognitionTimeRef = useRef<number>(0);
+  const signQueueRef = useRef<QueuedSign[]>([]);
+  const processingRef = useRef<boolean>(false);
 
   // ── Recognition API call ────────────────────────────────────────────────────
   const recognizeSegment = useCallback(async (frames: Landmark[][]) => {
@@ -232,6 +243,7 @@ export function useSignPipeline(): SignPipelineResult {
     audioUrl,
     isTranslating,
     status,
+    countdown,
     beginRecording,
     addFrame,
     commitSegment,
