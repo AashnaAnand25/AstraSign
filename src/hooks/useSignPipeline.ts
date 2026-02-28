@@ -1,75 +1,41 @@
 /**
- * useSignPipeline — push-to-sign model
+ * useSignPipeline — batch processing model
  *
- * The user controls sign boundaries explicitly via the UI:
- *
- *   beginRecording()  →  start buffering landmark frames
- *   addFrame(lms)     →  called each video frame while recording
- *   commitSegment()   →  user releases button; sends buffer to GPT-4o
- *
- * This removes all motion-threshold guessing and is 100% reliable for demos.
- *
- * After words are accumulated:
- *   triggerTranslate()  →  gloss → English (GPT-4o-mini) → ElevenLabs TTS
+ * Collects multiple signs and sends them in one API call to reduce rate limits.
  */
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import type { Landmark } from "./useHandTracking";
 
-/** Minimum frames for a valid sign (< 10 frames ≈ < 0.33 s is noise) */
 const MIN_SEGMENT_FRAMES = 10;
-/** Hard cap — prevents runaway buffers if user holds too long */
 const MAX_SEGMENT_FRAMES = 120;
-/** Evenly-spaced frames sent to the recognition API */
 const SAMPLE_FRAMES = 8;
-/** Batch size for sign recognition - collect N signs before API call */
 const BATCH_SIZE = 3;
-/** Cooldown between batches (45 seconds) */
-const BATCH_COOLDOWN_MS = 45000;
 
-// Sign queue for batching multiple signs
 interface QueuedSign {
   frames: Landmark[][];
-  timestamp: number;
+  handedness: string;
 }
 
 type PipelineState = "idle" | "recognizing";
 
 export interface SignPipelineResult {
-  /** Accumulated recognised ASL words for this session */
   glossWords: string[];
-  /** true while a sign is actively being recorded (driven by UI) */
   isDetectingSign: boolean;
-  /** true while waiting for the recognition API */
   isRecognizing: boolean;
-  /** GPT-4o-mini–naturalised English sentence */
   translatedText: string;
-  /** Blob URL for the ElevenLabs audio */
   audioUrl: string | null;
-  /** true while gloss→English + TTS are in flight */
   isTranslating: boolean;
-  /** Human-readable status */
   status: string;
-  /** Number of signs in queue waiting to be processed */
   queueLength: number;
-  /** Time until next batch can be processed (seconds) */
-  timeUntilNextBatch: number;
-
-  /** Call when the user starts signing (clears frame buffer) */
   beginRecording: () => void;
-  /** Feed one landmark frame while recording */
   addFrame: (landmarks: Landmark[]) => void;
-  /** Call when the user stops signing — triggers recognition */
   commitSegment: () => void;
-  /** Convert accumulated gloss to English + synthesise speech */
   triggerTranslate: () => Promise<void>;
-  /** Remove the last recognised word */
   undoLastWord: () => void;
-  /** Reset all state for a fresh session */
   clearGloss: () => void;
+  flushQueue: () => void;
 }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function sampleFrames(buffer: Landmark[][], n: number): Landmark[][] {
   if (buffer.length <= n) return buffer;
@@ -78,74 +44,83 @@ function sampleFrames(buffer: Landmark[][], n: number): Landmark[][] {
   );
 }
 
-// ── Hook ──────────────────────────────────────────────────────────────────────
-
 export function useSignPipeline(): SignPipelineResult {
-  const [glossWords, setGlossWords]       = useState<string[]>([]);
+  const [glossWords, setGlossWords] = useState<string[]>([]);
   const [translatedText, setTranslatedText] = useState("");
-  const [audioUrl, setAudioUrl]           = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [pipelineState, setPipelineState] = useState<PipelineState>("idle");
   const [isTranslating, setIsTranslating] = useState(false);
   const [isDetectingSign, setIsDetectingSign] = useState(false);
-  const [status, setStatus]               = useState("Tap mic to start signing");
-  const [countdown, setCountdown]         = useState<number>(0);
+  const [status, setStatus] = useState(`Tap mic, sign ${BATCH_SIZE} times, then Translate`);
+  const [queueLength, setQueueLength] = useState(0);
 
   const frameBufferRef = useRef<Landmark[][]>([]);
-  const lastRecognitionTimeRef = useRef<number>(0);
   const signQueueRef = useRef<QueuedSign[]>([]);
   const processingRef = useRef<boolean>(false);
 
-  // ── Recognition API call ────────────────────────────────────────────────────
-  const recognizeSegment = useCallback(async (frames: Landmark[][]) => {
-    // Rate limiting: check if enough time has passed since last call
-    const now = Date.now();
-    const timeSinceLastCall = now - lastRecognitionTimeRef.current;
-    if (timeSinceLastCall < BATCH_COOLDOWN_MS) {
-      const waitTime = Math.ceil((BATCH_COOLDOWN_MS - timeSinceLastCall) / 1000);
-      setStatus(`Please wait ${waitTime}s between signs to avoid rate limits`);
-      setPipelineState("idle");
+  const processBatch = useCallback(async (force = false) => {
+    const queue = signQueueRef.current;
+    if (queue.length === 0) return;
+    if (!force && queue.length < BATCH_SIZE) {
+      setStatus(`Sign ${BATCH_SIZE - queue.length} more time(s), then tap Translate`);
       return;
     }
-    lastRecognitionTimeRef.current = now;
     
-    const sampled = sampleFrames(frames, SAMPLE_FRAMES);
+    if (processingRef.current) return;
+    processingRef.current = true;
+    setPipelineState("recognizing");
+    setStatus(`Recognizing ${queue.length} signs…`);
+
+    const segments = queue.map((sign) => ({
+      frames: sampleFrames(sign.frames, SAMPLE_FRAMES).map((f) =>
+        f.map((lm) => [lm.x, lm.y, lm.z])
+      ),
+      handedness: sign.handedness,
+    }));
 
     try {
-      const resp = await fetch("/api/recognize/sign", {
+      const resp = await fetch("/api/recognize/sign-batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          frames: sampled.map((f) => f.map((lm) => [lm.x, lm.y, lm.z])),
-          handedness: "Right",
-        }),
+        body: JSON.stringify({ segments }),
       });
 
       if (!resp.ok) {
         const errBody = await resp.json().catch(() => ({}));
         throw new Error(errBody.detail || `HTTP ${resp.status}`);
       }
+
       const data = await resp.json();
-      const word = (data.word as string | undefined)?.trim().toUpperCase();
-
-      if (word && word !== "UNKNOWN") {
-        setGlossWords((prev) => [...prev, word]);
-        setStatus(`Detected: ${word} — sign again or tap Translate`);
+      const words: string[] = data.words || [];
+      const validWords = words.filter((w: string) => w && w !== "UNKNOWN");
+      
+      if (validWords.length > 0) {
+        setGlossWords((prev) => [...prev, ...validWords]);
+        setStatus(`Detected: ${validWords.join(", ")} — tap Translate`);
       } else {
-        setStatus("Could not identify sign — try again with a clearer gesture");
+        setStatus("Could not identify signs — try again");
       }
-    } catch (err) {
-      setStatus(`Recognition error: ${String(err)}`);
-    }
 
-    setPipelineState("idle");
+      signQueueRef.current = [];
+      setQueueLength(0);
+    } catch (err) {
+      setStatus(`Error: ${String(err)}`);
+    } finally {
+      processingRef.current = false;
+      setPipelineState("idle");
+    }
   }, []);
 
-  // ── Push-to-sign controls ───────────────────────────────────────────────────
+  useEffect(() => {
+    if (signQueueRef.current.length >= BATCH_SIZE && !processingRef.current) {
+      processBatch(false);
+    }
+  }, [queueLength, processBatch]);
 
   const beginRecording = useCallback(() => {
     frameBufferRef.current = [];
     setIsDetectingSign(true);
-    setStatus("Signing… release button to recognise");
+    setStatus(`Signing… release to capture sign ${signQueueRef.current.length + 1}/${BATCH_SIZE}`);
   }, []);
 
   const addFrame = useCallback((landmarks: Landmark[]) => {
@@ -160,18 +135,32 @@ export function useSignPipeline(): SignPipelineResult {
     frameBufferRef.current = [];
 
     if (buffer.length < MIN_SEGMENT_FRAMES) {
-      setStatus("Too short — hold the sign for a moment longer");
+      setStatus("Too short — hold the sign longer");
       return;
     }
 
-    setPipelineState("recognizing");
-    setStatus("Recognising sign…");
-    recognizeSegment(buffer);
-  }, [recognizeSegment]);
+    signQueueRef.current.push({ frames: buffer, handedness: "Right" });
+    const newLength = signQueueRef.current.length;
+    setQueueLength(newLength);
 
-  // ── Gloss → English → ElevenLabs ────────────────────────────────────────────
+    if (newLength < BATCH_SIZE) {
+      setStatus(`Sign ${BATCH_SIZE - newLength} more time(s), then tap Translate`);
+    }
+  }, []);
+
+  const flushQueue = useCallback(() => {
+    processBatch(true);
+  }, [processBatch]);
+
   const triggerTranslate = useCallback(async () => {
-    if (glossWords.length === 0) return;
+    if (signQueueRef.current.length > 0) {
+      await processBatch(true);
+    }
+
+    if (glossWords.length === 0) {
+      setStatus("No signs detected — sign first, then translate");
+      return;
+    }
 
     setIsTranslating(true);
     setStatus("Converting to English…");
@@ -187,7 +176,7 @@ export function useSignPipeline(): SignPipelineResult {
 
       const { text } = await grammarResp.json();
       setTranslatedText(text);
-      setStatus("Synthesising speech via ElevenLabs…");
+      setStatus("Synthesising speech…");
 
       const speakResp = await fetch("/api/speak", {
         method: "POST",
@@ -195,7 +184,7 @@ export function useSignPipeline(): SignPipelineResult {
         body: JSON.stringify({ text, voice_id: "21m00Tcm4TlvDq8ikWAM" }),
       });
       if (!speakResp.ok)
-        throw new Error(`ElevenLabs API returned ${speakResp.status}`);
+        throw new Error(`TTS API returned ${speakResp.status}`);
 
       const blob = await speakResp.blob();
       setAudioUrl((prev) => {
@@ -203,24 +192,19 @@ export function useSignPipeline(): SignPipelineResult {
         return URL.createObjectURL(blob);
       });
 
-      setStatus("Done — tap Play to hear the translation");
+      setStatus("Done — tap Play to hear");
     } catch (err) {
       setStatus(`Error: ${String(err)}`);
     } finally {
       setIsTranslating(false);
     }
-  }, [glossWords]);
+  }, [glossWords, processBatch]);
 
-  // ── Utilities ────────────────────────────────────────────────────────────────
   const undoLastWord = useCallback(() => {
     setGlossWords((prev) => {
       if (prev.length === 0) return prev;
       const next = prev.slice(0, -1);
-      setStatus(
-        next.length > 0
-          ? `Removed last word — current gloss: ${next.join(" ")}`
-          : "Tap mic to start signing"
-      );
+      setStatus(next.length > 0 ? `Removed word — current: ${next.join(" ")}` : `Tap mic, sign ${BATCH_SIZE} times, then Translate`);
       return next;
     });
   }, []);
@@ -232,11 +216,13 @@ export function useSignPipeline(): SignPipelineResult {
       if (prev) URL.revokeObjectURL(prev);
       return null;
     });
+    signQueueRef.current = [];
+    setQueueLength(0);
     frameBufferRef.current = [];
     setIsDetectingSign(false);
     setPipelineState("idle");
     setIsTranslating(false);
-    setStatus("Tap mic to start signing");
+    setStatus(`Tap mic, sign ${BATCH_SIZE} times, then Translate`);
   }, []);
 
   return {
@@ -247,13 +233,13 @@ export function useSignPipeline(): SignPipelineResult {
     audioUrl,
     isTranslating,
     status,
-    queueLength: signQueueRef.current.length,
-    timeUntilNextBatch: Math.max(0, Math.ceil((BATCH_COOLDOWN_MS - (Date.now() - lastRecognitionTimeRef.current)) / 1000)),
+    queueLength,
     beginRecording,
     addFrame,
     commitSegment,
     triggerTranslate,
     undoLastWord,
     clearGloss,
+    flushQueue,
   };
 }
