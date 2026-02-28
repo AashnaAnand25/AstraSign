@@ -22,12 +22,21 @@ import { useCallback, useRef, useState } from "react";
 import type { Landmark } from "./useHandTracking";
 
 // ── Segmentation thresholds ───────────────────────────────────────────────────
-/** Sum of per-landmark L2 distances must exceed this to count as "in motion" */
-const MOTION_THRESHOLD = 0.015;
+/**
+ * Sum of per-landmark L2 distances needed to START a sign segment.
+ * Raised high enough that hand trembling / entering the frame doesn't trigger it.
+ * Requires a deliberate, intentional hand movement.
+ */
+const START_MOTION_THRESHOLD = 0.06;
+/**
+ * Sum of per-landmark L2 distances that counts as "still enough" to END a sign.
+ * More forgiving than the start threshold — natural hand trembling stays below this.
+ */
+const STILL_THRESHOLD = 0.030;
 /** Consecutive still frames needed before we call a sign boundary */
-const STILL_FRAMES_NEEDED = 8;
+const STILL_FRAMES_NEEDED = 10;
 /** Minimum frames for a valid sign (ignores noise / accidental trigger) */
-const MIN_SEGMENT_FRAMES = 10;
+const MIN_SEGMENT_FRAMES = 12;
 /** Maximum frames before we force a cut-off (handles very long gestures) */
 const MAX_SEGMENT_FRAMES = 90;
 /** How many evenly-spaced frames to send to the recognition API */
@@ -149,8 +158,8 @@ export function useSignPipeline(): SignPipelineResult {
       if (state === "recognizing") return;
 
       if (state === "idle") {
-        if (motion > MOTION_THRESHOLD) {
-          // Signing has started
+        if (motion > START_MOTION_THRESHOLD) {
+          // Signing has started — requires deliberate motion above the start threshold
           currentStateRef.current = "signing";
           setPipelineState("signing");
           frameBufferRef.current  = [landmarks];
@@ -160,8 +169,8 @@ export function useSignPipeline(): SignPipelineResult {
       } else if (state === "signing") {
         frameBufferRef.current.push(landmarks);
 
-        if (motion < MOTION_THRESHOLD) {
-          // Hand has gone still — increment stillness counter
+        if (motion < STILL_THRESHOLD) {
+          // Hand has gone still — uses the more forgiving still threshold
           stillCountRef.current += 1;
 
           if (stillCountRef.current >= STILL_FRAMES_NEEDED) {
