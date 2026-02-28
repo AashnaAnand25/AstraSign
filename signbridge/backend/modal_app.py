@@ -10,22 +10,21 @@ import modal
 image = (
     modal.Image.debian_slim()
     .pip_install_from_requirements("requirements.txt")
-    .copy_local_file("main.py", "/app/main.py")
-    .copy_local_dir("routes", "/app/routes")
-    .copy_local_dir("services", "/app/services")
-    .copy_local_dir("data", "/app/data")
+    .add_local_file("main.py", "/app/main.py")
+    .add_local_dir("routes", "/app/routes")
+    .add_local_dir("services", "/app/services")
+    .add_local_dir("data", "/app/data")
 )
 
 # Create secrets for API keys (set these via Modal dashboard or CLI)
 # modal secret create signbridge-secrets GEMINI_API_KEY=xxx WHISPERAI_KEY=xxx ELEVENLABS_API_KEY=xxx SUPERMEMORY_API_KEY=xxx
-secrets = modal.Secret.from_name("signbridge-secrets", optional=True)
 
 # Create the Modal app
 app = modal.App("signbridge-backend", image=image)
 
 
 @app.function(
-    secrets=[secrets],
+    secrets=[modal.Secret.from_name("signbridge-secrets")],
     cpu=1,
     memory=512,
     timeout=300,  # 5 minutes
