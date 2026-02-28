@@ -7,13 +7,15 @@ import os
 import httpx
 import asyncio
 
+import random
+
 _API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 _MODEL = "gemini-2.0-flash"
 _URL_V1 = f"https://generativelanguage.googleapis.com/v1/models/{_MODEL}:generateContent"
 _URL_BETA = f"https://generativelanguage.googleapis.com/v1beta/models/{_MODEL}:generateContent"
 
 
-async def chat(system: str, user: str, max_tokens: int = 100, retries: int = 3) -> str:
+async def chat(system: str, user: str, max_tokens: int = 100, retries: int = 5) -> str:
     if not _API_KEY:
         raise ValueError("GEMINI_API_KEY not set in .env")
 
@@ -45,15 +47,16 @@ async def chat(system: str, user: str, max_tokens: int = 100, retries: int = 3) 
                         continue  # Try next URL
                     elif e.response.status_code == 429:
                         if attempt < retries - 1:
-                            wait_time = (2 ** attempt) + 0.5  # Exponential backoff: 1s, 2.5s, 4.5s
+                            # Longer exponential backoff for Gemini free tier: 2s, 4s, 8s, 16s, 32s
+                            wait_time = min((2 ** (attempt + 1)) + random.uniform(0, 1), 60)
                             await asyncio.sleep(wait_time)
                             break  # Retry from outer loop
-                        raise Exception(f"Gemini API rate limit exceeded. Please wait a moment and try again.")
+                        raise Exception(f"Gemini API rate limit exceeded. Please wait ~60 seconds and try again.")
                     raise
             else:
                 # Both URLs failed, retry with backoff
                 if attempt < retries - 1:
-                    wait_time = (2 ** attempt) + 0.5
+                    wait_time = min((2 ** (attempt + 1)) + random.uniform(0, 1), 60)
                     await asyncio.sleep(wait_time)
                     continue
         
