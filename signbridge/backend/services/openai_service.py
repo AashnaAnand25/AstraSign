@@ -1,16 +1,30 @@
 import os, io, re, math
 from services.gemini_service import chat as gemini_chat
 
+try:
+    from openai import AsyncOpenAI
+except Exception:  # pragma: no cover
+    AsyncOpenAI = None
+
+
+_OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+_openai_client = None
+if _OPENAI_API_KEY and AsyncOpenAI is not None:
+    _openai_client = AsyncOpenAI(api_key=_OPENAI_API_KEY)
+
 async def transcribe_audio(audio_bytes: bytes, filename: str) -> str:
     """Send audio to Whisper, get back transcript"""
     if not audio_bytes:
         raise ValueError("Audio bytes cannot be empty")
+
+    if not _openai_client:
+        raise ValueError("OPENAI_API_KEY not set (required for Whisper transcription)")
     
     audio_file = io.BytesIO(audio_bytes)
     audio_file.name = filename or "audio.m4a"
     
     try:
-        response = await client.audio.transcriptions.create(
+        response = await _openai_client.audio.transcriptions.create(
             model="whisper-1",
             file=audio_file,
             response_format="text",
@@ -24,14 +38,11 @@ async def convert_to_asl_grammar(text: str) -> list[str]:
     """Reorder English to ASL grammar using GPT-4o"""
     if not text or not text.strip():
         raise ValueError("Text cannot be empty")
-    
+
     try:
-        response = await client.chat.completions.create(
-            model="gemini-1.5-flash",
-            messages=[
-                {
-                    "role": "system",
-                    "content": """Convert English to ASL grammar order.
+        raw = await gemini_chat(
+            system=(
+                """Convert English to ASL grammar order.
 Rules:
 - Topic-Comment structure (put topic first)  
 - Subject-Object-Verb order
@@ -44,16 +55,14 @@ Example: "I am going to the store" → "STORE I GO"
 Example: "The cat is hungry" → "CAT HUNGRY"
 Example: "Can you help me" → "YOU HELP ME"
 """
-                },
-                {"role": "user", "content": text}
-            ],
-            temperature=0.1,
-            max_tokens=100
+            ),
+            user=text,
+            max_tokens=100,
         )
-        content = response.choices[0].message.content
-        if not content:
+
+        if not raw:
             return []
-        words = content.strip().split()
+        words = raw.strip().split()
         return [w.upper() for w in words]
     except Exception as e:
         raise Exception(f"Grammar conversion failed: {str(e)}")

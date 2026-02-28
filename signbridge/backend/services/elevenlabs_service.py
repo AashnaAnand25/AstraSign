@@ -3,11 +3,11 @@ import httpx, os
 ELEVENLABS_KEY = os.getenv("ELEVENLABS_API_KEY")
 BASE_URL = "https://api.elevenlabs.io/v1"
 
-if not ELEVENLABS_KEY:
-    raise ValueError("ELEVENLABS_API_KEY environment variable is not set")
-
 async def text_to_speech(text: str, voice_id: str) -> bytes:
     """Call ElevenLabs and return audio bytes"""
+    if not ELEVENLABS_KEY:
+        raise ValueError("ELEVENLABS_API_KEY environment variable is not set")
+
     if not text or not text.strip():
         raise ValueError("Text cannot be empty")
     

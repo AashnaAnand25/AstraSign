@@ -4,6 +4,7 @@
 !.env.example
 signbridge/backend/.env
 signbridge/backend/.env.*
+!signbridge/backend/.env.example
 
 # Python
 signbridge/backend/venv/
