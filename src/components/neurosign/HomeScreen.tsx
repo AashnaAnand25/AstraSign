@@ -1,4 +1,4 @@
-import { Settings } from "lucide-react";
+import { Settings, Users } from "lucide-react";
 
 interface Props {
   onStartLive: () => void;
@@ -53,7 +53,7 @@ export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, o
           onClick={onSettings}
           className="w-10 h-10 rounded-2xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
         >
-          <Settings size={18} />
+          <Users size={18} />
         </button>
       </div>
 

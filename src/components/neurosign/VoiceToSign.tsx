@@ -72,6 +72,63 @@ const processTextToASL = (text: string): { letters: string[], words: string[] } 
   };
 };
 
+// API Configuration
+const API_BASE_URL = "http://localhost:8001/api";
+const API_SECRET = "neurosign-secret-key-123";
+
+// API call helper
+const apiCall = async (endpoint: string, data: any) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_SECRET,
+      },
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API call failed: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
+
+// Wispr API integration
+const transcribeWithWispr = async (audioBlob: Blob): Promise<string> => {
+  try {
+    // For demo, use backend API
+    const formData = new FormData();
+    formData.append('audio_data', audioBlob);
+    formData.append('format', 'webm');
+    
+    const result = await apiCall('/transcribe', {
+      audio_data: await blobToBase64(audioBlob),
+      format: 'webm'
+    });
+    
+    return result.transcript || "HELLO WORLD";
+  } catch (error) {
+    console.error('Wispr transcription failed:', error);
+    throw error;
+  }
+};
+
+// Convert blob to base64
+const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
 // sign.mt inspired translation pipeline with ASL database
 const translateWithSignMTPipeline = async (text: string): Promise<{ letters: string[], words: string[] }> => {
   // Step 1: Text normalization
@@ -450,17 +507,6 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
         </div>
         <div className="flex items-center justify-center gap-2 mb-4">
           <button
-            onClick={() => setInputMode('voice')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              inputMode === 'voice'
-                ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50'
-                : 'bg-background/50 text-muted-foreground border border-border'
-            }`}
-          >
-            <Mic size={16} className="inline mr-2" />
-            Voice
-          </button>
-          <button
             onClick={() => setInputMode('text')}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               inputMode === 'text'
@@ -470,6 +516,17 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
           >
             <Type size={16} className="inline mr-2" />
             Text
+          </button>
+          <button
+            onClick={() => setInputMode('voice')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              inputMode === 'voice'
+                ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50'
+                : 'bg-background/50 text-muted-foreground border border-border'
+            }`}
+          >
+            <Mic size={16} className="inline mr-2" />
+            Voice
           </button>
         </div>
 
