@@ -6,7 +6,7 @@ import os
 import httpx
 
 _API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
-_MODEL = "gemini-1.5-flash"
+_MODEL = "gemini-2.0-flash"
 _URL_V1 = f"https://generativelanguage.googleapis.com/v1/models/{_MODEL}:generateContent"
 _URL_BETA = f"https://generativelanguage.googleapis.com/v1beta/models/{_MODEL}:generateContent"
 
@@ -39,5 +39,7 @@ async def chat(system: str, user: str, max_tokens: int = 100) -> str:
                 last_error = e
                 if e.response.status_code == 404:
                     continue
+                elif e.response.status_code == 429:
+                    raise Exception(f"Gemini API rate limit exceeded. Please wait a moment and try again.")
                 raise
         raise Exception(f"Gemini API error: {last_error}")
