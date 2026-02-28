@@ -63,7 +63,7 @@
 |---|---|---|
 | **Gemini 1.5 Flash** (Google) | Sign recognition + gloss→English + grammar | `GEMINI_API_KEY` |
 | **ElevenLabs** | Text-to-speech (Rachel voice) | `ELEVENLABS_API_KEY` |
-| **OpenAI Whisper** | Speech-to-text (voice→sign direction) | `OPENAI_API_KEY` (optional) |
+| **OpenAI Whisper** | Speech-to-text (voice→sign direction) | `WHISPERAI_KEY` (optional, preferred) |
 | **Supermemory** | Conversation memory (optional) | `SUPERMEMORY_API_KEY` |
 
 > **Important**: We call Gemini via its **native REST API** (`httpx` in `gemini_service.py`), NOT the OpenAI compatibility shim. The shim caused 404/routing errors. Do not revert to the OpenAI SDK for Gemini calls.
@@ -159,7 +159,8 @@ Copy `signbridge/backend/.env.example` → `signbridge/backend/.env` and fill in
 ```
 GEMINI_API_KEY=...          # Required — sign recognition + grammar
 ELEVENLABS_API_KEY=...      # Required — text-to-speech
-OPENAI_API_KEY=...          # Optional — only needed for Whisper transcription
+WHISPERAI_KEY=...           # Optional — only needed for Whisper transcription
+OPENAI_API_KEY=...          # Legacy fallback for Whisper (still accepted)
 SUPERMEMORY_API_KEY=...     # Optional — memory features
 PORT=8000
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080

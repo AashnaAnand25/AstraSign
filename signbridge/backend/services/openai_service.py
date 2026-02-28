@@ -7,7 +7,7 @@ except Exception:  # pragma: no cover
     AsyncOpenAI = None
 
 
-_OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+_OPENAI_API_KEY = os.getenv("WHISPERAI_KEY", "") or os.getenv("OPENAI_API_KEY", "")
 _openai_client = None
 if _OPENAI_API_KEY and AsyncOpenAI is not None:
     _openai_client = AsyncOpenAI(api_key=_OPENAI_API_KEY)
@@ -18,7 +18,7 @@ async def transcribe_audio(audio_bytes: bytes, filename: str) -> str:
         raise ValueError("Audio bytes cannot be empty")
 
     if not _openai_client:
-        raise ValueError("OPENAI_API_KEY not set (required for Whisper transcription)")
+        raise ValueError("WHISPERAI_KEY not set (required for Whisper transcription)")
     
     audio_file = io.BytesIO(audio_bytes)
     audio_file.name = filename or "audio.m4a"

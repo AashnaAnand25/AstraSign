@@ -16,7 +16,7 @@ app = FastAPI(
 # OPENAI_API_KEY is only required for Whisper transcription.
 # ELEVENLABS_API_KEY is only required for text-to-speech.
 required_vars = ["GEMINI_API_KEY"]
-optional_vars = ["OPENAI_API_KEY", "ELEVENLABS_API_KEY", "SUPERMEMORY_API_KEY"]
+optional_vars = ["WHISPERAI_KEY", "OPENAI_API_KEY", "ELEVENLABS_API_KEY", "SUPERMEMORY_API_KEY"]
 
 missing_required = [var for var in required_vars if not os.getenv(var)]
 missing_optional = [var for var in optional_vars if not os.getenv(var)]

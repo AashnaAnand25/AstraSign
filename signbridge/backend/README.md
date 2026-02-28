@@ -25,7 +25,8 @@ pip install -r requirements.txt
 
 3. Set up environment variables in `.env`:
 ```
-OPENAI_API_KEY=your-openai-key
+WHISPERAI_KEY=your-openai-key
+OPENAI_API_KEY=your-openai-key  # legacy fallback (still accepted)
 ELEVENLABS_API_KEY=your-elevenlabs-key
 SUPERMEMORY_API_KEY=your-supermemory-key
 PORT=8000
