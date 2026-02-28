@@ -4,6 +4,7 @@ interface Props {
   onStartLive: () => void;
   onReverseMode: () => void;
   onCameraMode: () => void;
+  onEnhancedCameraMode: () => void;
   onConversation: () => void;
   onSettings: () => void;
 }
@@ -37,7 +38,7 @@ const BigCard = ({ title, subtitle, desc, color, onClick }: { title: string; sub
   );
 };
 
-export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, onConversation, onSettings }: Props) {
+export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, onEnhancedCameraMode, onConversation, onSettings }: Props) {
   return (
     <div className="min-h-screen flex flex-col px-5 pt-14 pb-8">
       <div className="flex items-center justify-between mb-6">
@@ -83,6 +84,13 @@ export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, o
           subtitle="Sign → Voice"
           desc="Point the camera at signing and generate natural voice output."
           onClick={onCameraMode}
+        />
+        <BigCard
+          color="cyan"
+          title="Enhanced Camera"
+          subtitle="3D Sign → Voice"
+          desc="Advanced hand tracking with real-time 3D visualization and AI translation."
+          onClick={onEnhancedCameraMode}
         />
 
         <button

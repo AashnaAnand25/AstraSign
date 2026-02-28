@@ -3,9 +3,12 @@ import { ArrowLeft, Settings, Play, Pause, ToggleLeft, ToggleRight } from "lucid
 import { useAccessibility } from "@/accessibility/AccessibilityProvider";
 
 interface Props {
-  onBack: () => void;
-  onSettings: () => void;
+  onBack?: () => void;
+  onSettings?: () => void;
   focusMode?: boolean;
+  embedded?: boolean;
+  onStatusChange?: (status: "ready" | "listening" | "processing") => void;
+  onAddToHistory?: (audioText: string, aslTranslation: string) => void;
 }
 
 const HandLandmark = ({ x, y }: { x: number; y: number }) => (
@@ -44,7 +47,7 @@ const SAMPLE_TRANSLATIONS = [
   "Thank you so much for your kindness.",
 ];
 
-export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
+export default function SignToVoice({ onBack, onSettings, focusMode, embedded, onStatusChange, onAddToHistory }: Props) {
   const { settings } = useAccessibility();
   const [isRecording, setIsRecording] = useState(false);
   const [liveMode, setLiveMode] = useState(true);
@@ -56,12 +59,18 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
+    onStatusChange?.(isRecording ? "processing" : translation ? "ready" : "ready");
+  }, [isRecording, translation, onStatusChange]);
+
+  useEffect(() => {
     if (isRecording) {
       timerRef.current = setTimeout(() => {
-        setTranslation(SAMPLE_TRANSLATIONS[Math.floor(Math.random() * SAMPLE_TRANSLATIONS.length)]);
+        const t = SAMPLE_TRANSLATIONS[Math.floor(Math.random() * SAMPLE_TRANSLATIONS.length)];
+        setTranslation(t);
         setConfidence(92 + Math.floor(Math.random() * 7));
         setShowParticles(true);
         setTimeout(() => setShowParticles(false), 2000);
+        onAddToHistory?.(t, "Sign detected");
       }, 2200);
     } else {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -248,40 +257,61 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
         />
       ))}
 
-      {/* Top bar */}
-      <div
-        className="relative z-10 flex items-center justify-between px-5 pt-12 pb-4 transition-opacity duration-300"
-        style={{ opacity: focusMode ? 0.2 : 1, pointerEvents: focusMode ? "none" : "auto" }}
-      >
-        <button
-          onClick={onBack}
-          className="w-9 h-9 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
+      {/* Top bar - hidden when embedded */}
+      {!embedded && (
+        <div
+          className="relative z-10 flex items-center justify-between px-5 pt-12 pb-4 transition-opacity duration-300"
+          style={{ opacity: focusMode ? 0.2 : 1, pointerEvents: focusMode ? "none" : "auto" }}
         >
-          <ArrowLeft size={16} />
-        </button>
-        <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-neon-purple animate-glow-pulse" />
-          <span className="font-display text-sm font-bold gradient-text-purple-cyan">NEUROSIGN</span>
+          <button
+            onClick={onBack}
+            className="w-9 h-9 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-neon-purple animate-glow-pulse" />
+            <span className="font-display text-sm font-bold gradient-text-purple-cyan">NEUROSIGN</span>
+          </div>
+          <button
+            onClick={onSettings}
+            className="w-9 h-9 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
+          >
+            <Settings size={16} />
+          </button>
         </div>
-        <button
-          onClick={onSettings}
-          className="w-9 h-9 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
-        >
-          <Settings size={16} />
-        </button>
-      </div>
+      )}
 
-      {/* Mode label */}
-      <div className="relative z-10 flex justify-center mb-2">
-        <div className="glass rounded-full px-4 py-1.5 neon-border-purple flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <rect x="2" y="1" width="2.5" height="8" rx="1.25" fill="hsl(272 76% 53%)" />
-            <rect x="5.5" y="2.5" width="2.5" height="6.5" rx="1.25" fill="hsl(272 76% 53%)" opacity="0.8" />
-            <rect x="9" y="0.5" width="2.5" height="9" rx="1.25" fill="hsl(272 76% 53%)" opacity="0.6" />
-          </svg>
-          <span className="text-xs font-semibold text-neon-purple tracking-wider">SIGN → VOICE</span>
+      {/* Mode label - hidden when embedded */}
+      {!embedded && (
+        <div className="relative z-10 flex justify-center mb-2">
+          <div className="glass rounded-full px-4 py-1.5 neon-border-purple flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="2" y="1" width="2.5" height="8" rx="1.25" fill="hsl(272 76% 53%)" />
+              <rect x="5.5" y="2.5" width="2.5" height="6.5" rx="1.25" fill="hsl(272 76% 53%)" opacity="0.8" />
+              <rect x="9" y="0.5" width="2.5" height="9" rx="1.25" fill="hsl(272 76% 53%)" opacity="0.6" />
+            </svg>
+            <span className="text-xs font-semibold text-neon-purple tracking-wider">SIGN → VOICE</span>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Floating confidence badge - "HELP – 92% Match" style */}
+      {translation && settings.confidenceDisplay && (
+        <div
+          className="fixed top-24 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-xl font-semibold text-sm"
+          style={{
+            background: "hsl(240 15% 9% / 0.95)",
+            border: `1px solid ${
+              confidence >= 90 ? "hsl(142 70% 50% / 0.5)" : confidence >= 70 ? "hsl(40 90% 55% / 0.5)" : "hsl(0 80% 55% / 0.5)"
+            }`,
+            color: confidence >= 90 ? "hsl(142 70% 50%)" : confidence >= 70 ? "hsl(40 90% 55%)" : "hsl(0 80% 65%)",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+          }}
+        >
+          {translation.split(" ").slice(0, 2).join(" ").replace(/\.$/, "")} – {confidence}% Match
+        </div>
+      )}
 
       {/* Spacer for camera area */}
       <div className="flex-1" />

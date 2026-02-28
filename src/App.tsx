@@ -6,12 +6,14 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { AccessibilityProvider } from "./accessibility/AccessibilityProvider";
+import { HistoryProvider } from "./context/HistoryContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AccessibilityProvider>
+      <HistoryProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -23,6 +25,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+      </HistoryProvider>
     </AccessibilityProvider>
   </QueryClientProvider>
 );

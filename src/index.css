@@ -63,6 +63,8 @@
     --a11y-content-scale: 1;
     --a11y-letter-spacing: 0em;
     --a11y-speech-rate: 1;
+    --a11y-asl-speed: 1;
+    --a11y-text-scale-dyslexia: 1;
   }
 }
 
@@ -95,6 +97,7 @@
 
   html.a11y-dyslexia-font body {
     font-family: 'OpenDyslexic', 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: calc(1em * var(--a11y-text-scale-dyslexia));
   }
 
   html.a11y-line-spacing body {

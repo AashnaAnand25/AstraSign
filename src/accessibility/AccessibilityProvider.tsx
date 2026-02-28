@@ -5,8 +5,14 @@ export type TextSize = 1 | 2 | 3 | 4;
 export type PlaybackSpeed = 1 | 2 | 3 | 4 | 5;
 export type SpeechProvider = "wispr" | "mock";
 
+export type ASLSpeed = 0.5 | 0.75 | 1 | 1.25 | 1.5 | 2;
+export type TextScale = 1 | 1.25 | 1.5 | 1.75 | 2;
+
 export interface AccessibilitySettings {
   focusMode: boolean;
+
+  aslSpeed: ASLSpeed;
+  textScale: TextScale;
 
   textSize: TextSize;
   contentScale: ContentScale;
@@ -42,6 +48,9 @@ export interface AccessibilitySettings {
 
 const DEFAULT_SETTINGS: AccessibilitySettings = {
   focusMode: false,
+
+  aslSpeed: 1,
+  textScale: 1,
 
   textSize: 2,
   contentScale: 1,
@@ -90,7 +99,7 @@ function safeParseSettings(raw: string | null): AccessibilitySettings | null {
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as Partial<AccessibilitySettings>;
-    return { ...DEFAULT_SETTINGS, ...parsed };
+    return { ...DEFAULT_SETTINGS, ...parsed } as AccessibilitySettings;
   } catch {
     return null;
   }
@@ -129,6 +138,8 @@ function applyAccessibilityToDom(settings: AccessibilitySettings) {
 
   root.style.setProperty("--a11y-text-scale", String(textSizeToScale(settings.textSize)));
   root.style.setProperty("--a11y-content-scale", String(settings.contentScale));
+  root.style.setProperty("--a11y-asl-speed", String(settings.aslSpeed));
+  root.style.setProperty("--a11y-text-scale-dyslexia", String(settings.textScale));
   root.style.setProperty("--a11y-letter-spacing", `${settings.letterSpacing}em`);
   root.style.setProperty("--a11y-speech-rate", String(playbackSpeedToSpeechRate(settings.playbackSpeed)));
 }
