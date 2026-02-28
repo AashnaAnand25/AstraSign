@@ -87,7 +87,7 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
   // MediaPipe hand tracking — runs inference on every video frame
   const { landmarks, isReady: mpReady, error: mpError } = useHandTracking(videoRef);
 
-  // Sign recognition pipeline — segmentation + API orchestration
+  // Sign recognition pipeline — push-to-sign model
   const {
     glossWords,
     isDetectingSign,
@@ -96,7 +96,9 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
     audioUrl,
     isTranslating,
     status,
+    beginRecording,
     addFrame,
+    commitSegment,
     triggerTranslate,
     undoLastWord,
     clearGloss,
@@ -186,8 +188,13 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
 
   // ── UI helpers ──────────────────────────────────────────────────────────────
   const toggleRecord = () => {
-    if (!isRecording) clearGloss();
-    setIsRecording((v) => !v);
+    if (!isRecording) {
+      beginRecording();       // clears frame buffer, sets status
+      setIsRecording(true);
+    } else {
+      setIsRecording(false);
+      commitSegment();        // sends buffered frames to GPT-4o
+    }
   };
 
   const handleSpeak = () => {
@@ -409,11 +416,11 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
         </div>
 
         <p className="text-center text-[10px] text-muted-foreground mt-3">
-          {isRecording
-            ? isRecognizing ? "Recognising…"
-            : isDetectingSign ? "Signing — hold still to confirm"
-            : "Listening — show a sign"
-            : "Tap mic to start • Signs build up • Tap speaker to translate"}
+          {isRecognizing
+            ? "Recognising sign…"
+            : isRecording
+            ? "Signing — tap mic again to recognise"
+            : "Tap mic → sign → tap mic again • Tap speaker to translate"}
         </p>
       </div>
 

@@ -1,68 +1,53 @@
 /**
- * useSignPipeline
+ * useSignPipeline — push-to-sign model
  *
- * Manages the full ASL → Text pipeline on top of raw MediaPipe landmarks:
+ * The user controls sign boundaries explicitly via the UI:
  *
- *   landmarks per frame
- *     → sliding-window buffer
- *     → motion-delta segmentation (detects sign boundaries)
- *     → POST /api/recognize/sign   (GPT-4o identifies the sign)
- *     → accumulate gloss words
- *     → POST /api/recognize/gloss-to-english  (GPT-4o-mini naturalises)
- *     → POST /api/speak            (ElevenLabs TTS)
+ *   beginRecording()  →  start buffering landmark frames
+ *   addFrame(lms)     →  called each video frame while recording
+ *   commitSegment()   →  user releases button; sends buffer to GPT-4o
  *
- * Usage:
- *   const pipeline = useSignPipeline();
- *   // Feed each frame:  pipeline.addFrame(landmarks)  (call only while recording)
- *   // When done signing: pipeline.triggerTranslate()
- *   // Reset everything:  pipeline.clearGloss()
+ * This removes all motion-threshold guessing and is 100% reliable for demos.
+ *
+ * After words are accumulated:
+ *   triggerTranslate()  →  gloss → English (GPT-4o-mini) → ElevenLabs TTS
  */
 
 import { useCallback, useRef, useState } from "react";
 import type { Landmark } from "./useHandTracking";
 
-// ── Segmentation thresholds ───────────────────────────────────────────────────
-/**
- * Sum of per-landmark L2 distances needed to START a sign segment.
- * Raised high enough that hand trembling / entering the frame doesn't trigger it.
- * Requires a deliberate, intentional hand movement.
- */
-const START_MOTION_THRESHOLD = 0.06;
-/**
- * Sum of per-landmark L2 distances that counts as "still enough" to END a sign.
- * More forgiving than the start threshold — natural hand trembling stays below this.
- */
-const STILL_THRESHOLD = 0.030;
-/** Consecutive still frames needed before we call a sign boundary */
-const STILL_FRAMES_NEEDED = 10;
-/** Minimum frames for a valid sign (ignores noise / accidental trigger) */
-const MIN_SEGMENT_FRAMES = 12;
-/** Maximum frames before we force a cut-off (handles very long gestures) */
-const MAX_SEGMENT_FRAMES = 90;
-/** How many evenly-spaced frames to send to the recognition API */
+/** Minimum frames for a valid sign (< 10 frames ≈ < 0.33 s is noise) */
+const MIN_SEGMENT_FRAMES = 10;
+/** Hard cap — prevents runaway buffers if user holds too long */
+const MAX_SEGMENT_FRAMES = 120;
+/** Evenly-spaced frames sent to the recognition API */
 const SAMPLE_FRAMES = 8;
 
-type PipelineState = "idle" | "signing" | "recognizing";
+type PipelineState = "idle" | "recognizing";
 
 export interface SignPipelineResult {
   /** Accumulated recognised ASL words for this session */
   glossWords: string[];
-  /** true while a sign is actively being performed */
+  /** true while a sign is actively being recorded (driven by UI) */
   isDetectingSign: boolean;
-  /** true while waiting for the recognition API to respond */
+  /** true while waiting for the recognition API */
   isRecognizing: boolean;
-  /** GPT-4o-mini–naturalised English sentence (set after triggerTranslate) */
+  /** GPT-4o-mini–naturalised English sentence */
   translatedText: string;
-  /** Blob URL for the ElevenLabs audio (set after triggerTranslate) */
+  /** Blob URL for the ElevenLabs audio */
   audioUrl: string | null;
-  /** true while gloss→English + TTS requests are in flight */
+  /** true while gloss→English + TTS are in flight */
   isTranslating: boolean;
-  /** Human-readable status for the UI */
+  /** Human-readable status */
   status: string;
 
-  /** Feed one landmark frame into the segmentation engine (call per video frame) */
+  /** Call when the user starts signing (clears frame buffer) */
+  beginRecording: () => void;
+  /** Feed one landmark frame while recording */
   addFrame: (landmarks: Landmark[]) => void;
-  /** Convert accumulated gloss to English and synthesise speech */
+  /** Call when the user stops signing — triggers recognition */
+  commitSegment: () => void;
+  /** Convert accumulated gloss to English + synthesise speech */
   triggerTranslate: () => Promise<void>;
   /** Remove the last recognised word */
   undoLastWord: () => void;
@@ -72,21 +57,6 @@ export interface SignPipelineResult {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function motionDelta(prev: Landmark[], curr: Landmark[]): number {
-  let sum = 0;
-  const n = Math.min(prev.length, curr.length);
-  for (let i = 0; i < n; i++) {
-    const dx = curr[i].x - prev[i].x;
-    const dy = curr[i].y - prev[i].y;
-    sum += Math.sqrt(dx * dx + dy * dy);
-  }
-  return sum;
-}
-
-/**
- * Sample n evenly-spaced frames from a buffer.
- * If the buffer is shorter than n, return it as-is.
- */
 function sampleFrames(buffer: Landmark[][], n: number): Landmark[][] {
   if (buffer.length <= n) return buffer;
   return Array.from({ length: n }, (_, i) =>
@@ -97,18 +67,15 @@ function sampleFrames(buffer: Landmark[][], n: number): Landmark[][] {
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useSignPipeline(): SignPipelineResult {
-  const [glossWords, setGlossWords] = useState<string[]>([]);
+  const [glossWords, setGlossWords]       = useState<string[]>([]);
   const [translatedText, setTranslatedText] = useState("");
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl]           = useState<string | null>(null);
   const [pipelineState, setPipelineState] = useState<PipelineState>("idle");
   const [isTranslating, setIsTranslating] = useState(false);
-  const [status, setStatus] = useState("Ready — show a sign to begin");
+  const [isDetectingSign, setIsDetectingSign] = useState(false);
+  const [status, setStatus]               = useState("Tap mic to start signing");
 
-  // Mutable state accessed inside callbacks — stored in refs to avoid stale closures
-  const currentStateRef = useRef<PipelineState>("idle");
-  const frameBufferRef  = useRef<Landmark[][]>([]);
-  const prevLandmarksRef = useRef<Landmark[] | null>(null);
-  const stillCountRef   = useRef(0);
+  const frameBufferRef = useRef<Landmark[][]>([]);
 
   // ── Recognition API call ────────────────────────────────────────────────────
   const recognizeSegment = useCallback(async (frames: Landmark[][]) => {
@@ -124,13 +91,16 @@ export function useSignPipeline(): SignPipelineResult {
         }),
       });
 
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      if (!resp.ok) {
+        const errBody = await resp.json().catch(() => ({}));
+        throw new Error(errBody.detail || `HTTP ${resp.status}`);
+      }
       const data = await resp.json();
       const word = (data.word as string | undefined)?.trim().toUpperCase();
 
       if (word && word !== "UNKNOWN") {
         setGlossWords((prev) => [...prev, word]);
-        setStatus(`Detected: ${word} — show next sign or tap Translate`);
+        setStatus(`Detected: ${word} — sign again or tap Translate`);
       } else {
         setStatus("Could not identify sign — try again with a clearer gesture");
       }
@@ -138,78 +108,37 @@ export function useSignPipeline(): SignPipelineResult {
       setStatus(`Recognition error: ${String(err)}`);
     }
 
-    // Always return to idle so new signs can be captured
-    currentStateRef.current = "idle";
     setPipelineState("idle");
-  }, []); // stable: only uses setState (stable) and refs (runtime-accessed)
+  }, []);
 
-  // ── Main frame ingestion ────────────────────────────────────────────────────
-  const addFrame = useCallback(
-    (landmarks: Landmark[]) => {
-      const prev = prevLandmarksRef.current;
-      prevLandmarksRef.current = landmarks;
+  // ── Push-to-sign controls ───────────────────────────────────────────────────
 
-      if (!prev) return; // first frame — nothing to diff yet
+  const beginRecording = useCallback(() => {
+    frameBufferRef.current = [];
+    setIsDetectingSign(true);
+    setStatus("Signing… release button to recognise");
+  }, []);
 
-      const motion = motionDelta(prev, landmarks);
-      const state  = currentStateRef.current;
+  const addFrame = useCallback((landmarks: Landmark[]) => {
+    if (frameBufferRef.current.length < MAX_SEGMENT_FRAMES) {
+      frameBufferRef.current.push(landmarks);
+    }
+  }, []);
 
-      // Skip while an API call is in flight
-      if (state === "recognizing") return;
+  const commitSegment = useCallback(() => {
+    setIsDetectingSign(false);
+    const buffer = frameBufferRef.current.slice();
+    frameBufferRef.current = [];
 
-      if (state === "idle") {
-        if (motion > START_MOTION_THRESHOLD) {
-          // Signing has started — requires deliberate motion above the start threshold
-          currentStateRef.current = "signing";
-          setPipelineState("signing");
-          frameBufferRef.current  = [landmarks];
-          stillCountRef.current   = 0;
-          setStatus("Signing detected…");
-        }
-      } else if (state === "signing") {
-        frameBufferRef.current.push(landmarks);
+    if (buffer.length < MIN_SEGMENT_FRAMES) {
+      setStatus("Too short — hold the sign for a moment longer");
+      return;
+    }
 
-        if (motion < STILL_THRESHOLD) {
-          // Hand has gone still — uses the more forgiving still threshold
-          stillCountRef.current += 1;
-
-          if (stillCountRef.current >= STILL_FRAMES_NEEDED) {
-            // Sign boundary detected
-            const buffer = frameBufferRef.current.slice();
-            frameBufferRef.current = [];
-            stillCountRef.current  = 0;
-
-            if (buffer.length >= MIN_SEGMENT_FRAMES) {
-              currentStateRef.current = "recognizing";
-              setPipelineState("recognizing");
-              setStatus("Recognising sign…");
-              recognizeSegment(buffer); // fire-and-forget; updates state when done
-            } else {
-              // Too short — likely noise, discard
-              currentStateRef.current = "idle";
-              setPipelineState("idle");
-              setStatus("Ready — show a sign to begin");
-            }
-          }
-        } else {
-          // Still moving — reset stillness counter
-          stillCountRef.current = 0;
-
-          // Force a cut-off if the sign runs too long (prevents infinite buffers)
-          if (frameBufferRef.current.length >= MAX_SEGMENT_FRAMES) {
-            const buffer = frameBufferRef.current.slice();
-            frameBufferRef.current  = [];
-            stillCountRef.current   = 0;
-            currentStateRef.current = "recognizing";
-            setPipelineState("recognizing");
-            setStatus("Recognising sign…");
-            recognizeSegment(buffer);
-          }
-        }
-      }
-    },
-    [recognizeSegment]
-  );
+    setPipelineState("recognizing");
+    setStatus("Recognising sign…");
+    recognizeSegment(buffer);
+  }, [recognizeSegment]);
 
   // ── Gloss → English → ElevenLabs ────────────────────────────────────────────
   const triggerTranslate = useCallback(async () => {
@@ -219,7 +148,6 @@ export function useSignPipeline(): SignPipelineResult {
     setStatus("Converting to English…");
 
     try {
-      // Step 1: ASL gloss → natural English (GPT-4o-mini)
       const grammarResp = await fetch("/api/recognize/gloss-to-english", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -232,20 +160,15 @@ export function useSignPipeline(): SignPipelineResult {
       setTranslatedText(text);
       setStatus("Synthesising speech via ElevenLabs…");
 
-      // Step 2: Natural English → ElevenLabs audio
       const speakResp = await fetch("/api/speak", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text,
-          voice_id: "21m00Tcm4TlvDq8ikWAM", // Rachel (ElevenLabs default)
-        }),
+        body: JSON.stringify({ text, voice_id: "21m00Tcm4TlvDq8ikWAM" }),
       });
       if (!speakResp.ok)
         throw new Error(`ElevenLabs API returned ${speakResp.status}`);
 
       const blob = await speakResp.blob();
-      // Revoke previous blob URL to avoid memory leaks
       setAudioUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev);
         return URL.createObjectURL(blob);
@@ -267,7 +190,7 @@ export function useSignPipeline(): SignPipelineResult {
       setStatus(
         next.length > 0
           ? `Removed last word — current gloss: ${next.join(" ")}`
-          : "Ready — show a sign to begin"
+          : "Tap mic to start signing"
       );
       return next;
     });
@@ -280,24 +203,24 @@ export function useSignPipeline(): SignPipelineResult {
       if (prev) URL.revokeObjectURL(prev);
       return null;
     });
-    setStatus("Ready — show a sign to begin");
-    frameBufferRef.current   = [];
-    prevLandmarksRef.current = null;
-    stillCountRef.current    = 0;
-    currentStateRef.current  = "idle";
+    frameBufferRef.current = [];
+    setIsDetectingSign(false);
     setPipelineState("idle");
     setIsTranslating(false);
+    setStatus("Tap mic to start signing");
   }, []);
 
   return {
     glossWords,
-    isDetectingSign: pipelineState === "signing",
-    isRecognizing:   pipelineState === "recognizing",
+    isDetectingSign,
+    isRecognizing: pipelineState === "recognizing",
     translatedText,
     audioUrl,
     isTranslating,
     status,
+    beginRecording,
     addFrame,
+    commitSegment,
     triggerTranslate,
     undoLastWord,
     clearGloss,
