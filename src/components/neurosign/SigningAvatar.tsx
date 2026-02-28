@@ -115,6 +115,40 @@ export default function SigningAvatar({
         leftArmRot = new THREE.Euler(-1.3, 0.1, 0.4);
         rightArmRot = new THREE.Euler(-1.3, -0.1, -0.4);
         break;
+      case "me":
+        // Point to chest (ASL "me")
+        rightArmRot = new THREE.Euler(-0.5, 0, -0.4);
+        rightHandRot = new THREE.Euler(0, 0, 0);
+        break;
+      case "go":
+        // Forward motion (ASL "go")
+        rightArmRot = new THREE.Euler(-0.3 - easeOut * 0.4, 0, -0.2);
+        break;
+      case "class":
+      case "school":
+      case "work":
+        // Two hands flat, forward (concept sign)
+        leftArmRot = new THREE.Euler(-0.5, 0.1, 0.3);
+        rightArmRot = new THREE.Euler(-0.5, -0.1, -0.3);
+        break;
+      case "name":
+        // Fingers tap (ASL "name")
+        const nameTap = Math.sin(state.clock.elapsedTime * 4) * 0.2;
+        rightArmRot = new THREE.Euler(-0.6, nameTap * 0.3, -0.3);
+        rightHandRot = new THREE.Euler(0, nameTap, 0);
+        break;
+      case "need":
+        // Bent hand toward body (ASL "need")
+        rightArmRot = new THREE.Euler(-0.7, 0, -0.35);
+        break;
+      case "good":
+      case "morning":
+      case "night":
+      case "your":
+        // Neutral polite pose
+        leftArmRot = new THREE.Euler(-0.45, 0, 0.25);
+        rightArmRot = new THREE.Euler(-0.45, 0, -0.25);
+        break;
       case "nice":
       case "meet":
       case "how":

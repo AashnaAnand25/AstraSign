@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { Camera } from "@mediapipe/camera_utils";
 import { Hands, Results } from "@mediapipe/hands";
-import { aslClassifier } from "@/ml/aslClassifier";
+import SimpleHandClassifier from "@/ml/simpleHandClassifier";
 
 interface HandTrackerProps {
   onGestureDetected: (gesture: string, confidence: number) => void;
@@ -14,6 +14,14 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
   const [isLoading, setIsLoading] = useState(false);
   const [currentGesture, setCurrentGesture] = useState<string>("");
   const [confidence, setConfidence] = useState<number>(0);
+  
+  // Initialize simple hand classifier
+  const handClassifier = new SimpleHandClassifier();
+
+  useEffect(() => {
+    // Initialize the classifier when component mounts
+    handClassifier.initialize();
+  }, []);
 
   const processHandResults = useCallback(async (results: Results) => {
     if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
@@ -30,20 +38,18 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
     ]);
 
     try {
-      // Classify the gesture using ML model
-      const prediction = await aslClassifier.classify(formattedLandmarks);
+      // Classify gesture using simple rules
+      const result = handClassifier.classifyHand(formattedLandmarks);
       
-      setCurrentGesture(prediction.label);
-      setConfidence(prediction.confidence);
-      
-      // Only notify if confidence is high enough
-      if (prediction.confidence > 0.5) {
-        onGestureDetected(prediction.label, prediction.confidence);
+      if (result.confidence > 0.5) {
+        setCurrentGesture(result.gesture);
+        setConfidence(result.confidence);
+        onGestureDetected(result.gesture, result.confidence);
       }
     } catch (error) {
       console.error('Gesture classification failed:', error);
     }
-  }, [onGestureDetected]);
+  }, [onGestureDetected, handClassifier]);
 
   const startCamera = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current) return;

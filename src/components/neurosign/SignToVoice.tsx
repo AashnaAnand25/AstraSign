@@ -47,8 +47,9 @@ const SAMPLE_TRANSLATIONS = [
   "Thank you so much for your kindness.",
 ];
 
-export default function SignToVoice({ onBack, onSettings, focusMode, embedded, onStatusChange, onAddToHistory }: Props) {
+export default function SignToVoice({ onBack, onSettings, focusMode: focusModeProp, embedded, onStatusChange, onAddToHistory }: Props) {
   const { settings } = useAccessibility();
+  const focusMode = focusModeProp ?? settings.focusMode;
   const [isRecording, setIsRecording] = useState(false);
   const [liveMode, setLiveMode] = useState(true);
   const [translation, setTranslation] = useState("");
@@ -259,9 +260,7 @@ export default function SignToVoice({ onBack, onSettings, focusMode, embedded, o
 
       {/* Top bar - hidden when embedded */}
       {!embedded && (
-        <div
-          className="relative z-10 flex items-center justify-between px-5 pt-12 pb-4 transition-opacity duration-300"
-          style={{ opacity: focusMode ? 0.2 : 1, pointerEvents: focusMode ? "none" : "auto" }}
+        <div className={`relative z-10 flex items-center justify-between px-5 pt-12 pb-4 transition-opacity duration-300 ${focusMode ? "a11y-focus-dim" : ""}`}
         >
           <button
             onClick={onBack}
@@ -284,7 +283,7 @@ export default function SignToVoice({ onBack, onSettings, focusMode, embedded, o
 
       {/* Mode label - hidden when embedded */}
       {!embedded && (
-        <div className="relative z-10 flex justify-center mb-2">
+        <div className={`relative z-10 flex justify-center mb-2 ${focusMode ? "a11y-focus-dim" : ""}`}>
           <div className="glass rounded-full px-4 py-1.5 neon-border-purple flex items-center gap-2">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <rect x="2" y="1" width="2.5" height="8" rx="1.25" fill="hsl(272 76% 53%)" />
@@ -316,10 +315,10 @@ export default function SignToVoice({ onBack, onSettings, focusMode, embedded, o
       {/* Spacer for camera area */}
       <div className="flex-1" />
 
-      {/* Translation text */}
+      {/* Translation text - focus content when focus mode */}
       {translation && (
         <div
-          className="relative z-10 mx-5 mb-3 p-4 glass rounded-2xl neon-border-cyan animate-fade-in-up"
+          className={`relative z-10 mx-5 mb-3 p-4 glass rounded-2xl neon-border-cyan animate-fade-in-up ${focusMode ? "a11y-focus-content" : ""}`}
           style={{ boxShadow: "0 0 20px hsl(183 100% 50% / 0.1)" }}
         >
           <div className="flex items-center gap-2 mb-2">
@@ -334,7 +333,7 @@ export default function SignToVoice({ onBack, onSettings, focusMode, embedded, o
       )}
 
       {/* Control Panel */}
-      <div className="relative z-10 mx-3 mb-6 glass-strong rounded-3xl p-5" style={{ boxShadow: "0 -10px 40px hsl(272 76% 53% / 0.1)" }}>
+      <div className={`relative z-10 mx-3 mb-6 glass-strong rounded-3xl p-5 ${focusMode ? "a11y-focus-dim" : ""}`} style={{ boxShadow: "0 -10px 40px hsl(272 76% 53% / 0.1)" }}>
         {/* Waveform */}
         {isPlaying && (
           <div className="flex items-center justify-center gap-0.5 mb-4 h-8">

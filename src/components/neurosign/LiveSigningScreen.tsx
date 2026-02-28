@@ -89,7 +89,7 @@ export default function LiveSigningScreen({ onBack, onSettings }: Props) {
         style={{ background: "radial-gradient(ellipse at 50% 25%, hsl(272 76% 53% / 0.10) 0%, transparent 60%), hsl(240 20% 4%)" }}
       />
 
-      <div className="relative z-10 flex items-center justify-between px-5 pt-12 pb-4" style={{ opacity: settings.focusMode ? 0.2 : 1, pointerEvents: settings.focusMode ? "none" : "auto" }}>
+      <div className={`relative z-10 flex items-center justify-between px-5 pt-12 pb-4 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
         <button
           onClick={onBack}
           className="w-9 h-9 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"

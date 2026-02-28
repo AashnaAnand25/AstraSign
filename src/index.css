@@ -90,9 +90,28 @@
 }
 
 @layer base {
+  /* Content scaling: use zoom when supported to avoid layout shift */
   html {
-    transform: scale(var(--a11y-content-scale));
-    transform-origin: top center;
+    zoom: var(--a11y-content-scale);
+  }
+  @supports not (zoom: 1) {
+    html {
+      transform: scale(var(--a11y-content-scale));
+      transform-origin: top center;
+    }
+  }
+
+  /* Focus mode: dim UI chrome, emphasize translation area */
+  html.a11y-focus-mode .a11y-focus-dim {
+    opacity: 0.25;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  html.a11y-focus-mode .a11y-focus-content {
+    opacity: 1;
+    transform: scale(1.08);
+    transform-origin: center center;
+    transition: transform 0.25s ease;
   }
 
   html.a11y-dyslexia-font body {
@@ -111,11 +130,20 @@
   }
 
   html.a11y-big-cursor, html.a11y-big-cursor * {
-    cursor: zoom-in;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='hsl(272 76% 53%)' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='4' fill='hsl(272 76% 53%)'/%3E%3C/svg%3E") 16 16, crosshair;
   }
 
-  html.a11y-larger-buttons button {
+  html.a11y-larger-buttons button,
+  html.a11y-larger-buttons [role="button"] {
     min-height: 44px;
+    min-width: 44px;
+    padding: 0.5rem 0.75rem;
+  }
+  html.a11y-larger-buttons a[href] {
+    min-height: 44px;
+    padding: 0.5rem 0.75rem;
+    display: inline-flex;
+    align-items: center;
   }
 }
 

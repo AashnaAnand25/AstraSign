@@ -54,7 +54,7 @@ export default function ReverseMode({ onBack, onSettings }: Props) {
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       <div className="absolute inset-0" style={{ background: "hsl(240 20% 4%)" }} />
 
-      <div className="relative z-10 flex items-center justify-between px-5 pt-12 pb-4">
+      <div className={`relative z-10 flex items-center justify-between px-5 pt-12 pb-4 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
         <button
           onClick={onBack}
           className="w-9 h-9 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
@@ -73,7 +73,7 @@ export default function ReverseMode({ onBack, onSettings }: Props) {
         </button>
       </div>
 
-      <div className="relative z-10 px-5 pb-4">
+      <div className={`relative z-10 px-5 pb-4 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
         <div className="text-xs text-muted-foreground mb-2">Quick phrases</div>
         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
           {QUICK_PHRASES.map((p) => (
@@ -89,7 +89,7 @@ export default function ReverseMode({ onBack, onSettings }: Props) {
         </div>
       </div>
 
-      <div className="relative z-10 mx-5 glass rounded-3xl p-4" style={{ border: "1px solid hsl(240 10% 14%)" }}>
+      <div className={`relative z-10 mx-5 glass rounded-3xl p-4 ${settings.focusMode ? "a11y-focus-content" : ""}`} style={{ border: "1px solid hsl(240 10% 14%)" }}>
         <div className="text-xs text-muted-foreground mb-2">Type message</div>
         <textarea
           value={text}
@@ -101,7 +101,7 @@ export default function ReverseMode({ onBack, onSettings }: Props) {
 
       <div className="flex-1" />
 
-      <div className="relative z-10 mx-5 mb-8">
+      <div className={`relative z-10 mx-5 mb-8 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
         <button
           onClick={speak}
           disabled={!text.trim()}

@@ -1,34 +1,58 @@
 import { useCallback } from "react";
 import { useAccessibility } from "@/accessibility/AccessibilityProvider";
 
-const PHRASES = [
-  { text: "I am deaf/hard of hearing", emoji: "👋" },
-  { text: "Please speak slowly", emoji: "🐢" },
-  { text: "Yes", emoji: "✓" },
-  { text: "No", emoji: "✗" },
-  { text: "Thank you", emoji: "🙏" },
-  { text: "I need help", emoji: "🆘" },
-  { text: "Please repeat that", emoji: "🔄" },
-  { text: "One moment", emoji: "⏳" },
-  { text: "Please write it down", emoji: "✏️" },
-  { text: "Emergency", emoji: "🚨", emergency: true },
+type Expression = "urgent" | "calm" | "warm" | "clear" | "firm" | "gentle" | "neutral";
+
+const PHRASES: { text: string; emoji: string; emergency?: boolean; expression?: Expression }[] = [
+  { text: "I am deaf or hard of hearing.", emoji: "👋", expression: "clear" },
+  { text: "Please speak slowly.", emoji: "🐢", expression: "calm" },
+  { text: "Yes.", emoji: "✓", expression: "warm" },
+  { text: "No.", emoji: "✗", expression: "firm" },
+  { text: "Thank you.", emoji: "🙏", expression: "warm" },
+  { text: "I need help.", emoji: "🆘", expression: "urgent" },
+  { text: "Please repeat that.", emoji: "🔄", expression: "gentle" },
+  { text: "One moment.", emoji: "⏳", expression: "calm" },
+  { text: "Please write it down.", emoji: "✏️", expression: "clear" },
+  { text: "Emergency!", emoji: "🚨", emergency: true, expression: "urgent" },
 ];
+
+function getExpressionParams(expression: Expression, baseRate: number): { rate: number; pitch: number; volume: number } {
+  switch (expression) {
+    case "urgent":
+      return { rate: Math.min(baseRate * 1.4, 1.45), pitch: 1.35, volume: 1 };
+    case "calm":
+      return { rate: Math.max(baseRate * 0.65, 0.55), pitch: 0.82, volume: 0.9 };
+    case "warm":
+      return { rate: baseRate * 0.8, pitch: 1.22, volume: 1 };
+    case "clear":
+      return { rate: baseRate * 0.78, pitch: 1, volume: 1 };
+    case "firm":
+      return { rate: baseRate * 0.85, pitch: 0.78, volume: 1 };
+    case "gentle":
+      return { rate: baseRate * 0.65, pitch: 1.12, volume: 0.82 };
+    default:
+      return { rate: baseRate, pitch: 1, volume: 1 };
+  }
+}
 
 export default function QuickPhrasesTab() {
   const { settings } = useAccessibility();
 
   const speak = useCallback(
-    (text: string) => {
+    (phrase: (typeof PHRASES)[number]) => {
       if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
       try {
         window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.rate =
+        const baseRate =
           Number(
-            getComputedStyle(document.documentElement).getPropertyValue(
-              "--a11y-speech-rate"
-            )
+            getComputedStyle(document.documentElement).getPropertyValue("--a11y-speech-rate")
           ) || 1;
+        const { rate, pitch, volume } = getExpressionParams(phrase.expression ?? "neutral", baseRate);
+
+        const u = new SpeechSynthesisUtterance(phrase.text);
+        u.rate = rate;
+        u.pitch = pitch;
+        u.volume = volume;
         u.onstart = () => {
           if (settings.hapticFeedback && "vibrate" in navigator) {
             navigator.vibrate?.([25]);
@@ -60,30 +84,30 @@ export default function QuickPhrasesTab() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 flex-1 content-start">
-        {PHRASES.map(({ text, emoji, emergency }) => (
+        {PHRASES.map((phrase) => (
           <button
-            key={text}
-            onClick={() => speak(text)}
+            key={phrase.text}
+            onClick={() => speak(phrase)}
             className="rounded-2xl p-6 text-left transition-all active:scale-95 flex flex-col items-start justify-center min-h-[100px]"
             style={{
-              background: emergency
+              background: phrase.emergency
                 ? "linear-gradient(135deg, hsl(0 80% 55% / 0.2), hsl(316 80% 60% / 0.15)"
                 : "hsl(240 15% 9%)",
-              border: emergency
+              border: phrase.emergency
                 ? "1px solid hsl(0 80% 55% / 0.5)"
                 : "1px solid hsl(240 10% 14%)",
-              boxShadow: emergency
+              boxShadow: phrase.emergency
                 ? "0 0 20px hsl(0 80% 55% / 0.2)"
                 : "0 0 12px hsl(183 100% 50% / 0.05)",
             }}
           >
-            <span className="text-2xl mb-2">{emoji}</span>
+            <span className="text-2xl mb-2">{phrase.emoji}</span>
             <span
               className={`font-semibold text-base leading-tight ${
-                emergency ? "text-red-400" : "text-foreground"
+                phrase.emergency ? "text-red-400" : "text-foreground"
               }`}
             >
-              {text}
+              {phrase.text}
             </span>
           </button>
         ))}

@@ -4,6 +4,8 @@ import ModeSelection from "@/components/neurosign/ModeSelection";
 import SignToVoice from "@/components/neurosign/SignToVoice";
 import SignToVoiceEnhanced from "@/components/neurosign/SignToVoiceEnhanced";
 import VoiceToSign from "@/components/neurosign/VoiceToSign";
+import CleanVoiceToSign from "@/components/neurosign/CleanVoiceToSign";
+import GuaranteedVoiceToSign from "@/components/neurosign/GuaranteedVoiceToSign";
 import AccessibilityPanel from "@/components/neurosign/AccessibilityPanel";
 import ConversationMode from "@/components/neurosign/ConversationMode";
 import OnboardingOne from "@/components/neurosign/OnboardingOne";
@@ -76,7 +78,7 @@ const Index = () => {
 
         {screen === "live" && (
           <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
-            <VoiceToSign
+            <GuaranteedVoiceToSign
               onBack={() => setScreen("home")}
               onSettings={() => goToTab("settings")}
             />

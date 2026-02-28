@@ -1,11 +1,9 @@
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Environment, ContactShadows } from "@react-three/drei";
+import { Environment, ContactShadows } from "@react-three/drei";
 import { Suspense } from "react";
 import RealisticAvatarSystem from "./RealisticAvatarSystem";
 import { AvatarType } from "./AvatarSelector";
 import SigningAvatar from "./SigningAvatar";
-import AstronautModel from "./AstronautModel";
-import HeroModel from "./HeroModel";
 import type { ASLAnimationId } from "@/data/aslAnimationMap";
 
 interface AvatarSceneProps {
@@ -22,14 +20,20 @@ export default function AvatarScene({
   currentLetter,
   currentWord,
   isAnimating = false,
-  avatarType = 'person'
+  animationQueue = [],
+  queueIndex = 0,
+  signMode = "words",
+  avatarType = "person",
 }: AvatarSceneProps) {
-  console.log('AvatarScene rendering:', { currentLetter, currentWord, isAnimating, avatarType });
+  const useWordQueue = signMode === "words" && animationQueue.length > 0;
+  const currentAnimation: ASLAnimationId = useWordQueue
+    ? (animationQueue[queueIndex] ?? "idle")
+    : "idle";
 
   return (
     <div
-      className="w-full h-full rounded-xl overflow-hidden"
-      style={{ minHeight: "300px" }}
+      className="w-full h-full rounded-xl overflow-hidden shrink-0"
+      style={{ height: "100%", minHeight: 0, maxHeight: "100%" }}
     >
       <Canvas
         shadows
@@ -45,13 +49,23 @@ export default function AvatarScene({
           shadow-mapSize={[1024, 1024]}
         />
         <Suspense fallback={null}>
-          <RealisticAvatarSystem
-            currentLetter={currentLetter}
-            currentWord={currentWord}
-            isAnimating={isAnimating}
-            position={[0, -0.3, 0]}
-            avatarType={avatarType}
-          />
+          {useWordQueue ? (
+            <SigningAvatar
+              currentAnimation={currentAnimation}
+              animationQueue={animationQueue}
+              queueIndex={queueIndex}
+              isAnimating={isAnimating}
+              position={[0, -0.3, 0]}
+            />
+          ) : (
+            <RealisticAvatarSystem
+              currentLetter={currentLetter}
+              currentWord={currentWord}
+              isAnimating={isAnimating}
+              position={[0, -0.3, 0]}
+              avatarType={avatarType}
+            />
+          )}
         </Suspense>
         <ContactShadows
           position={[0, -0.5, 0]}

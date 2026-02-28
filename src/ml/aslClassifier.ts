@@ -57,9 +57,10 @@ export class ASLClassifier {
   private async trainModel(): Promise<void> {
     const { features, labels } = getTrainingData();
     
-    // Convert to tensors
+    // Convert to tensors with proper types
     const featuresTensor = tf.tensor2d(features);
-    const labelsTensor = tf.oneHot(tf.tensor1d(labels.map(l => this.labels.indexOf(l))), this.labels.length).toInt();
+    const labelIndices = tf.tensor1d(labels.map(l => this.labels.indexOf(l)), 'int32');
+    const labelsTensor = tf.oneHot(labelIndices, this.labels.length);
     
     console.log(`Training on ${features.length} samples...`);
     
@@ -82,6 +83,7 @@ export class ASLClassifier {
     
     // Clean up tensors
     featuresTensor.dispose();
+    labelIndices.dispose();
     labelsTensor.dispose();
   }
 

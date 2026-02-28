@@ -21,11 +21,22 @@ export type ASLAnimationId =
   | "emergency"
   | "deaf"
   | "assistance"
+  | "me"
+  | "go"
+  | "class"
+  | "name"
+  | "need"
+  | "good"
+  | "morning"
+  | "night"
+  | "your"
+  | "school"
+  | "work"
   | "idle";
 
 export const ANIMATION_DURATION_MS = 1800;
 
-/** Words that map to known ASL animations */
+/** Words that map to known ASL animations (demo vocabulary: 10–15 signs + grammar words) */
 export const WORD_TO_ANIMATION: Record<string, ASLAnimationId> = {
   hello: "hello",
   hi: "hello",
@@ -48,6 +59,17 @@ export const WORD_TO_ANIMATION: Record<string, ASLAnimationId> = {
   deaf: "deaf",
   assistance: "assistance",
   help_me: "help",
+  me: "me",
+  go: "go",
+  class: "class",
+  name: "name",
+  need: "need",
+  good: "good",
+  morning: "morning",
+  night: "night",
+  your: "your",
+  school: "school",
+  work: "work",
 };
 
 /** Phrase-level overrides (longer phrases first for matching) */
@@ -55,11 +77,13 @@ export const PHRASE_TO_ANIMATION: Record<string, ASLAnimationId[]> = {
   "thank you very much": ["thank", "you"],
   "nice to meet you": ["nice", "meet", "you"],
   "how are you": ["how", "you"],
+  "my name is": ["name", "me"],
+  "me go class": ["me", "go", "class"],
   "i need help": ["help"],
   "i am deaf": ["deaf"],
   "i need assistance": ["assistance"],
   "thank you": ["thank", "you"],
-  "emergency": ["emergency"],
+  emergency: ["emergency"],
 };
 
 /**

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { ArrowLeft, Mic, MicOff, Settings, Type, Volume2 } from "lucide-react";
 import { useAccessibility } from "@/accessibility/AccessibilityProvider";
-import AvatarScene from "./AvatarScene";
+import SigningHands2D from "./SigningHands2D";
 import HandTracker from "./HandTracker";
 import AvatarSelector, { AvatarType } from "./AvatarSelector";
 import { aslClassifier } from "@/ml/aslClassifier";
@@ -79,6 +79,9 @@ const API_SECRET = "neurosign-secret-key-123";
 // API call helper
 const apiCall = async (endpoint: string, data: any) => {
   try {
+    console.log('🔥 Making API call to:', `${API_BASE_URL}${endpoint}`);
+    console.log('📤 Sending data:', data);
+    
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
       headers: {
@@ -92,9 +95,13 @@ const apiCall = async (endpoint: string, data: any) => {
       throw new Error(`API call failed: ${response.statusText}`);
     }
     
-    return await response.json();
+    const result = await response.json();
+    console.log('📥 API Response:', result);
+    console.log('🎯 Source:', result.source || 'unknown');
+    
+    return result;
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('❌ API Error:', error);
     throw error;
   }
 };
@@ -129,40 +136,37 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
-// sign.mt inspired translation pipeline with ASL database
-const translateWithSignMTPipeline = async (text: string): Promise<{ letters: string[], words: string[] }> => {
-  // Step 1: Text normalization
-  const normalizedText = text.trim().toUpperCase();
-  
-  // Step 2: Check for common ASL phrases first
-  const commonPhrases = {
-    'HELLO': ['HELLO'],
-    'THANK YOU': ['THANK'],
-    'PLEASE': ['PLEASE'],
-    'SORRY': ['SORRY'],
-    'YES': ['YES'],
-    'NO': ['NO'],
-    'HELP': ['HELP'],
-    'LOVE': ['LOVE'],
-    'FRIEND': ['FRIEND'],
-    'NICE TO MEET YOU': ['NICE', 'MEET', 'YOU'],
-    'HOW ARE YOU': ['HOW', 'YOU'],
+// Pipeline: text (after ASL restructure) → letters + words for display; animation queue from aslAnimationMap
+const translateWithSignMTPipeline = async (text: string): Promise<{ letters: string[]; words: string[] }> => {
+  const normalizedText = text.trim().toUpperCase().replace(/[^\w\s]/g, "").trim();
+  if (!normalizedText) return { letters: [], words: [] };
+
+  const commonPhrases: Record<string, string[]> = {
+    HELLO: ["HELLO"],
+    "THANK YOU": ["THANK", "YOU"],
+    PLEASE: ["PLEASE"],
+    SORRY: ["SORRY"],
+    YES: ["YES"],
+    NO: ["NO"],
+    HELP: ["HELP"],
+    LOVE: ["LOVE"],
+    "NICE TO MEET YOU": ["NICE", "MEET", "YOU"],
+    "HOW ARE YOU": ["HOW", "YOU"],
   };
-  
-  // Step 3: Check for phrase matches
-  for (const [phrase, signs] of Object.entries(commonPhrases)) {
-    if (normalizedText.includes(phrase)) {
-      return {
-        letters: phrase.replace(/[^A-Z]/g, '').split(''),
-        words: signs
-      };
-    }
+
+  // Exact phrase match only (so "HELLO THANK YOU" is handled word-by-word)
+  const signs = commonPhrases[normalizedText];
+  if (signs) {
+    return {
+      letters: normalizedText.replace(/\s/g, "").split(""),
+      words: signs,
+    };
   }
-  
-  // Step 4: Fall back to letter-by-letter spelling
+
   return processTextToASL(text);
 };
 
+import { restructureToASLGrammar } from "@/data/aslGrammar";
 import { getGestureForCharacter, getGestureForWord } from "@/data/aslGestures";
 import {
   textToAnimationQueue,
@@ -181,7 +185,7 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
   const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [inputMode, setInputMode] = useState<'voice' | 'text' | 'camera'>('voice');
-  const [signMode, setSignMode] = useState<'letters' | 'words'>('letters');
+  const [signMode, setSignMode] = useState<'letters' | 'words'>('words');
   const [animationQueue, setAnimationQueue] = useState<ASLAnimationId[]>([]);
   const [queueIndex, setQueueIndex] = useState(0);
   const [avatarType, setAvatarType] = useState<"default" | "astronaut" | "spiderman" | "minimal">("default");
@@ -262,20 +266,21 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
     
     recognition.onresult = (event: any) => {
       const current = event.resultIndex;
-      const transcript = event.results[current][0].transcript;
-      
-      setTranscript(transcript);
-      
-      // Process the transcript through our translation pipeline
-      translateWithSignMTPipeline(transcript).then(result => {
+      const rawText = event.results[current][0].transcript;
+      setTranscript(rawText);
+
+      // Pipeline: Audio → Wispr/Web Speech → LLM-style ASL grammar → animation map → queue
+      const aslText = restructureToASLGrammar(rawText) || rawText;
+      translateWithSignMTPipeline(aslText).then((result) => {
         if (result.letters.length > 0 || result.words.length > 0) {
           setPhrase({
-            text: transcript,
+            text: aslText,
             letters: result.letters,
-            words: result.words
+            words: result.words,
           });
           setStepIndex(settings.stepMode ? 1 : result.letters.length);
           setCurrentLetterIndex(0);
+          setCurrentWordIndex(0);
           setShowParticles(true);
           setTimeout(() => setShowParticles(false), 2000);
         }
@@ -352,36 +357,35 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
     return () => clearInterval(interval);
   }, [phrase?.words, signMode, aslSpeed, animationQueue.length]);
 
-  // Quick test - plays ASL animations for common phrases
+  // Quick test: same pipeline as voice/text (restructure → animation map → queue → play)
   const testAvatar = () => {
-    setTranscript("Hello, thank you!");
-    setPhrase({
-      text: "Hello thank you",
-      letters: ["H", "E", "L", "L", "O"],
-      words: ["HELLO", "THANK"],
+    const demo = "Hello, thank you!";
+    setTranscript(demo);
+    const aslText = restructureToASLGrammar(demo) || demo;
+    translateWithSignMTPipeline(aslText).then((result) => {
+      setPhrase({ text: aslText, letters: result.letters, words: result.words });
+      setStepIndex(settings.stepMode ? 1 : result.letters.length);
+      setCurrentLetterIndex(0);
+      setCurrentWordIndex(0);
+      setShowParticles(true);
+      setTimeout(() => setShowParticles(false), 2000);
     });
-    setStepIndex(1);
-    setCurrentLetterIndex(0);
-    setCurrentWordIndex(0);
-    setShowParticles(true);
-    setTimeout(() => setShowParticles(false), 2000);
   };
 
-  // Handle text input submission with enhanced pipeline
+  // Handle text input: restructure to ASL grammar → animation map → queue
   const handleTextSubmit = async () => {
     if (!textInput.trim()) return;
-    
-    console.log('Submitting text:', textInput); // Debug log
-    const translation = await translateWithSignMTPipeline(textInput);
-    console.log('Translation result:', translation); // Debug log
-    
+
+    const aslText = restructureToASLGrammar(textInput) || textInput.trim();
+    const translation = await translateWithSignMTPipeline(aslText);
+
     if (translation.letters.length === 0 && translation.words.length === 0) return;
-    
+
     setTranscript(textInput);
-    setPhrase({ 
-      text: textInput, 
+    setPhrase({
+      text: aslText,
       letters: translation.letters,
-      words: translation.words
+      words: translation.words,
     });
     setStepIndex(settings.stepMode ? 1 : translation.letters.length);
     setCurrentLetterIndex(0);
@@ -456,7 +460,7 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
 
       {/* Top bar - hidden when embedded */}
       {!embedded && (
-        <div className="relative z-10 flex items-center justify-between px-5 pt-12 pb-4">
+        <div className={`relative z-10 flex items-center justify-between px-5 pt-12 pb-4 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
           <button
             onClick={onBack}
             className="w-9 h-9 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
@@ -478,7 +482,7 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
 
       {/* Mode pill - hidden when embedded */}
       {!embedded && (
-        <div className="relative z-10 flex flex-col items-center gap-3 mb-6">
+        <div className={`relative z-10 flex flex-col items-center gap-3 mb-6 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
           <div className="glass rounded-full px-4 py-1.5 neon-border-cyan flex items-center gap-2">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <rect x="4" y="1" width="6" height="8" rx="3" fill="hsl(183 100% 50%)" />
@@ -491,7 +495,7 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
       )}
 
       {/* Avatar dropdown - contextual to Audio→ASL */}
-      <div className="relative z-10 flex flex-col items-center gap-3 mb-6">
+      <div className={`relative z-10 flex flex-col items-center gap-3 mb-6 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
         <div className="flex items-center gap-2 w-full max-w-[280px] mx-auto">
           <span className="text-xs text-muted-foreground whitespace-nowrap">Avatar</span>
           <select
@@ -636,65 +640,63 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
         )}
       </div>
 
-      {/* 3D Avatar panel */}
-      <div className="relative z-10 mx-5 mb-6">
+      {/* 2D signing: our pipeline (same logic as sign.mt — text → normalize → ASL queue → render) */}
+      <div className={`relative z-10 mx-5 mb-6 shrink-0 ${settings.focusMode ? "a11y-focus-content" : ""}`}>
         <div
           className="rounded-3xl overflow-hidden"
           style={{
-            background: "hsl(240 15% 7%)",
-            border: "1px solid hsl(183 100% 50% / 0.25)",
-            boxShadow: "0 0 30px hsl(183 100% 50% / 0.08)",
-            minHeight: "220px",
+            minHeight: "260px",
+            background: "hsl(240 18% 7%)",
+            border: "2px solid hsl(183 100% 50% / 0.5)",
+            boxShadow: "0 0 32px hsl(183 100% 50% / 0.3), 0 0 48px hsl(272 76% 53% / 0.2), inset 0 0 32px hsl(183 100% 50% / 0.04)",
           }}
         >
-          {/* 3D Avatar Scene - SigningAvatar for ASL word animations, TestAvatar for letters/minimal */}
-          <AvatarScene
-            currentLetter={signMode === "letters" ? currentLetter : undefined}
-            currentWord={signMode === "words" ? currentWord : undefined}
-            isAnimating={!!phrase}
-            avatarType={selectedAvatar}
-          />
-          
-          {/* BIG TEST BUTTON - VERY VISIBLE */}
-          <div className="absolute top-4 right-4">
+          <div
+            className="px-3 py-2 flex items-center justify-between"
+            style={{
+              borderBottom: "1px solid hsl(183 100% 50% / 0.25)",
+              background: "hsl(183 100% 50% / 0.06)",
+              boxShadow: "0 0 16px hsl(183 100% 50% / 0.1)",
+            }}
+          >
+            <span className="text-[10px] font-bold tracking-wider" style={{ color: "hsl(183 100% 50%)", textShadow: "0 0 12px hsl(183 100% 50% / 0.6)" }}>
+              2D · Our pipeline (text → ASL → hands)
+            </span>
             <button
               onClick={testAvatar}
-              className="px-4 py-2 rounded-lg font-bold text-white animate-pulse"
+              className="px-3 py-1.5 rounded-lg text-xs font-bold"
               style={{
-                background: "linear-gradient(135deg, #ff006e, #8338ec)",
-                boxShadow: "0 4px 15px rgba(131, 56, 236, 0.4)",
-                fontSize: "14px",
-                zIndex: 1000
+                background: "linear-gradient(135deg, hsl(272 76% 53%), hsl(183 100% 50%))",
+                color: "#fff",
+                boxShadow: "0 0 16px hsl(272 76% 53% / 0.5), 0 0 24px hsl(183 100% 50% / 0.3)",
               }}
             >
-              🚀 TEST 3D AVATAR
+              TEST
             </button>
           </div>
-          
-          {/* Status indicator */}
-          <div className="absolute bottom-4 left-0 right-0 text-center">
-            <p className="text-xs text-muted-foreground">
-              {phrase ? (
-                <span className="text-neon-cyan">
-                  {signMode === "words" && animationQueue.length > 0 ? (
-                    <>Signing: {animationQueue[queueIndex] ?? "idle"} ({queueIndex + 1}/{animationQueue.length})</>
-                  ) : signMode === "letters" ? (
-                    <>Signing: {currentLetter} ({visibleLetters.indexOf(currentLetter) + 1}/{visibleLetters.length})</>
-                  ) : (
-                    <>Signing: {currentWord} ({currentWordIndex + 1}/{phrase.words?.length})</>
-                  )}
-                </span>
-              ) : (
-                "ASL Avatar ready · Say hello, help, yes, no, thank you — or tap TEST"
-              )}
-            </p>
-          </div>
+          {phrase?.text ? (
+            <div style={{ height: "220px" }} className="flex flex-col">
+              <SigningHands2D
+                currentSign={signMode === "words" && animationQueue.length > 0 ? (animationQueue[queueIndex] ?? "idle") : "idle"}
+                isAnimating={!!phrase && signMode === "words" && animationQueue.length > 0}
+                className="flex-1 min-h-0"
+              />
+              <p className="text-[10px] text-center pb-2" style={{ color: "hsl(183 100% 50% / 0.7)" }}>
+                &quot;{phrase.text}&quot;
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center min-h-[220px] text-sm px-4 text-center" style={{ color: "hsl(183 100% 50% / 0.8)" }}>
+              <p>Enter text or speak — signing will show here.</p>
+              <p className="text-xs mt-2" style={{ color: "hsl(272 76% 53% / 0.8)" }}>Text → normalize → ASL signs → 2D hands (our logic)</p>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Sign gesture cards */}
       {phrase && (
-        <div className="relative z-10 px-5 mb-4">
+        <div className={`relative z-10 px-5 mb-4 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
           {settings.stepMode && (
             <div className="flex items-center justify-between mb-2">
               <div className="text-[10px] text-muted-foreground">
@@ -717,9 +719,9 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
         </div>
       )}
 
-      {/* Transcript / Live Text Buffer */}
+      {/* Transcript / Live Text Buffer - focus content when focus mode */}
       {transcript && (
-        <div className="relative z-10 mx-5 mb-4 glass neon-border-purple rounded-2xl p-4 animate-fade-in-up">
+        <div className={`relative z-10 mx-5 mb-4 glass neon-border-purple rounded-2xl p-4 animate-fade-in-up ${settings.focusMode ? "a11y-focus-content" : ""}`}>
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-neon-purple animate-pulse" />
@@ -745,7 +747,7 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
       <div className="flex-1" />
 
       {/* Input controls */}
-      <div className="relative z-10 mx-5 mb-8">
+      <div className={`relative z-10 mx-5 mb-8 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
         {inputMode === 'text' ? (
           /* Text input mode */
           <div className="glass-strong rounded-3xl p-5" style={{ boxShadow: "0 -10px 40px hsl(183 100% 50% / 0.1)" }}>
