@@ -22,6 +22,8 @@ const MIN_SEGMENT_FRAMES = 10;
 const MAX_SEGMENT_FRAMES = 120;
 /** Evenly-spaced frames sent to the recognition API */
 const SAMPLE_FRAMES = 8;
+/** Minimum time between recognition calls to avoid Gemini rate limits (8 seconds) */
+const MIN_RECOGNITION_INTERVAL_MS = 8000;
 
 type PipelineState = "idle" | "recognizing";
 
@@ -76,9 +78,21 @@ export function useSignPipeline(): SignPipelineResult {
   const [status, setStatus]               = useState("Tap mic to start signing");
 
   const frameBufferRef = useRef<Landmark[][]>([]);
+  const lastRecognitionTimeRef = useRef<number>(0);
 
   // ── Recognition API call ────────────────────────────────────────────────────
   const recognizeSegment = useCallback(async (frames: Landmark[][]) => {
+    // Rate limiting: check if enough time has passed since last call
+    const now = Date.now();
+    const timeSinceLastCall = now - lastRecognitionTimeRef.current;
+    if (timeSinceLastCall < MIN_RECOGNITION_INTERVAL_MS) {
+      const waitTime = Math.ceil((MIN_RECOGNITION_INTERVAL_MS - timeSinceLastCall) / 1000);
+      setStatus(`Please wait ${waitTime}s between signs to avoid rate limits`);
+      setPipelineState("idle");
+      return;
+    }
+    lastRecognitionTimeRef.current = now;
+    
     const sampled = sampleFrames(frames, SAMPLE_FRAMES);
 
     try {
