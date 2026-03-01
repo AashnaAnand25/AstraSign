@@ -154,7 +154,7 @@ export default function LandingScreen({ onStart }: Props) {
         </button>
 
         <p className="text-xs text-muted-foreground text-center">
-          Powered by NeuroSign AI · Version 2.4
+          Powered by AstraSign · Version 2.4
         </p>
       </div>
     </div>

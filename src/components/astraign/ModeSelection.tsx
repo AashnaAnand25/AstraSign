@@ -130,7 +130,7 @@ export default function ModeSelection({ onSelect, onSettings, onConversation }: 
 
       {/* Subtitle */}
       <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-        Choose your translation direction. NeuroSign AI adapts to your communication needs in real time.
+        Choose your translation direction. AstraSign adapts to your communication needs in real time.
       </p>
 
       {/* Cards */}
@@ -148,7 +148,7 @@ export default function ModeSelection({ onSelect, onSettings, onConversation }: 
           }
           title="Sign → Voice"
           subtitle="Camera Mode"
-          description="Point your camera at ASL gestures and NeuroSign instantly translates them into natural speech."
+          description="Point your camera at ASL gestures and AstraSign instantly translates them into natural speech."
         />
 
         <GlowCard
@@ -164,7 +164,7 @@ export default function ModeSelection({ onSelect, onSettings, onConversation }: 
           }
           title="Voice → Sign"
           subtitle="Microphone Mode"
-          description="Speak naturally and watch NeuroSign translate your words into expressive ASL in real time."
+          description="Speak naturally and watch AstraSign translate your words into expressive ASL in real time."
         />
 
         {/* Conversation Mode CTA */}

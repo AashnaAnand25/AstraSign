@@ -584,7 +584,7 @@ export default function SettingsTab() {
           <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
           <div className="flex-1">
             <div className="text-sm font-semibold text-foreground">
-              NeuroSign AI v2.4
+              AstraSign v2.4
             </div>
             <div className="text-xs text-muted-foreground">
               All systems operational

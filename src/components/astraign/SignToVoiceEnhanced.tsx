@@ -265,7 +265,7 @@ export default function SignToVoiceEnhanced({ onBack, onSettings }: Props) {
         </button>
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-neon-purple animate-glow-pulse" />
-          <span className="font-display text-sm font-bold gradient-text-purple-cyan">NEUROSIGN</span>
+          <span className="font-display text-sm font-bold gradient-text-purple-cyan">AstraSign</span>
         </div>
         <button
           onClick={onSettings}

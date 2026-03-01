@@ -10,7 +10,7 @@ export default function OnboardingTwo({ onNext, onBack }: Props) {
     <div className="min-h-screen flex flex-col px-6 pt-14 pb-10">
       <div className="flex items-center justify-between mb-10">
         <button onClick={onBack} className="text-xs text-muted-foreground">Back</button>
-        <div className="font-display text-sm font-bold gradient-text-purple-cyan">SIGNBRIDGE</div>
+        <div className="font-display text-sm font-bold gradient-text-purple-cyan">AstraSign</div>
         <div className="w-10" />
       </div>
 

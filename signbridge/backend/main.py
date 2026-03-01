@@ -6,9 +6,9 @@ import os
 load_dotenv()
 
 app = FastAPI(
-    title="SignBridge API", 
+    title="AstraSign API", 
     version="1.0.0",
-    description="API for SignBridge - Speech to ASL translation service"
+    description="API for AstraSign - Speech to ASL translation service"
 )
 
 # Validate required environment variables
@@ -48,7 +48,7 @@ except ImportError as e:
 @app.get("/")
 def root():
     return {
-        "status": "SignBridge API running", 
+        "status": "AstraSign API running", 
         "version": "1.0.0",
         "endpoints": {
             "health": "/health",

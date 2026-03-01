@@ -1,6 +1,6 @@
-# SignBridge Backend
+# AstraSign Backend
 
-FastAPI backend for SignBridge - Speech to ASL translation service.
+FastAPI backend for AstraSign - Speech to ASL translation service.
 
 ## Features
 

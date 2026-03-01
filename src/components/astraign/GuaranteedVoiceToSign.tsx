@@ -49,7 +49,7 @@ export default function GuaranteedVoiceToSign({ onBack, onSettings, embedded = f
 
   // API Configuration
   const API_BASE_URL = "http://localhost:8001/api";
-  const API_SECRET = "neurosign-secret-key-123";
+  const API_SECRET = "AstraSign-secret-key-123";
 
   // API call helper
   const apiCall = async (endpoint: string, data: any) => {
@@ -239,7 +239,7 @@ export default function GuaranteedVoiceToSign({ onBack, onSettings, embedded = f
           )}
           <div>
             <h1 className="text-xl font-bold text-white">
-              NeuroSign AI
+              AstraSign
             </h1>
             <p className="text-sm text-white/70">
               Guaranteed Working MVP

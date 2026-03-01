@@ -3,6 +3,7 @@ import { RotateCcw, Mic, MicOff } from "lucide-react";
 import { useAccessibility } from "@/accessibility/AccessibilityProvider";
 import { useHistory } from "@/context/HistoryContext";
 import VoiceToSign from "./VoiceToSign";
+import MVPVoiceToSign from "./MVPVoiceToSign";
 import SignToVoice from "./SignToVoice";
 
 export type TranslateMode = "audio-to-asl" | "asl-to-audio";
@@ -141,11 +142,7 @@ export default function TranslateTab({ onAddToHistory }: Props) {
       {/* Content */}
       <div className="flex-1 overflow-y-auto pb-24">
         {mode === "audio-to-asl" ? (
-          <VoiceToSign
-            embedded
-            onStatusChange={setStatus}
-            onAddToHistory={addEntry}
-          />
+          <MVPVoiceToSign embedded />
         ) : (
           <SignToVoice
             embedded

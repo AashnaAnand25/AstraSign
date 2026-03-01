@@ -315,7 +315,7 @@ export default function EnhancedVoiceToSign({ onBack, onSettings, embedded = fal
             )}
             <div>
               <h1 className="text-xl font-bold text-white" style={getTextStyles()}>
-                NeuroSign AI
+                AstraSign
               </h1>
               <p className="text-sm text-white/70" style={getTextStyles()}>
                 {isMLInitialized ? 'Ready' : 'Initializing...'}

@@ -1,0 +1,477 @@
+import React, { useState, useEffect, useRef, Suspense } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { OrbitControls, Environment } from "@react-three/drei";
+import * as THREE from "three";
+import { Mic, MicOff, Type, ArrowLeft } from "lucide-react";
+
+// The Map the user requested
+const ANIMATION_MAP: Record<string, string> = {
+    "HELLO": "/animations/HELLO.glb",
+    "HOW": "/animations/HOW.glb",
+    "ARE": "/animations/ARE.glb",
+    "YOU": "/animations/YOU.glb",
+    "THANK": "/animations/THANK.glb",
+    "PLEASE": "/animations/PLEASE.glb",
+    "YES": "/animations/YES.glb",
+    "NO": "/animations/NO.glb",
+};
+
+// Neon purple → cyan gradient (theme colors)
+const NEON_PURPLE = "#a855f7";
+const NEON_CYAN = "#22d3ee";
+
+function useGradientTexture() {
+    return React.useMemo(() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 128;
+        canvas.height = 128;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return null;
+        const g = ctx.createLinearGradient(0, 0, 128, 128);
+        g.addColorStop(0, NEON_PURPLE);
+        g.addColorStop(0.5, "#7c3aed");
+        g.addColorStop(1, NEON_CYAN);
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, 128, 128);
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.needsUpdate = true;
+        return tex;
+    }, []);
+}
+
+// Hand material: neon purple–cyan gradient + subtle glow
+function HandMaterial({ gradientTex }: { gradientTex: THREE.CanvasTexture | null }) {
+    return (
+        <meshStandardMaterial
+            map={gradientTex || undefined}
+            color={gradientTex ? "#ffffff" : "#a855f7"}
+            emissive={NEON_PURPLE}
+            emissiveIntensity={0.15}
+            roughness={0.4}
+            metalness={0.15}
+        />
+    );
+}
+
+// One realistic-looking hand: palm + 5 fingers (each 2 segments)
+function HandMesh({ isLeft, gradientTex }: { isLeft: boolean; gradientTex: THREE.CanvasTexture | null }) {
+    const s = isLeft ? -1 : 1;
+    return (
+        <group scale={[s, 1, 1]}>
+            <mesh position={[0, 0, 0]} castShadow>
+                <boxGeometry args={[0.14, 0.08, 0.04]} />
+                <HandMaterial gradientTex={gradientTex} />
+            </mesh>
+            <group position={[s * 0.06, -0.02, 0.02]}>
+                <mesh castShadow>
+                    <boxGeometry args={[0.04, 0.035, 0.025]} />
+                    <HandMaterial gradientTex={gradientTex} />
+                </mesh>
+                <mesh position={[s * 0.022, -0.02, 0]} castShadow>
+                    <boxGeometry args={[0.025, 0.04, 0.02]} />
+                    <HandMaterial gradientTex={gradientTex} />
+                </mesh>
+            </group>
+            <group position={[s * 0.055, 0.055, 0.01]}>
+                <mesh castShadow>
+                    <boxGeometry args={[0.022, 0.045, 0.02]} />
+                    <HandMaterial gradientTex={gradientTex} />
+                </mesh>
+                <mesh position={[0, 0.048, 0]} castShadow>
+                    <boxGeometry args={[0.018, 0.04, 0.016]} />
+                    <HandMaterial gradientTex={gradientTex} />
+                </mesh>
+            </group>
+            <group position={[s * 0.02, 0.07, 0.01]}>
+                <mesh castShadow>
+                    <boxGeometry args={[0.022, 0.05, 0.02]} />
+                    <HandMaterial gradientTex={gradientTex} />
+                </mesh>
+                <mesh position={[0, 0.052, 0]} castShadow>
+                    <boxGeometry args={[0.018, 0.044, 0.016]} />
+                    <HandMaterial gradientTex={gradientTex} />
+                </mesh>
+            </group>
+            <group position={[s * -0.02, 0.065, 0.01]}>
+                <mesh castShadow>
+                    <boxGeometry args={[0.02, 0.046, 0.018]} />
+                    <HandMaterial gradientTex={gradientTex} />
+                </mesh>
+                <mesh position={[0, 0.046, 0]} castShadow>
+                    <boxGeometry args={[0.016, 0.038, 0.014]} />
+                    <HandMaterial gradientTex={gradientTex} />
+                </mesh>
+            </group>
+            <group position={[s * -0.055, 0.05, 0.01]}>
+                <mesh castShadow>
+                    <boxGeometry args={[0.018, 0.038, 0.016]} />
+                    <HandMaterial gradientTex={gradientTex} />
+                </mesh>
+                <mesh position={[0, 0.036, 0]} castShadow>
+                    <boxGeometry args={[0.014, 0.03, 0.012]} />
+                    <HandMaterial gradientTex={gradientTex} />
+                </mesh>
+            </group>
+        </group>
+    );
+}
+
+// Hands lower in view, palms facing camera (rotY 0 = face +Z)
+const HAND_X = 0.36;
+const HAND_Z = 0.08;
+const Y_DOWN = -0.12;
+const Y_CHEST = 0.02;
+const Y_FOREHEAD = 0.12;
+const FACE_CAMERA_Y_LEFT = 0;
+const FACE_CAMERA_Y_RIGHT = 0;
+
+// Finger curl 0 = flat, 1 = curled. [thumb, index, middle, ring, pinky]
+const FLAT = [0, 0, 0, 0, 0] as const;
+const FIST = [1, 1, 1, 1, 1] as const;
+const POINT = [1, 0, 1, 1, 1] as const; // index extended (YOU)
+const NO_HAND = [0.8, 0, 0, 0.6, 0.6] as const; // index+middle out, thumb tap
+const OK_HAND = [0.9, 0.9, 1, 1, 1] as const; // index touches thumb (O)
+
+type FingerCurls = readonly [number, number, number, number, number];
+
+type HandPose = {
+    y: number;
+    x: number;
+    z: number;
+    rotX: number;
+    rotY: number;
+    rotZ: number;
+    fingerCurls: FingerCurls;
+};
+
+function hand(y: number, z: number, rotX: number, rotY: number, rotZ: number, fingerCurls: FingerCurls = FLAT): HandPose {
+    return { y, x: HAND_X, z, rotX, rotY, rotZ, fingerCurls };
+}
+
+// Hardcoded ASL: handshape (finger curls) + motion per MVP list
+function getSignPose(word: string, t: number, motion: number): { left: HandPose; right: HandPose } {
+    const w = word.toUpperCase();
+    const lift = Math.min(1, t * 2.2);
+
+    switch (w) {
+        case "HELLO": {
+            // Flat hand, small wave from forehead
+            const y = Y_DOWN + lift * (Y_FOREHEAD - Y_DOWN);
+            const wave = motion > 0 ? Math.sin(motion * 4) * 0.6 : 0;
+            return { left: { ...hand(y, HAND_Z, 0, 0, 0), x: -HAND_X }, right: hand(y, HAND_Z, -0.15, 0, wave, FLAT) };
+        }
+        case "YES": {
+            // Fist, nod up and down
+            const y = Y_DOWN + lift * (Y_CHEST - Y_DOWN);
+            const nod = Math.sin(motion * 3) * 0.08;
+            const thumbsUp = Math.min(1, motion * 2) * -0.65; // tilt back for "thumbs up"
+            return { left: { ...hand(y + nod, HAND_Z, thumbsUp, 0, 0), x: -HAND_X }, right: hand(y + nod, HAND_Z, thumbsUp, 0, 0, FIST) };
+        }
+        case "NO": {
+            // Index+middle tap thumb (simplified: slight curl), shake
+            const y = Y_DOWN + lift * (Y_CHEST - Y_DOWN);
+            const shake = Math.sin(motion * 12) * 0.28;
+            return { left: { ...hand(y, HAND_Z, 0, 0, shake), x: -HAND_X }, right: hand(y, HAND_Z, 0, 0, shake, NO_HAND) };
+        }
+        case "THANK":
+        case "THANKYOU": {
+            // Flat hand, from chin outward
+            const y = Y_DOWN + lift * (Y_CHEST - Y_DOWN);
+            const out = Math.min(1, motion * 1.5) * 0.35;
+            return { left: { ...hand(y, HAND_Z, 0, 0, 0), x: -HAND_X }, right: hand(y, HAND_Z + out * 0.3, 0.2, 0, out, FLAT) };
+        }
+        case "PLEASE": {
+            // Flat hand, circular on chest
+            const y = Y_DOWN + lift * (Y_CHEST - Y_DOWN);
+            const circle = motion * Math.PI * 1.2;
+            return { left: { ...hand(y, HAND_Z, 0, circle * 0.4, 0), x: -HAND_X }, right: hand(y, HAND_Z, 0, circle, 0, FLAT) };
+        }
+        case "HELP": {
+            // Flat palm up, lift slightly
+            const y = Y_DOWN + lift * (Y_CHEST - Y_DOWN);
+            const up = Math.min(1, motion * 1.5) * 0.4;
+            return { left: { ...hand(y, HAND_Z, 0, 0, 0), x: -HAND_X }, right: hand(y + up * 0.15, HAND_Z, up, 0, 0, FLAT) };
+        }
+        case "STOP": {
+            // Flat palm forward, hold
+            const y = Y_DOWN + lift * (Y_CHEST - Y_DOWN);
+            return { left: { ...hand(y, HAND_Z, 0, 0, 0), x: -HAND_X }, right: hand(y, HAND_Z, -0.1, 0, 0, FLAT) };
+        }
+        case "OK": {
+            // Index touches thumb (O), slight bounce
+            const y = Y_DOWN + lift * (Y_CHEST - Y_DOWN);
+            const bounce = Math.sin(motion * 4) * 0.04;
+            return { left: { ...hand(y + bounce, HAND_Z, 0, 0, 0), x: -HAND_X }, right: hand(y + bounce, HAND_Z, 0, 0, 0, OK_HAND) };
+        }
+        case "SORRY": {
+            // Fist, circular on chest
+            const y = Y_DOWN + lift * (Y_CHEST - Y_DOWN);
+            const circle = motion * Math.PI * 1.2;
+            return { left: { ...hand(y, HAND_Z, 0, circle * 0.4, 0), x: -HAND_X }, right: hand(y, HAND_Z, 0, circle, 0, FIST) };
+        }
+        case "WAIT": {
+            // W-shape (3 fingers up) simplified as slight curl ring+pinky, small shake
+            const y = Y_DOWN + lift * (Y_CHEST - Y_DOWN);
+            const shake = Math.sin(motion * 8) * 0.2;
+            const curls: FingerCurls = [0, 0, 0, 0.4, 0.5];
+            return { left: { ...hand(y, HAND_Z, 0, 0, shake), x: -HAND_X }, right: hand(y, HAND_Z, 0, 0, shake, curls) };
+        }
+        case "YOU": {
+            // Point (index extended)
+            const y = Y_DOWN + lift * (Y_CHEST - Y_DOWN);
+            const point = Math.min(1, motion * 1.2) * 0.5;
+            return { left: { ...hand(y, HAND_Z, 0, 0, 0), x: -HAND_X }, right: hand(y, HAND_Z + point * 0.2, -point, 0, 0, POINT) };
+        }
+        case "HOW": {
+            const y = Y_DOWN + lift * (Y_CHEST - Y_DOWN);
+            const palmsUp = Math.min(1, motion * 1.2) * 0.5;
+            return { left: { ...hand(y, HAND_Z, palmsUp, 0, 0), x: -HAND_X - Math.sin(motion * 2) * 0.06 }, right: hand(y, HAND_Z, palmsUp, 0, 0, FLAT) };
+        }
+        case "ARE": {
+            const y = Y_DOWN + lift * (Y_CHEST - Y_DOWN);
+            const wave = Math.sin(motion * 3) * 0.3;
+            return { left: { ...hand(y, HAND_Z, 0, 0, 0), x: -HAND_X }, right: hand(y, HAND_Z, 0, 0, wave, FLAT) };
+        }
+        default: {
+            const y = Y_DOWN + lift * (Y_CHEST - Y_DOWN);
+            const wave = Math.sin(motion * 3) * 0.4;
+            return { left: { ...hand(y, HAND_Z, 0, 0, 0), x: -HAND_X }, right: hand(y, HAND_Z, 0, 0, wave, FLAT) };
+        }
+    }
+}
+
+// One hand (dominant right), hardcoded ASL signs per word
+function AnimatedHands({ word, gradientTex }: { word: string; gradientTex: THREE.CanvasTexture | null }) {
+    const handRef = useRef<THREE.Group>(null);
+    const startRef = useRef<number | null>(null);
+
+    useFrame((state) => {
+        if (startRef.current === null) startRef.current = state.clock.elapsedTime;
+        const t = state.clock.elapsedTime - startRef.current;
+        if (t > 2.2) return;
+
+        const motion = t > 0.3 ? t - 0.3 : 0;
+        const pose = getSignPose(word, t, motion);
+        const h = pose.right; // use right-hand pose for single hand
+
+        if (handRef.current) {
+            handRef.current.position.set(0, h.y, h.z);
+            handRef.current.rotation.set(h.rotX, h.rotY + FACE_CAMERA_Y_RIGHT, h.rotZ);
+        }
+    });
+
+    return (
+        <group ref={handRef} position={[0, Y_DOWN, HAND_Z]} scale={2.2}>
+            <HandMesh isLeft={false} gradientTex={gradientTex} />
+        </group>
+    );
+}
+
+// Hands-only scene: no astronaut, hands are the main focus
+function HandsScene({ currentWord, gradientTex }: { currentWord: string | null; gradientTex: THREE.CanvasTexture | null }) {
+    const groupRef = useRef<THREE.Group>(null);
+
+    useFrame((state) => {
+        if (groupRef.current) groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.4) * 0.03;
+    });
+
+    return (
+        <group ref={groupRef} position={[0, 0, 0]}>
+            {currentWord && <AnimatedHands key={currentWord} word={currentWord} gradientTex={gradientTex} />}
+        </group>
+    );
+}
+
+interface Props {
+    onBack?: () => void;
+    embedded?: boolean;
+}
+
+const QUICK_PHRASES = ["Hello", "Thank you", "How are you", "Yes", "No"];
+
+export default function MVPVoiceToSign({ onBack, embedded }: Props) {
+    const [inputText, setInputText] = useState("");
+    const [gloss, setGloss] = useState<string[]>([]);
+    const [currentWord, setCurrentWord] = useState<string | null>(null);
+    const [currentAnimUrl, setCurrentAnimUrl] = useState<string | null>(null);
+    const [isListening, setIsListening] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const gradientTex = useGradientTexture();
+
+    // Web Speech API for voice input
+    useEffect(() => {
+        if (!isListening) return;
+
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert("Browser speech recognition not supported in this browser.");
+            setIsListening(false);
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onresult = (event: any) => {
+            const text = event.results[0][0].transcript;
+            setInputText(text);
+            handleTranslate(text);
+        };
+
+        recognition.onerror = () => {
+            setIsListening(false);
+        };
+
+        recognition.onend = () => {
+            setIsListening(false);
+        };
+
+        recognition.start();
+
+        return () => {
+            recognition.stop();
+        };
+    }, [isListening]);
+
+    // Text -> Gloss
+    const textToGloss = (text: string) => {
+        return text.toUpperCase().split(/\s+/).filter(Boolean);
+    };
+
+    // Playback Loop
+    const playGloss = async (glossArray: string[]) => {
+        setIsPlaying(true);
+        for (const word of glossArray) {
+            setCurrentWord(word);
+            const animFile = ANIMATION_MAP[word];
+            if (animFile) {
+                setCurrentAnimUrl(animFile);
+                // Wait for the animation duration (approx 2s per sign for MVP)
+                await new Promise((resolve) => setTimeout(resolve, 2000));
+            } else {
+                // If no animation, just show the word for 1 second
+                setCurrentAnimUrl(null);
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+        }
+        setCurrentWord(null);
+        setCurrentAnimUrl(null);
+        setIsPlaying(false);
+    };
+
+    const handleTranslate = (textToProcess: string = inputText) => {
+        if (!textToProcess.trim() || isPlaying) return;
+        const glossArray = textToGloss(textToProcess);
+        setGloss(glossArray);
+        playGloss(glossArray);
+    };
+
+    return (
+        <div className="w-full min-h-screen bg-background flex flex-col overflow-y-auto">
+            {!embedded && (
+            <div className="flex items-center p-4 border-b border-border shrink-0">
+                {onBack && (
+                    <button onClick={onBack} className="p-2 mr-3 rounded-lg bg-muted hover:bg-muted/80 text-foreground">
+                        <ArrowLeft size={20} />
+                    </button>
+                )}
+                <div>
+                    <h1 className="text-xl font-bold text-foreground">AstraSign MVP</h1>
+                    <p className="text-xs text-muted-foreground">Text/Voice → ASL</p>
+                </div>
+            </div>
+            )}
+
+            {/* 3D Canvas — hands lower, centered, palms facing camera */}
+            <div className="relative bg-card border-b border-border h-[320px] flex-shrink-0">
+                <Canvas camera={{ position: [0, 0, 1.5], fov: 48 }} style={{ width: "100%", height: 320 }}>
+                    <ambientLight intensity={0.7} />
+                    <directionalLight position={[2, 3, 4]} intensity={1.3} />
+                    <Suspense fallback={null}>
+                        <HandsScene currentWord={currentWord} gradientTex={gradientTex} />
+                    </Suspense>
+                    <OrbitControls target={[0, 0, 0.08]} enablePan={false} minDistance={1} maxDistance={3} />
+                    <Environment preset="city" />
+                </Canvas>
+
+                {/* Gloss Subtitles Overlay */}
+                {gloss.length > 0 && (
+                    <div className="absolute inset-x-0 bottom-4 flex justify-center pointer-events-none">
+                        <div className="bg-card/90 backdrop-blur-md border border-border px-4 py-2 rounded-xl flex flex-wrap justify-center gap-2 max-w-[90%]">
+                            {gloss.map((word, i) => (
+                                <span
+                                    key={i}
+                                    className={`text-sm font-bold transition-all ${word === currentWord
+                                        ? "text-primary scale-110"
+                                        : "text-muted-foreground"
+                                        }`}
+                                >
+                                    {word}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Try a phrase — compact, moved down a little */}
+            <div className="shrink-0 pt-5 px-3 py-2 flex flex-col items-center gap-1.5">
+                <p className="text-[11px] text-muted-foreground">Try a phrase</p>
+                <div className="flex flex-wrap justify-center gap-1.5">
+                    {QUICK_PHRASES.map((phrase) => (
+                        <button
+                            key={phrase}
+                            type="button"
+                            onClick={() => {
+                                if (isPlaying) return;
+                                setInputText(phrase);
+                                handleTranslate(phrase);
+                            }}
+                            disabled={isPlaying}
+                            className="px-2.5 py-1 rounded-full text-xs font-medium bg-muted/80 text-foreground border border-border hover:border-primary/50 hover:bg-muted transition-colors disabled:opacity-50"
+                        >
+                            {phrase}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Input Area */}
+            <div className="p-4 pt-0 pb-6 bg-background border-t border-border shrink-0">
+                <div className="flex gap-3 max-w-lg mx-auto">
+                    <button
+                        onClick={() => setIsListening(!isListening)}
+                        disabled={isPlaying}
+                        className={`p-4 rounded-xl flex items-center justify-center transition-all ${isListening
+                            ? "bg-destructive/20 text-destructive animate-pulse border border-destructive"
+                            : "bg-muted text-foreground hover:bg-muted/80 border border-border"
+                            } disabled:opacity-50`}
+                    >
+                        {isListening ? <MicOff size={24} /> : <Mic size={24} />}
+                    </button>
+
+                    <div className="flex-1 relative">
+                        <input
+                            type="text"
+                            value={inputText}
+                            onChange={(e) => setInputText(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleTranslate()}
+                            disabled={isPlaying}
+                            placeholder="Type or speak a phrase..."
+                            className="w-full h-full bg-muted text-foreground placeholder-muted-foreground px-5 rounded-xl border border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                        <button
+                            onClick={() => handleTranslate()}
+                            disabled={!inputText.trim() || isPlaying}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-primary text-primary-foreground rounded-lg disabled:opacity-50 hover:opacity-90"
+                        >
+                            <Type size={18} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}

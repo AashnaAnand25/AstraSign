@@ -4,7 +4,7 @@ import ModeSelection from "@/components/astraign/ModeSelection";
 import SignToVoice from "@/components/astraign/SignToVoice";
 import VoiceToSign from "@/components/astraign/VoiceToSign";
 import CleanVoiceToSign from "@/components/astraign/CleanVoiceToSign";
-import GuaranteedVoiceToSign from "@/components/astraign/GuaranteedVoiceToSign";
+import MVPVoiceToSign from "@/components/astraign/MVPVoiceToSign";
 import AccessibilityPanel from "@/components/astraign/AccessibilityPanel";
 import ConversationMode from "@/components/astraign/ConversationMode";
 import OnboardingOne from "@/components/astraign/OnboardingOne";
@@ -65,7 +65,7 @@ const Index = () => {
 
         {screen === "home" && (
           <MainLayout
-            onStartLive={() => setScreen("live")}
+            onStartLive={() => goToTab("translate")}
             onReverseMode={() => setScreen("reverse")}
             onCameraMode={() => setScreen("sign-to-voice")}
             onConversation={() => setScreen("conversation")}
@@ -78,9 +78,8 @@ const Index = () => {
 
         {screen === "live" && (
           <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
-            <GuaranteedVoiceToSign
+            <MVPVoiceToSign
               onBack={() => setScreen("home")}
-              onSettings={() => goToTab("settings")}
             />
           </ScreenWithNav>
         )}

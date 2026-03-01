@@ -95,7 +95,7 @@ type AccessibilityContextValue = {
 
 const AccessibilityContext = createContext<AccessibilityContextValue | null>(null);
 
-const STORAGE_KEY = "neurosign:a11y";
+const STORAGE_KEY = "AstraSign:a11y";
 
 function safeParseSettings(raw: string | null): AccessibilitySettings | null {
   if (!raw) return null;
