@@ -60,24 +60,19 @@ export default function HistoryTab() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-neon-purple animate-pulse" />
-            <span className="text-xs text-neon-purple font-medium tracking-wider">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-xs text-primary font-medium tracking-wider">
               CONVERSATION LOG
             </span>
           </div>
-          <h2 className="font-display text-2xl font-bold text-foreground">
+          <h2 className="text-2xl font-bold text-foreground">
             History
           </h2>
         </div>
         <div className="relative">
           <button
             onClick={() => setExportOpen(!exportOpen)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
-            style={{
-              background: "hsl(272 76% 53% / 0.12)",
-              border: "1px solid hsl(272 76% 53% / 0.3)",
-              color: "hsl(var(--neon-purple))",
-            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-subtle border border-primary/25 text-primary text-sm font-medium transition-all duration-200 hover:bg-accent-subtle/80"
           >
             <FileText size={16} />
             Export
@@ -88,34 +83,27 @@ export default function HistoryTab() {
                 className="fixed inset-0 z-40"
                 onClick={() => setExportOpen(false)}
               />
-              <div
-                className="absolute right-0 top-full mt-2 z-50 rounded-xl overflow-hidden py-1 min-w-[180px]"
-                style={{
-                  background: "hsl(240 18% 8%)",
-                  border: "1px solid hsl(240 10% 14%)",
-                  boxShadow: "0 10px 40px rgba(0,0,0,0.4)",
-                }}
-              >
+              <div className="absolute right-0 top-full mt-2 z-50 bg-card border border-border rounded-lg overflow-hidden py-1 min-w-[180px] shadow-lg">
                 <button
                   onClick={handleDownload}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm hover:bg-secondary transition-colors"
                 >
                   <FileText size={16} className="text-muted-foreground" />
                   Download .txt
                 </button>
                 <button
                   onClick={handleShare}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm hover:bg-secondary transition-colors"
                 >
                   <Share2 size={16} className="text-muted-foreground" />
                   Share link
                 </button>
                 <button
                   onClick={handleCopy}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm hover:bg-secondary transition-colors"
                 >
                   {copied ? (
-                    <Check size={16} className="text-green-400" />
+                    <Check size={16} className="text-primary" />
                   ) : (
                     <Copy size={16} className="text-muted-foreground" />
                   )}
@@ -130,14 +118,8 @@ export default function HistoryTab() {
       <div className="flex-1 overflow-y-auto space-y-4 pb-4">
         {entries.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center"
-              style={{
-                background: "hsl(272 76% 53% / 0.1)",
-                border: "1px solid hsl(272 76% 53% / 0.2)",
-              }}
-            >
-              <FileText size={28} className="text-neon-purple" />
+            <div className="w-16 h-16 rounded-xl bg-accent-subtle border border-primary/25 flex items-center justify-center">
+              <FileText size={28} className="text-primary" />
             </div>
             <p className="text-muted-foreground text-center">
               No conversations yet
@@ -148,15 +130,9 @@ export default function HistoryTab() {
           </div>
         ) : (
           entries.map((e) => (
-            <div key={e.id} className="space-y-2 animate-fade-in-up">
+            <div key={e.id} className="space-y-2">
               <div className="flex justify-start">
-                <div
-                  className="max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3"
-                  style={{
-                    background: "hsl(183 100% 50% / 0.08)",
-                    border: "1px solid hsl(183 100% 50% / 0.2)",
-                  }}
-                >
+                <div className="max-w-[85%] rounded-xl rounded-bl-md px-4 py-3 bg-secondary border border-border">
                   <p className="text-sm text-foreground">{e.audioText}</p>
                   <p className="text-[10px] text-muted-foreground mt-1">
                     {format(e.timestamp, "p")}
@@ -164,13 +140,7 @@ export default function HistoryTab() {
                 </div>
               </div>
               <div className="flex justify-end">
-                <div
-                  className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-3"
-                  style={{
-                    background: "hsl(272 76% 53% / 0.08)",
-                    border: "1px solid hsl(272 76% 53% / 0.2)",
-                  }}
-                >
+                <div className="max-w-[85%] rounded-xl rounded-br-md px-4 py-3 bg-accent-subtle border border-primary/20">
                   <p className="text-sm text-foreground">{e.aslTranslation}</p>
                   <p className="text-[10px] text-muted-foreground mt-1">
                     {format(e.timestamp, "p")}

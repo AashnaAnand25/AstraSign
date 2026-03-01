@@ -18,10 +18,8 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 export default function BottomNav({ activeTab, onTabChange }: Props) {
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-[9999] max-w-[430px] mx-auto border-t border-border/50"
+      className="fixed bottom-0 left-0 right-0 z-[9999] max-w-[430px] mx-auto border-t border-border bg-card/95 backdrop-blur-sm shadow-lg"
       style={{
-        background: "hsl(240 18% 6% / 0.95)",
-        backdropFilter: "blur(20px)",
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
@@ -32,28 +30,20 @@ export default function BottomNav({ activeTab, onTabChange }: Props) {
             <button
               key={id}
               onClick={() => onTabChange(id)}
-              className="flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-2 transition-all active:scale-95"
+              className="flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-2 transition-all duration-200 active:scale-95"
             >
               <div
-                className={`p-2 rounded-xl transition-all flex items-center justify-center ${
+                className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center ${
                   isActive
-                    ? "text-neon-cyan"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-primary bg-accent-subtle"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
-                style={
-                  isActive
-                    ? {
-                        background: "hsl(183 100% 50% / 0.12)",
-                        boxShadow: "0 0 12px hsl(183 100% 50% / 0.2)",
-                      }
-                    : {}
-                }
               >
                 {icon}
               </div>
               <span
                 className={`text-[10px] font-medium ${
-                  isActive ? "text-neon-cyan" : "text-muted-foreground"
+                  isActive ? "text-primary" : "text-muted-foreground"
                 }`}
               >
                 {label}

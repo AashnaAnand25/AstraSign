@@ -41,10 +41,10 @@ const Index = () => {
     <GlobalAccessibilityProvider>
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="relative w-full max-w-[430px] min-h-screen mx-auto">
-          {/* Ambient glow */}
-          <div className="fixed inset-0 max-w-[430px] mx-auto pointer-events-none overflow-hidden z-0">
-            <div className="absolute top-0 left-1/3 w-48 h-48 rounded-full bg-neon-purple/[0.06] blur-[90px]" />
-            <div className="absolute bottom-0 right-1/3 w-48 h-48 rounded-full bg-neon-cyan/[0.04] blur-[90px]" />
+          {/* Subtle gradient overlay */}
+          <div className="fixed inset-0 max-w-[430px] mx-auto pointer-events-none overflow-hidden z-0 opacity-30">
+            <div className="absolute top-0 left-1/3 w-64 h-64 rounded-full bg-primary/5 blur-3xl" />
+            <div className="absolute bottom-0 right-1/3 w-64 h-64 rounded-full bg-primary/3 blur-3xl" />
           </div>
 
           {/* Landing Screen */}

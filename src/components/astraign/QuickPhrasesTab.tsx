@@ -71,12 +71,12 @@ export default function QuickPhrasesTab() {
       {/* Header — matches Home / History tab theme */}
       <div className="mb-5">
         <div className="flex items-center gap-2 mb-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-pulse" />
-          <span className="text-xs font-medium tracking-wider text-neon-cyan">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          <span className="text-xs font-medium tracking-wider text-primary">
             RAPID COMMUNICATION
           </span>
         </div>
-        <h2 className="font-display text-2xl font-bold text-foreground">
+        <h2 className="text-2xl font-bold text-foreground">
           Quick Phrases
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
@@ -84,16 +84,16 @@ export default function QuickPhrasesTab() {
         </p>
       </div>
 
-      {/* Phrase grid — glass cards, theme borders, emergency accent */}
+      {/* Phrase grid — clean cards, theme borders, emergency accent */}
       <div className="grid grid-cols-2 gap-3 flex-1 content-start">
         {PHRASES.map((phrase) => (
           <button
             key={phrase.text}
             onClick={() => speak(phrase)}
-            className={`rounded-2xl p-5 text-left transition-all duration-200 active:scale-[0.98] flex items-center justify-center min-h-[88px] hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+            className={`rounded-xl p-5 text-left transition-all duration-200 active:scale-[0.98] flex items-center justify-center min-h-[88px] hover:scale-[1.02] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
               phrase.emergency
-                ? "glass border border-destructive/50 hover:border-destructive/70 shadow-[0_0_16px_hsl(0_84%_60%_/_0.15)]"
-                : "glass neon-border-purple hover:border-primary/50"
+                ? "bg-card border border-destructive/50 hover:border-destructive/70"
+                : "bg-card border border-border hover:border-primary/50"
             }`}
           >
             <span

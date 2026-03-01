@@ -115,35 +115,35 @@ export default function MainNavigationHub({ onBack, onHome, onGoToTranslate }: M
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="relative w-full max-w-[430px] min-h-screen mx-auto overflow-hidden">
-        {/* Ambient glow */}
-        <div className="fixed inset-0 max-w-[430px] mx-auto pointer-events-none overflow-hidden">
-          <div className="absolute top-0 left-1/3 w-48 h-48 rounded-full bg-neon-purple/[0.06] blur-[90px]" />
-          <div className="absolute bottom-0 right-1/3 w-48 h-48 rounded-full bg-neon-cyan/[0.04] blur-[90px]" />
+        {/* Subtle gradient overlay */}
+        <div className="fixed inset-0 max-w-[430px] mx-auto pointer-events-none overflow-hidden opacity-30">
+          <div className="absolute top-0 left-1/3 w-64 h-64 rounded-full bg-primary/5 blur-3xl" />
+          <div className="absolute bottom-0 right-1/3 w-64 h-64 rounded-full bg-primary/3 blur-3xl" />
         </div>
 
         {/* Header */}
-        <div className="glass rounded-2xl p-4 m-4" style={{ border: "1px solid hsl(240 10% 14%)" }}>
+        <div className="bg-card border border-border rounded-xl p-4 m-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {onBack && (
-                <button 
+                <button
                   onClick={onBack}
-                  className="w-8 h-8 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors text-sm"
+                  className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-all duration-200 text-sm"
                 >
                   <ArrowLeftRight className="w-4 h-4" />
                 </button>
               )}
               <AstraSignLogo size="sm" />
             </div>
-            
+
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={onHome}
-                className="w-8 h-8 rounded-xl glass neon-border-cyan flex items-center justify-center text-muted-foreground hover:text-neon-cyan transition-colors text-sm"
+                className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-all duration-200 text-sm"
               >
                 Home
               </button>
-              <button className="w-8 h-8 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors text-sm">
+              <button className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-all duration-200 text-sm">
                 <Settings className="w-4 h-4" />
               </button>
             </div>
@@ -159,21 +159,14 @@ export default function MainNavigationHub({ onBack, onHome, onGoToTranslate }: M
               return (
                 <div
                   key={item.id}
-                  className="glass rounded-2xl p-4 cursor-pointer transition-all active:scale-95 hover:scale-105"
-                  style={{ border: "1px solid hsl(240 10% 14%)" }}
+                  className="bg-card border border-border rounded-xl p-4 cursor-pointer transition-all duration-200 active:scale-95 hover:shadow-md hover:border-primary/50"
                   onClick={() => handleNavClick(item)}
                 >
                   <div className="flex flex-col items-center text-center space-y-2">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      item.color === 'purple' ? 'bg-neon-purple/20 text-neon-purple' :
-                      item.color === 'blue' ? 'bg-neon-cyan/20 text-neon-cyan' :
-                      item.color === 'green' ? 'bg-green-500/20 text-green-400' :
-                      item.color === 'pink' ? 'bg-pink-500/20 text-pink-400' :
-                      'bg-gray-500/20 text-gray-400'
-                    }`}>
+                    <div className="w-12 h-12 rounded-lg bg-accent-subtle flex items-center justify-center text-primary">
                       {item.icon}
                     </div>
-                    
+
                     <div>
                       <h3 className="font-semibold text-foreground text-xs">
                         {item.title}
@@ -190,42 +183,42 @@ export default function MainNavigationHub({ onBack, onHome, onGoToTranslate }: M
         </div>
 
         {/* Bottom Navigation */}
-        <div className="absolute bottom-0 left-0 right-0 glass rounded-t-3xl" style={{ border: "1px solid hsl(240 10% 14%)" }}>
+        <div className="absolute bottom-0 left-0 right-0 bg-card border-t border-border rounded-t-2xl shadow-lg">
           <div className="p-4">
             <div className="flex justify-around">
-              <button 
+              <button
                 onClick={onHome}
-                className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors duration-200"
               >
-                <div className="w-6 h-6 rounded-lg bg-neon-purple/20 flex items-center justify-center">
-                  <div className="w-3 h-3 bg-neon-purple rounded-full" />
+                <div className="w-6 h-6 rounded-lg bg-accent-subtle flex items-center justify-center">
+                  <div className="w-3 h-3 bg-primary rounded-full" />
                 </div>
                 <span className="text-xs">Home</span>
               </button>
               <button
                 onClick={() => onGoToTranslate?.()}
-                className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors duration-200"
               >
-                <div className="w-6 h-6 rounded-lg bg-neon-cyan/20 flex items-center justify-center">
-                  <div className="w-3 h-3 bg-neon-cyan rounded-full" />
+                <div className="w-6 h-6 rounded-lg bg-accent-subtle flex items-center justify-center">
+                  <div className="w-3 h-3 bg-primary rounded-full" />
                 </div>
                 <span className="text-xs">Translate</span>
               </button>
-              <button className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                <div className="w-6 h-6 rounded-lg bg-gray-500/20 flex items-center justify-center">
-                  <div className="w-3 h-3 bg-gray-400 rounded-full" />
+              <button className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors duration-200">
+                <div className="w-6 h-6 rounded-lg bg-secondary flex items-center justify-center">
+                  <div className="w-3 h-3 bg-muted-foreground rounded-full" />
                 </div>
                 <span className="text-xs">Quick</span>
               </button>
-              <button className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                <div className="w-6 h-6 rounded-lg bg-gray-500/20 flex items-center justify-center">
-                  <div className="w-3 h-3 bg-gray-400 rounded-full" />
+              <button className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors duration-200">
+                <div className="w-6 h-6 rounded-lg bg-secondary flex items-center justify-center">
+                  <div className="w-3 h-3 bg-muted-foreground rounded-full" />
                 </div>
                 <span className="text-xs">History</span>
               </button>
-              <button className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                <div className="w-6 h-6 rounded-lg bg-neon-purple/20 flex items-center justify-center">
-                  <div className="w-3 h-3 bg-neon-purple rounded-full" />
+              <button className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors duration-200">
+                <div className="w-6 h-6 rounded-lg bg-accent-subtle flex items-center justify-center">
+                  <div className="w-3 h-3 bg-primary rounded-full" />
                 </div>
                 <span className="text-xs">A11y</span>
               </button>

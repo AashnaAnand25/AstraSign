@@ -52,26 +52,15 @@ export default function TranslateTab({ onAddToHistory, initialMode, onInitialMod
       <button
         type="button"
         onClick={handleFlip}
-        className="fixed top-20 right-5 z-[100] flex items-center gap-2 px-3 py-2 rounded-xl transition-all active:scale-95 cursor-pointer pointer-events-auto"
-        style={{
-          background: "hsl(240 15% 9% / 0.9)",
-          border: "1px solid hsl(272 76% 53% / 0.25)",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-        }}
+        className="fixed top-20 right-5 z-[100] flex items-center gap-2 px-3 py-2 rounded-lg bg-card/95 backdrop-blur-sm border border-border shadow-lg transition-all duration-200 active:scale-95 hover:border-primary cursor-pointer pointer-events-auto"
       >
-        <RotateCcw size={16} className="text-neon-cyan" />
+        <RotateCcw size={16} className="text-primary" />
         <span className="text-xs font-medium text-foreground">Flip Screen</span>
       </button>
 
       {/* Mode switch at top — ensure clickable above content */}
       <div className="relative z-[60] flex justify-center pt-14 pb-2 pointer-events-none">
-        <div
-          className="inline-flex rounded-full p-1 pointer-events-auto"
-          style={{
-            background: "hsl(240 15% 9%)",
-            border: "1px solid hsl(240 10% 14%)",
-          }}
-        >
+        <div className="inline-flex rounded-full p-1 bg-secondary border border-border pointer-events-auto">
           <button
             type="button"
             onClick={() => {
@@ -79,16 +68,11 @@ export default function TranslateTab({ onAddToHistory, initialMode, onInitialMod
               setMode("audio-to-asl");
               onInitialModeConsumed?.();
             }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
               mode === "audio-to-asl"
-                ? "bg-neon-cyan/20 text-neon-cyan"
+                ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
-            style={
-              mode === "audio-to-asl"
-                ? { border: "1px solid hsl(183 100% 50% / 0.4)" }
-                : {}
-            }
           >
             Audio → ASL
           </button>
@@ -99,16 +83,11 @@ export default function TranslateTab({ onAddToHistory, initialMode, onInitialMod
               setMode("asl-to-audio");
               onInitialModeConsumed?.();
             }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
               mode === "asl-to-audio"
-                ? "bg-neon-purple/20 text-neon-purple"
+                ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
-            style={
-              mode === "asl-to-audio"
-                ? { border: "1px solid hsl(272 76% 53% / 0.4)" }
-                : {}
-            }
           >
             ASL → Audio
           </button>
@@ -118,35 +97,21 @@ export default function TranslateTab({ onAddToHistory, initialMode, onInitialMod
       {/* Status indicator */}
       <div className="relative z-[60] flex justify-center mb-2 pointer-events-none">
         <div
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
-          style={{
-            background:
-              status === "listening"
-                ? "hsl(183 100% 50% / 0.15)"
-                : status === "processing"
-                  ? "hsl(272 76% 53% / 0.15)"
-                  : "hsl(240 10% 12%)",
-            border:
-              status === "listening"
-                ? "1px solid hsl(183 100% 50% / 0.3)"
-                : status === "processing"
-                  ? "1px solid hsl(272 76% 53% / 0.3)"
-                  : "1px solid hsl(240 10% 18%)",
-            color:
-              status === "listening"
-                ? "hsl(183 100% 50%)"
-                : status === "processing"
-                  ? "hsl(272 76% 53%)"
-                  : "hsl(240 5% 65%)",
-          }}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${
+            status === "listening"
+              ? "bg-accent-subtle border-primary text-primary"
+              : status === "processing"
+                ? "bg-accent-subtle border-primary text-primary"
+                : "bg-secondary border-border text-muted-foreground"
+          }`}
         >
           <div
             className={`w-1.5 h-1.5 rounded-full ${
               status === "listening"
-                ? "bg-neon-cyan animate-pulse"
+                ? "bg-primary animate-pulse"
                 : status === "processing"
-                  ? "bg-neon-purple animate-pulse"
-                  : "bg-green-400"
+                  ? "bg-primary animate-pulse"
+                  : "bg-primary"
             }`}
           />
           {status === "listening" && "Listening…"}
