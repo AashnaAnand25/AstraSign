@@ -43,7 +43,7 @@ export default function TranslateTab({ onAddToHistory, initialMode, onInitialMod
 
   return (
     <div
-      className="min-h-screen flex flex-col relative overflow-hidden transition-transform duration-500"
+      className="h-full flex flex-col relative overflow-hidden transition-transform duration-500"
       style={{
         transform: flipped ? "rotate(180deg)" : "none",
       }}
@@ -156,7 +156,7 @@ export default function TranslateTab({ onAddToHistory, initialMode, onInitialMod
       </div>
 
       {/* Content — scrollable; buttons inside have pointer-events */}
-      <div className="flex-1 overflow-y-auto pb-24 min-h-0">
+      <div className="flex-1 overflow-y-auto min-h-0">
         {mode === "audio-to-asl" ? (
           <MVPVoiceToSign embedded />
         ) : (

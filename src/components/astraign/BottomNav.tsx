@@ -18,7 +18,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 export default function BottomNav({ activeTab, onTabChange }: Props) {
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 max-w-[430px] mx-auto border-t border-border/50"
+      className="fixed bottom-0 left-0 right-0 z-[9999] max-w-[430px] mx-auto border-t border-border/50"
       style={{
         background: "hsl(240 18% 6% / 0.95)",
         backdropFilter: "blur(20px)",

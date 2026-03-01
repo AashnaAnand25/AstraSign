@@ -67,7 +67,7 @@ export default function QuickPhrasesTab() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col px-5 pt-14 pb-24 bg-background">
+    <div className="flex flex-col px-5 pt-14 pb-4 bg-background">
       {/* Header — matches Home / History tab theme */}
       <div className="mb-5">
         <div className="flex items-center gap-2 mb-1">
@@ -90,17 +90,14 @@ export default function QuickPhrasesTab() {
           <button
             key={phrase.text}
             onClick={() => speak(phrase)}
-            className={`rounded-2xl p-5 text-left transition-all duration-200 active:scale-[0.98] flex flex-col items-start justify-center min-h-[88px] hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+            className={`rounded-2xl p-5 text-left transition-all duration-200 active:scale-[0.98] flex items-center justify-center min-h-[88px] hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
               phrase.emergency
                 ? "glass border border-destructive/50 hover:border-destructive/70 shadow-[0_0_16px_hsl(0_84%_60%_/_0.15)]"
                 : "glass neon-border-purple hover:border-primary/50"
             }`}
           >
-            <span className="text-2xl mb-1.5" aria-hidden>
-              {phrase.emoji}
-            </span>
             <span
-              className={`font-semibold text-sm leading-tight ${
+              className={`font-semibold text-sm leading-tight text-center ${
                 phrase.emergency ? "text-destructive" : "text-foreground"
               }`}
             >

@@ -181,7 +181,7 @@ export default function SettingsTab() {
   const { settings, updateSettings } = useAccessibility();
 
   return (
-    <div className="min-h-screen flex flex-col px-5 pt-14 pb-24">
+    <div className="flex flex-col px-5 pt-14 pb-4">
       <div className="mb-6">
         <h3 className="font-display text-xl font-bold gradient-text-purple-cyan">
           Accessibility
