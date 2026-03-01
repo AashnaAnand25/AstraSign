@@ -57,17 +57,17 @@ export default function ReverseMode({ onBack, onSettings }: Props) {
       <div className={`relative z-10 flex items-center justify-between px-5 pt-12 pb-4 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
         <button
           onClick={onBack}
-          className="w-9 h-9 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
+          className="w-9 h-9 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-all duration-200"
         >
           <ArrowLeft size={16} />
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-neon-pink animate-glow-pulse" />
-          <span className="font-display text-sm font-bold gradient-text-purple-pink">REVERSE</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          <span className="text-sm font-bold text-primary">REVERSE</span>
         </div>
         <button
           onClick={onSettings}
-          className="w-9 h-9 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
+          className="w-9 h-9 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-all duration-200"
         >
           <Settings size={16} />
         </button>
@@ -80,8 +80,7 @@ export default function ReverseMode({ onBack, onSettings }: Props) {
             <button
               key={p}
               onClick={() => setText(p)}
-              className="px-3 py-2 rounded-2xl text-xs font-semibold"
-              style={{ background: "hsl(240 10% 10%)", border: "1px solid hsl(240 10% 16%)", color: "hsl(183 100% 50%)" }}
+              className="px-3 py-2 rounded-xl text-xs font-semibold bg-secondary border border-border text-primary hover:bg-accent-subtle transition-colors duration-200"
             >
               {p}
             </button>
@@ -89,7 +88,7 @@ export default function ReverseMode({ onBack, onSettings }: Props) {
         </div>
       </div>
 
-      <div className={`relative z-10 mx-5 glass rounded-3xl p-4 ${settings.focusMode ? "a11y-focus-content" : ""}`} style={{ border: "1px solid hsl(240 10% 14%)" }}>
+      <div className={`relative z-10 mx-5 bg-card border border-border rounded-2xl p-4 ${settings.focusMode ? "a11y-focus-content" : ""}`}>
         <div className="text-xs text-muted-foreground mb-2">Type message</div>
         <textarea
           value={text}
@@ -105,13 +104,7 @@ export default function ReverseMode({ onBack, onSettings }: Props) {
         <button
           onClick={speak}
           disabled={!text.trim()}
-          className="w-full py-4 rounded-2xl font-display font-bold text-sm tracking-widest text-white transition-all active:scale-95 disabled:opacity-40 flex items-center justify-center gap-2"
-          style={{
-            background: speaking
-              ? "linear-gradient(135deg, hsl(142 70% 45%), hsl(183 100% 35%))"
-              : "linear-gradient(135deg, hsl(183 100% 45%), hsl(272 76% 53%))",
-            boxShadow: "0 0 24px hsl(183 100% 50% / 0.25)",
-          }}
+          className="w-full py-4 rounded-xl bg-primary hover:bg-primary-hover font-bold text-sm tracking-widest text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 disabled:opacity-40 flex items-center justify-center gap-2"
         >
           <Volume2 size={16} />
           {speaking ? "SPEAKING" : "SPEAK ALOUD"}
