@@ -1,30 +1,19 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  ArrowLeftRight, 
-  Mic, 
-  Camera, 
-  Volume2, 
-  User, 
-  CheckCircle,
-  Type,
-  PersonStanding,
-  Hand,
+import {
+  ArrowLeftRight,
+  Mic,
+  Camera,
+  User,
   Settings
 } from 'lucide-react';
 import AstraSignLogo from '@/components/AstraSignLogo';
-import DefaultASLSigning from './DefaultASLSigning';
-import Person2DHands from './Person2DHands';
 import ChooseAvatar from './ChooseAvatar';
-import ReadyComponent from './ReadyComponent';
 import AccessibilitySettings from './AccessibilitySettings';
-import MinimalAudioToASL from './MinimalAudioToASL';
-import MinimalASLToAudio from './MinimalASLToAudio';
-import MinimalAvatar from './MinimalAvatar';
 import { useAccessibility } from './GlobalAccessibilityProvider';
 
-type NavigationScreen = 'home' | 'audio-to-asl' | 'asl-to-audio' | 'avatar' | 'ready' | 'default-signing' | 'person-2d' | 'choose-avatar';
+type NavigationScreen = 'home' | 'audio-to-asl' | 'asl-to-audio' | 'choose-avatar';
 
 export type TranslateModeForHub = 'audio-to-asl' | 'asl-to-audio';
 
@@ -81,62 +70,6 @@ export default function MainNavigationHub({ onBack, onHome, onGoToTranslate }: M
       screen: 'asl-to-audio' as NavigationScreen
     },
     {
-      id: 'ready',
-      title: 'Ready',
-      description: 'System status and checks',
-      icon: <CheckCircle className="w-6 h-6" />,
-      color: 'emerald',
-      screen: 'ready' as NavigationScreen
-    },
-    {
-      id: 'avatar',
-      title: 'Avatar',
-      description: '3D character animations',
-      icon: <User className="w-6 h-6" />,
-      color: 'pink',
-      screen: 'avatar' as NavigationScreen
-    },
-    {
-      id: 'default-signing',
-      title: 'Default (ASL Signing)',
-      description: 'Text and voice to ASL',
-      icon: <Type className="w-6 h-6" />,
-      color: 'indigo',
-      screen: 'default-signing' as NavigationScreen
-    },
-    {
-      id: 'text',
-      title: 'Text',
-      description: 'Type text for translation',
-      icon: <Type className="w-6 h-6" />,
-      color: 'gray',
-      screen: 'default-signing' as NavigationScreen
-    },
-    {
-      id: 'voice',
-      title: 'Voice',
-      description: 'Speak for translation',
-      icon: <Volume2 className="w-6 h-6" />,
-      color: 'orange',
-      screen: 'default-signing' as NavigationScreen
-    },
-    {
-      id: 'person',
-      title: 'Person',
-      description: '2D hand animations',
-      icon: <PersonStanding className="w-6 h-6" />,
-      color: 'teal',
-      screen: 'person-2d' as NavigationScreen
-    },
-    {
-      id: '2d-pipeline',
-      title: '2D · Our pipeline',
-      description: 'Text → ASL → hands',
-      icon: <Hand className="w-6 h-6" />,
-      color: 'cyan',
-      screen: 'person-2d' as NavigationScreen
-    },
-    {
       id: 'choose-avatar',
       title: 'Choose Avatar',
       description: 'Select your 3D character',
@@ -164,18 +97,6 @@ export default function MainNavigationHub({ onBack, onHome, onGoToTranslate }: M
 
   const renderCurrentScreen = () => {
     switch (currentScreen) {
-      case 'audio-to-asl':
-        return <MinimalAudioToASL onBack={() => setCurrentScreen('home')} />;
-      case 'asl-to-audio':
-        return <MinimalASLToAudio onBack={() => setCurrentScreen('home')} />;
-      case 'avatar':
-        return <MinimalAvatar />;
-      case 'ready':
-        return <ReadyComponent onBack={() => setCurrentScreen('home')} />;
-      case 'default-signing':
-        return <DefaultASLSigning onBack={() => setCurrentScreen('home')} onAvatar={() => setCurrentScreen('choose-avatar')} />;
-      case 'person-2d':
-        return <Person2DHands onBack={() => setCurrentScreen('home')} />;
       case 'choose-avatar':
         return <ChooseAvatar onBack={() => setCurrentScreen('home')} />;
       default:
