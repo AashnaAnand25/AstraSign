@@ -419,7 +419,19 @@ export default function MVPVoiceToSign({ onBack, embedded }: Props) {
 
             {/* 3D Canvas — hands lower, centered, palms facing camera */}
             <div className="relative mx-4 mt-4 mb-2 bg-card border border-border rounded-2xl h-[320px] flex-shrink-0 shadow-lg overflow-hidden">
-                <Canvas camera={{ position: [0, 0, 1.5], fov: 48 }} style={{ width: "100%", height: 320 }}>
+                <Canvas
+                    camera={{ position: [0, 0, 1.5], fov: 48 }}
+                    style={{ width: "100%", height: 320 }}
+                    onCreated={({ gl }) => {
+                        // Attempt to prevent context loss on mobile by explicitly disposing when done
+                        const cleanup = () => {
+                            gl.dispose();
+                            gl.forceContextLoss();
+                        };
+                        window.addEventListener('beforeunload', cleanup);
+                        return () => window.removeEventListener('beforeunload', cleanup);
+                    }}
+                >
                     <ambientLight intensity={0.7} />
                     <directionalLight position={[2, 3, 4]} intensity={1.3} />
                     <Suspense fallback={null}>

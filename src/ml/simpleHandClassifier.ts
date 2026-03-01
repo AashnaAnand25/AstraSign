@@ -12,7 +12,7 @@ export class SimpleHandClassifier {
 
   async initialize(): Promise<void> {
     console.log('🤚 Initializing Simple Hand Classifier...');
-    
+
     // Simple rule-based classifier - always works
     this.isInitialized = true;
     console.log('✅ Simple Hand Classifier ready!');
@@ -27,14 +27,14 @@ export class SimpleHandClassifier {
     try {
       // Extract key hand features
       const features = this.extractHandFeatures(landmarks);
-      
+
       // Simple rule-based classification
       const gesture = this.classifyByRules(features);
-      
+
       return gesture;
     } catch (error) {
       console.error('Hand classification error:', error);
-      
+
       // Fallback to unknown
       return {
         gesture: 'UNKNOWN',
@@ -64,20 +64,20 @@ export class SimpleHandClassifier {
       middleTip: middleTip,
       ringTip: ringTip,
       pinkyTip: pinkyTip,
-      
+
       // Calculate distances
       thumbToIndex: this.distance(thumbTip, indexTip),
       indexToMiddle: this.distance(indexTip, middleTip),
       middleToRing: this.distance(middleTip, ringTip),
       ringToPinky: this.distance(ringTip, pinkyTip),
-      
+
       // Calculate if fingers are extended
       thumbExtended: this.isFingerExtended(wrist, thumbTip, 0.15),
       indexExtended: this.isFingerExtended(wrist, indexTip, 0.12),
       middleExtended: this.isFingerExtended(wrist, middleTip, 0.12),
       ringExtended: this.isFingerExtended(wrist, ringTip, 0.12),
       pinkyExtended: this.isFingerExtended(wrist, pinkyTip, 0.12),
-      
+
       // Hand orientation
       palmFacing: this.getPalmFacing(landmarks),
       handHeight: wrist[1] // Y coordinate
@@ -100,7 +100,7 @@ export class SimpleHandClassifier {
   private getPalmFacing(landmarks: number[][]): string {
     const wrist = landmarks[0];
     const middleMcp = landmarks[9]; // Middle finger base
-    
+
     if (middleMcp[2] > wrist[2]) {
       return 'outward';
     } else {
@@ -119,8 +119,8 @@ export class SimpleHandClassifier {
     }
 
     // Rule 1: Fist (A, S, T)
-    if (!features.indexExtended && !features.middleExtended && 
-        !features.ringExtended && !features.pinkyExtended) {
+    if (!features.indexExtended && !features.middleExtended &&
+      !features.ringExtended && !features.pinkyExtended) {
       if (features.thumbExtended) {
         return {
           gesture: 'A',
@@ -137,8 +137,8 @@ export class SimpleHandClassifier {
     }
 
     // Rule 2: Flat hand (B, 5, HELLO)
-    if (features.indexExtended && features.middleExtended && 
-        features.ringExtended && features.pinkyExtended) {
+    if (features.indexExtended && features.middleExtended &&
+      features.ringExtended && features.pinkyExtended) {
       if (features.thumbExtended) {
         return {
           gesture: '5',
@@ -154,27 +154,46 @@ export class SimpleHandClassifier {
       }
     }
 
-    // Rule 3: Pointing (I, J, P)
-    if (features.indexExtended && !features.middleExtended && 
-        !features.ringExtended && !features.pinkyExtended) {
+    // Rule 3: Pointing (I, D, P)
+    if (features.indexExtended && !features.middleExtended &&
+      !features.ringExtended && !features.pinkyExtended) {
       if (features.thumbExtended) {
-        return {
-          gesture: 'P',
-          confidence: 0.8,
-          description: ASL_SIGNS['P']?.description || 'Pointing down'
-        };
+        // Check if pointing down (P) or sideways (L/D)
+        if (features.indexTip[1] > features.wrist[1]) {
+          return {
+            gesture: 'P',
+            confidence: 0.8,
+            description: ASL_SIGNS['P']?.description || 'Pointing down'
+          };
+        } else {
+          return {
+            gesture: 'L',
+            confidence: 0.8,
+            description: ASL_SIGNS['L']?.description || 'L shape hand'
+          };
+        }
       } else {
         return {
-          gesture: 'I',
+          gesture: 'D',
           confidence: 0.8,
-          description: ASL_SIGNS['I']?.description || 'Pointing up'
+          description: ASL_SIGNS['D']?.description || 'Pointing up (D)'
         };
       }
     }
 
+    // Rule 3.1: Pinky only (I)
+    if (!features.indexExtended && !features.middleExtended &&
+      !features.ringExtended && features.pinkyExtended) {
+      return {
+        gesture: 'I',
+        confidence: 0.8,
+        description: ASL_SIGNS['I']?.description || 'Pinky up (I)'
+      };
+    }
+
     // Rule 4: V shape (V, 2)
-    if (features.indexExtended && features.middleExtended && 
-        !features.ringExtended && !features.pinkyExtended) {
+    if (features.indexExtended && features.middleExtended &&
+      !features.ringExtended && !features.pinkyExtended) {
       return {
         gesture: 'V',
         confidence: 0.8,
@@ -182,38 +201,27 @@ export class SimpleHandClassifier {
       };
     }
 
-    // Rule 5: L shape (L)
-    if (features.indexExtended && features.thumbExtended && 
-        !features.middleExtended && !features.ringExtended && !features.pinkyExtended) {
-      return {
-        gesture: 'L',
-        confidence: 0.8,
-        description: ASL_SIGNS['L']?.description || 'L shape hand'
-      };
-    }
-
-    // Rule 6: C shape (C, O)
-    if (!features.indexExtended && !features.middleExtended && 
-        !features.ringExtended && !features.pinkyExtended && features.thumbExtended) {
+    // Rule 6: C shape or O shape
+    if (features.thumbExtended && !features.indexExtended) {
       // Check if thumb and index form circle
-      if (features.thumbToIndex < 0.08) {
-        return {
-          gesture: 'C',
-          confidence: 0.8,
-          description: ASL_SIGNS['C']?.description || 'C shape hand'
-        };
-      } else {
+      if (features.thumbToIndex < 0.1) {
         return {
           gesture: 'O',
           confidence: 0.8,
           description: ASL_SIGNS['O']?.description || 'O shape hand'
         };
+      } else {
+        return {
+          gesture: 'C',
+          confidence: 0.8,
+          description: ASL_SIGNS['C']?.description || 'C shape hand'
+        };
       }
     }
 
     // Rule 7: W shape (W)
-    if (features.indexExtended && features.middleExtended && 
-        features.ringExtended && features.pinkyExtended && features.thumbExtended) {
+    if (features.indexExtended && features.middleExtended &&
+      features.ringExtended && !features.pinkyExtended) {
       return {
         gesture: 'W',
         confidence: 0.8,
@@ -222,8 +230,8 @@ export class SimpleHandClassifier {
     }
 
     // Rule 8: Y shape (Y)
-    if (!features.indexExtended && !features.middleExtended && 
-        !features.ringExtended && features.pinkyExtended && features.thumbExtended) {
+    if (!features.indexExtended && !features.middleExtended &&
+      !features.ringExtended && features.pinkyExtended && features.thumbExtended) {
       return {
         gesture: 'Y',
         confidence: 0.8,

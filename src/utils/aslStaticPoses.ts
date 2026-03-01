@@ -4,12 +4,21 @@
  */
 
 export const GESTURE_TO_WORD: Record<string, string> = {
-  A: "Yes",   // Thumbs up
-  S: "No",    // Closed fist
-  "5": "Stop", // All fingers extended
-  B: "Stop",  // Flat hand (no thumb)
-  I: "One",   // Index only
-  V: "Two",   // Peace sign
+  A: "A",
+  B: "B",
+  C: "C",
+  D: "D",
+  I: "I",
+  L: "L",
+  O: "O",
+  P: "P",
+  V: "V",
+  W: "W",
+  Y: "Y",
+  S: "No",
+  "5": "Stop",
+  HELLO: "Hello",
+  THANK: "Thank you",
 };
 
 export const STATIC_POSE_WORDS = ["Yes", "No", "Stop", "One", "Two"] as const;

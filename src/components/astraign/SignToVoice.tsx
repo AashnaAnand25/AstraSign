@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { ArrowLeft, Settings, Play, Pause, ToggleLeft, ToggleRight, Volume2 } from "lucide-react";
 import { useAccessibility } from "@/accessibility/AccessibilityProvider";
 import HandTracker from "@/components/astraign/HandTracker";
-import { gestureToWord } from "@/utils/aslStaticPoses";
+import { useFastSignPipeline } from "@/hooks/useFastSignPipeline";
 
 interface Props {
   onBack?: () => void;
@@ -80,104 +80,89 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
     onStatusChange?.(isRecording ? "processing" : translation ? "ready" : "ready");
   }, [isRecording, translation, onStatusChange]);
 
-  const handleGestureDetected = useCallback(
-    (gesture: string, conf: number) => {
-      const word = gestureToWord(gesture);
-      if (!word || conf < 0.55) {
-        lastGestureRef.current = "";
-        return;
-      }
-      const now = Date.now();
-      if (lastGestureRef.current === gesture) {
-        const held = now - lastGestureTimeRef.current;
-        if (held >= POSE_HOLD_MS) {
-          const canSpeak =
-            lastSpokenWordRef.current !== word || now - lastSpokenTimeRef.current >= COOLDOWN_MS;
-          if (canSpeak) {
-            setTranslation(word);
-            setConfidence(Math.round(conf * 100));
-            setShowParticles(true);
-            setTimeout(() => setShowParticles(false), 1500);
-            lastSpokenWordRef.current = word;
-            lastSpokenTimeRef.current = now;
-            onAddToHistory?.(word, gesture);
-          }
-        }
-      } else {
-        lastGestureRef.current = gesture;
-        lastGestureTimeRef.current = now;
-      }
-    },
-    [onAddToHistory]
-  );
+  const [rawLandmarks, setRawLandmarks] = useState<any[][] | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const pipeline = useFastSignPipeline(videoRef, rawLandmarks);
 
   useEffect(() => {
-    if (!translation) return;
+    onStatusChange?.(isRecording ? "processing" : translation ? "ready" : "ready");
+  }, [isRecording, translation, onStatusChange]);
 
-    if (settings.hapticFeedback && typeof navigator !== "undefined" && "vibrate" in navigator) {
-      try {
-        navigator.vibrate?.([35, 20, 35]);
-      } catch {
-        // ignore
-      }
+  // Sync isRecording with pipeline
+  useEffect(() => {
+    if (isRecording) {
+      pipeline.beginRecording();
+    } else {
+      pipeline.commitSegment();
     }
+  }, [isRecording]);
 
-    // Always speak translation when detected in ASL to Audio mode, 
-    // but still respect the speech synthesis availability.
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      try {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(translation);
-        u.rate = Number(getComputedStyle(document.documentElement).getPropertyValue("--a11y-speech-rate")) || 1;
-        utteranceRef.current = u;
-        window.speechSynthesis.speak(u);
-        setIsPlaying(true);
-        u.onend = () => setIsPlaying(false);
-      } catch {
-        // ignore
-      }
+  // When pipeline detects a gesture, show particles and update "translation" / confidence
+  useEffect(() => {
+    if (pipeline.detectedGesture && pipeline.detectedGesture !== "NONE") {
+      setTranslation(pipeline.detectedGesture);
+      setConfidence(96); // The pipeline commits high-confidence signs automatically
+      setShowParticles(true);
+      const timer = setTimeout(() => setShowParticles(false), 1500);
+      return () => clearTimeout(timer);
     }
-  }, [translation, settings.hapticFeedback, settings.voiceGuidance]);
+  }, [pipeline.detectedGesture]);
 
+  // Sync glossWords updates to history
   useEffect(() => {
-    return () => {
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        try {
-          window.speechSynthesis.cancel();
-        } catch {
-          // ignore
-        }
+    if (pipeline.glossWords.length > 0) {
+      const lastWord = pipeline.glossWords[pipeline.glossWords.length - 1];
+      onAddToHistory?.(lastWord, lastWord);
+    }
+  }, [pipeline.glossWords, onAddToHistory]);
+
+  // When pipeline commits a new word, update the display and show particles
+  useEffect(() => {
+    if (pipeline.glossWords.length > 0) {
+      setTranslation(pipeline.glossWords.join(" "));
+      setConfidence(96); // The pipeline commits high-confidence signs automatically
+      setShowParticles(true);
+
+      // Haptic feedback
+      if (settings.hapticFeedback && typeof navigator !== "undefined" && "vibrate" in navigator) {
+        try { navigator.vibrate?.([35, 20, 35]); } catch { }
       }
-    };
-  }, []);
 
+      const timer = setTimeout(() => setShowParticles(false), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [pipeline.glossWords, settings.hapticFeedback]);
+
+  // Sync glossWords updates to history
   useEffect(() => {
-    if (!translation) {
-      setIsPlaying(false);
+    if (pipeline.glossWords.length > 0) {
+      const lastWord = pipeline.glossWords[pipeline.glossWords.length - 1];
+      onAddToHistory?.(lastWord, lastWord);
+    }
+  }, [pipeline.glossWords, onAddToHistory]);
+
+  // Play audio when URL is generated by the pipeline
+  useEffect(() => {
+    if (pipeline.audioUrl) {
+      const audio = new Audio(pipeline.audioUrl);
+      audio.onplay = () => setIsPlaying(true);
+      audio.onended = () => setIsPlaying(false);
+      audio.onerror = () => setIsPlaying(false);
+      audio.play().catch(console.error);
+    }
+  }, [pipeline.audioUrl]);
+
+  const handlePlayClick = () => {
+    if (isPlaying) {
+      // Cannot easily stop a playing blob audio without ref, but typical phrase is short.
+      // Could manage audio object in ref if needed.
       return;
     }
-
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-
-    if (isPlaying) {
-      try {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(translation);
-        u.rate = Number(getComputedStyle(document.documentElement).getPropertyValue("--a11y-speech-rate")) || 1;
-        utteranceRef.current = u;
-        window.speechSynthesis.speak(u);
-        u.onend = () => setIsPlaying(false);
-      } catch {
-        // ignore
-      }
-    } else {
-      try {
-        window.speechSynthesis.cancel();
-      } catch {
-        // ignore
-      }
+    if (pipeline.glossWords.length > 0) {
+      pipeline.triggerTranslate();
     }
-  }, [isPlaying, translation, settings.playbackSpeed]);
+  };
 
   const speakManual = async () => {
     if (!manualText.trim()) return;
@@ -303,9 +288,9 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
       {/* Camera + MediaPipe when recording — constrained so it doesn't cover bottom controls */}
       {isRecording && (
         <div
-          className="absolute left-4 right-4 top-4 bottom-[320px] rounded-3xl overflow-hidden border-2 border-primary/50 bg-card z-[5] pointer-events-auto shadow-xl"
+          className="absolute inset-0 z-[5] pointer-events-auto bg-card"
         >
-          <HandTracker isActive={true} onGestureDetected={handleGestureDetected} />
+          <HandTracker isActive={true} onLandmarks={setRawLandmarks} />
         </div>
       )}
 
@@ -528,9 +513,9 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
             <div className="text-center">
               <button
                 type="button"
-                onClick={() => setIsPlaying(!isPlaying)}
-                disabled={!translation}
-                className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all disabled:opacity-30 cursor-pointer"
+                onClick={handlePlayClick}
+                disabled={pipeline.glossWords.length === 0 || pipeline.isTranslating}
+                className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all disabled:opacity-30 cursor-pointer relative"
                 style={{
                   background: "hsl(183 100% 50% / 0.15)",
                   border: "1px solid hsl(183 100% 50% / 0.3)",
@@ -538,14 +523,20 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
                   boxShadow: translation ? "0 0 15px hsl(183 100% 50% / 0.2)" : "none",
                 }}
               >
-                {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+                {pipeline.isTranslating ? (
+                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : isPlaying ? (
+                  <Pause size={18} />
+                ) : (
+                  <Play size={18} />
+                )}
               </button>
               <span className="text-[10px] text-muted-foreground mt-1 block">Play</span>
             </div>
           </div>
 
           <p className="text-center text-xs text-muted-foreground mt-4">
-            {isRecording ? "Detecting hand gestures..." : "Tap to start recognition"}
+            {isRecording ? pipeline.status : "Tap to start recognition"}
           </p>
         </div>
       </div>

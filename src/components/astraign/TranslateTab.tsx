@@ -59,20 +59,18 @@ export default function TranslateTab({ onAddToHistory, initialMode, onInitialMod
       </button>
 
       {/* Mode switch at top — ensure clickable above content */}
-      <div className="relative z-[60] flex justify-center pt-14 pb-2 pointer-events-none">
+      <div className="relative z-[60] flex justify-center pt-24 pb-2 px-4 pointer-events-none">
         <div className="inline-flex rounded-full p-1 bg-secondary border border-border pointer-events-auto">
           <button
             type="button"
             onClick={() => {
               handleHaptic();
               setMode("audio-to-asl");
-              onInitialModeConsumed?.();
             }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
-              mode === "audio-to-asl"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${mode === "audio-to-asl"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground"
+              }`}
           >
             Audio → ASL
           </button>
@@ -81,13 +79,11 @@ export default function TranslateTab({ onAddToHistory, initialMode, onInitialMod
             onClick={() => {
               handleHaptic();
               setMode("asl-to-audio");
-              onInitialModeConsumed?.();
             }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
-              mode === "asl-to-audio"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${mode === "asl-to-audio"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground"
+              }`}
           >
             ASL → Audio
           </button>
@@ -97,22 +93,20 @@ export default function TranslateTab({ onAddToHistory, initialMode, onInitialMod
       {/* Status indicator */}
       <div className="relative z-[60] flex justify-center mb-2 pointer-events-none">
         <div
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${
-            status === "listening"
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${status === "listening"
+            ? "bg-accent-subtle border-primary text-primary"
+            : status === "processing"
               ? "bg-accent-subtle border-primary text-primary"
-              : status === "processing"
-                ? "bg-accent-subtle border-primary text-primary"
-                : "bg-secondary border-border text-muted-foreground"
-          }`}
+              : "bg-secondary border-border text-muted-foreground"
+            }`}
         >
           <div
-            className={`w-1.5 h-1.5 rounded-full ${
-              status === "listening"
+            className={`w-1.5 h-1.5 rounded-full ${status === "listening"
+              ? "bg-primary animate-pulse"
+              : status === "processing"
                 ? "bg-primary animate-pulse"
-                : status === "processing"
-                  ? "bg-primary animate-pulse"
-                  : "bg-primary"
-            }`}
+                : "bg-primary"
+              }`}
           />
           {status === "listening" && "Listening…"}
           {status === "processing" && "Processing…"}
@@ -122,9 +116,10 @@ export default function TranslateTab({ onAddToHistory, initialMode, onInitialMod
 
       {/* Content — scrollable; buttons inside have pointer-events */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        {mode === "audio-to-asl" ? (
+        {mode === "audio-to-asl" && (
           <MVPVoiceToSign embedded />
-        ) : (
+        )}
+        {mode === "asl-to-audio" && (
           <SignToVoice
             embedded
             onStatusChange={setStatus}
