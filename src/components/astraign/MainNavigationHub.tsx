@@ -26,14 +26,34 @@ import { useAccessibility } from './GlobalAccessibilityProvider';
 
 type NavigationScreen = 'home' | 'audio-to-asl' | 'asl-to-audio' | 'avatar' | 'ready' | 'default-signing' | 'person-2d' | 'choose-avatar';
 
+export type TranslateModeForHub = 'audio-to-asl' | 'asl-to-audio';
+
 interface MainNavigationHubProps {
   onBack?: () => void;
   onHome?: () => void;
+  /** When set, Audio → ASL / ASL → Audio / Flip Screen use the main app Translate tab (same as Home). */
+  onGoToTranslate?: (mode?: TranslateModeForHub) => void;
 }
 
-export default function MainNavigationHub({ onBack, onHome }: MainNavigationHubProps) {
+export default function MainNavigationHub({ onBack, onHome, onGoToTranslate }: MainNavigationHubProps) {
   const [currentScreen, setCurrentScreen] = useState<NavigationScreen>('home');
   const { settings } = useAccessibility();
+
+  const handleNavClick = (item: { id: string; screen: NavigationScreen }) => {
+    if (item.id === 'flip-screen' && onGoToTranslate) {
+      onGoToTranslate(); // Open Translate tab; user can use Flip button there
+      return;
+    }
+    if (item.id === 'audio-to-asl' && onGoToTranslate) {
+      onGoToTranslate('audio-to-asl');
+      return;
+    }
+    if (item.id === 'asl-to-audio' && onGoToTranslate) {
+      onGoToTranslate('asl-to-audio');
+      return;
+    }
+    setCurrentScreen(item.screen);
+  };
 
   const navigationItems = [
     {
@@ -220,7 +240,7 @@ export default function MainNavigationHub({ onBack, onHome }: MainNavigationHubP
                   key={item.id}
                   className="glass rounded-2xl p-4 cursor-pointer transition-all active:scale-95 hover:scale-105"
                   style={{ border: "1px solid hsl(240 10% 14%)" }}
-                  onClick={() => setCurrentScreen(item.screen)}
+                  onClick={() => handleNavClick(item)}
                 >
                   <div className="flex flex-col items-center text-center space-y-2">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
@@ -261,7 +281,10 @@ export default function MainNavigationHub({ onBack, onHome }: MainNavigationHubP
                 </div>
                 <span className="text-xs">Home</span>
               </button>
-              <button className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+              <button
+                onClick={() => onGoToTranslate?.()}
+                className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+              >
                 <div className="w-6 h-6 rounded-lg bg-neon-cyan/20 flex items-center justify-center">
                   <div className="w-3 h-3 bg-neon-cyan rounded-full" />
                 </div>

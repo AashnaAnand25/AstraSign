@@ -112,6 +112,11 @@ const Index = () => {
             <MainNavigationHub
               onBack={() => setScreen("home")}
               onHome={() => setScreen("home")}
+              onGoToTranslate={(mode) => {
+                setScreen("home");
+                setActiveTab("translate");
+                if (mode) setInitialTranslateMode(mode);
+              }}
             />
           )}
 
