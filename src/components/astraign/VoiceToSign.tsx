@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { ArrowLeft, Mic, MicOff, Settings, Type, Volume2 } from "lucide-react";
+import { ArrowLeft, Mic, MicOff, Settings, Type, Volume2, Glasses } from "lucide-react";
 import { useAccessibility } from "@/accessibility/AccessibilityProvider";
 import HandTracker from "./HandTracker";
 import AvatarScene from "./AvatarScene";
@@ -480,6 +480,12 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-sm font-bold text-primary">AstraSign</span>
+            {settings.glassesConnected && (
+              <div className="ml-2 px-2 py-0.5 rounded-full bg-neon-cyan/20 border border-neon-cyan/50 flex items-center gap-1.5 shadow-[0_0_10px_hsl(183_100%_50%_/_0.3)]">
+                <Glasses size={12} className="text-neon-cyan" />
+                <span className="text-[9px] font-bold text-neon-cyan uppercase tracking-widest">Ray-Ban</span>
+              </div>
+            )}
           </div>
           <button
             onClick={onSettings}
