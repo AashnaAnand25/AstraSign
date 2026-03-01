@@ -106,7 +106,9 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
       }
     }
 
-    if (settings.voiceGuidance && typeof window !== "undefined" && "speechSynthesis" in window) {
+    // Always speak translation when detected in ASL to Audio mode, 
+    // but still respect the speech synthesis availability.
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
       try {
         window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(translation);

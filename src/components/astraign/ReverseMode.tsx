@@ -34,9 +34,49 @@ export default function ReverseMode({ onBack, onSettings }: Props) {
     };
   }, []);
 
-  const speak = () => {
+  const speak = async () => {
     if (!text.trim()) return;
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    setSpeaking(true);
+
+    try {
+      // Try ElevenLabs backend first
+      const resp = await fetch("/api/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text.trim(), voice_id: "21m00Tcm4TlvDq8ikWAM" }),
+      });
+
+      if (!resp.ok) {
+        throw new Error("ElevenLabs backend failed");
+      }
+
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+
+      audio.onplay = () => setSpeaking(true);
+      audio.onended = () => {
+        setSpeaking(false);
+        URL.revokeObjectURL(url);
+      };
+      audio.onerror = () => {
+        setSpeaking(false);
+        URL.revokeObjectURL(url);
+        speakNative(); // Final fallback inside audio error
+      };
+
+      await audio.play();
+    } catch (err) {
+      console.warn("ElevenLabs failed, using native fallback:", err);
+      speakNative();
+    }
+  };
+
+  const speakNative = () => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      setSpeaking(false);
+      return;
+    }
     try {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text.trim());

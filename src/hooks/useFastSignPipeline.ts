@@ -177,7 +177,9 @@ export function useFastSignPipeline(
         body: JSON.stringify({ text, voice_id: "21m00Tcm4TlvDq8ikWAM" }),
       });
 
-      if (!resp.ok) throw new Error("TTS failed");
+      if (!resp.ok) {
+        throw new Error("ElevenLabs TTS failed; falling back to native speech");
+      }
 
       const blob = await resp.blob();
       setAudioUrl((prev) => {
@@ -187,7 +189,18 @@ export function useFastSignPipeline(
 
       setStatus("Done! Tap play to hear");
     } catch (err) {
-      setStatus(`Error: ${String(err)}`);
+      console.warn("TTS fallback triggered:", err);
+      // Fallback to native Web Speech API
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(glossWords.join(" "));
+        // Use playbackSpeed setting if available
+        u.rate = 1.0;
+        window.speechSynthesis.speak(u);
+        setStatus("Done (using native voice)");
+      } else {
+        setStatus(`Error: ${String(err)}`);
+      }
     } finally {
       setIsTranslating(false);
     }
