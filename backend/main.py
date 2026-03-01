@@ -1,14 +1,26 @@
-from fastapi import FastAPI, HTTPException, Header, Depends, WebSocket, WebSocketDisconnect
+f"""
+AstraSign ASL Translation Backend API
+
+This FastAPI backend provides endpoints for:
+- Audio transcription (using Gemini or OpenAI Whisper)
+- ASL grammar conversion
+- Sign lookup from database
+- Text-to-speech (using ElevenLabs)
+- Sign animation generation
+"""
+
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import Optional, List
-import os
+from typing import List, Optional, Dict, Any
 import json
+import os
 import asyncio
+import aiofiles
+from datetime import datetime
 from functools import lru_cache
 import httpx
-from datetime import datetime
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -30,7 +42,7 @@ print(f"ENVIRONMENT: {settings.ENVIRONMENT}")
 
 # Initialize FastAPI
 app = FastAPI(
-    title="NeuroSign API",
+    title="AstraSign API",
     description="Production-grade ASL Translation Backend",
     version="1.0.0"
 )
@@ -260,7 +272,7 @@ async def transcribe_audio(request: TranscribeRequest):
         print("🎭 DEMO MODE - Add GEMINI_API_KEY (free) or OPENAI_API_KEY")
         import random
         demo_transcripts = [
-            "HELLO WORLD", "HOW ARE YOU", "MY NAME IS NEUROSIGN", "NICE TO MEET YOU",
+            "HELLO WORLD", "HOW ARE YOU", "MY NAME IS ASTRASIGN", "NICE TO MEET YOU",
             "THANK YOU", "PLEASE HELP ME", "SORRY", "YES", "NO", "GOOD MORNING", "SEE YOU LATER",
         ]
         transcript = random.choice(demo_transcripts)
@@ -337,7 +349,7 @@ async def generate_sign(request: GenerateSignRequest):
             "words": words,
             "animation_ids": animation_ids,
             "poses": poses,
-            "source": "neurosign",
+            "source": "astrasign",
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Sign generation failed: {str(e)}")

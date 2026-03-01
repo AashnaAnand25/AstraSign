@@ -1,12 +1,12 @@
-import { Settings, Users } from "lucide-react";
+import { Settings, Users, ArrowLeftRight } from "lucide-react";
 
 interface Props {
   onStartLive: () => void;
   onReverseMode: () => void;
   onCameraMode: () => void;
-  onEnhancedCameraMode: () => void;
   onConversation: () => void;
   onSettings: () => void;
+  onTranslationHub?: () => void;
 }
 
 const Stat = ({ label, value }: { label: string; value: string }) => (
@@ -38,7 +38,7 @@ const BigCard = ({ title, subtitle, desc, color, onClick }: { title: string; sub
   );
 };
 
-export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, onEnhancedCameraMode, onConversation, onSettings }: Props) {
+export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, onConversation, onSettings, onTranslationHub }: Props) {
   return (
     <div className="min-h-screen flex flex-col px-5 pt-14 pb-8">
       <div className="flex items-center justify-between mb-6">
@@ -80,17 +80,10 @@ export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, o
         />
         <BigCard
           color="purple"
-          title="Camera Mode"
+          title="ASL Detection"
           subtitle="Sign → Voice"
           desc="Point the camera at signing and generate natural voice output."
           onClick={onCameraMode}
-        />
-        <BigCard
-          color="cyan"
-          title="Enhanced Camera"
-          subtitle="3D Sign → Voice"
-          desc="Advanced hand tracking with real-time 3D visualization and AI translation."
-          onClick={onEnhancedCameraMode}
         />
 
         <button
@@ -104,6 +97,21 @@ export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, o
         >
           Conversation Mode
         </button>
+
+        {onTranslationHub && (
+          <button
+            onClick={onTranslationHub}
+            className="w-full py-3 rounded-2xl text-sm font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
+            style={{
+              background: "hsl(183 100% 50% / 0.08)",
+              border: "1px solid hsl(183 100% 50% / 0.25)",
+              color: "hsl(var(--neon-cyan))",
+            }}
+          >
+            <ArrowLeftRight size={16} />
+            ASL Translation Hub
+          </button>
+        )}
 
         <div className="glass rounded-2xl p-4" style={{ border: "1px solid hsl(240 10% 14%)" }}>
           <div className="text-xs font-semibold text-muted-foreground tracking-wider uppercase mb-3">Preloaded Vocabulary</div>

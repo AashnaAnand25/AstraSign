@@ -1,0 +1,38 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="45" fill="url(#gradient1)" />
+  
+  <!-- ASL hand shapes stylized -->
+  <!-- Right hand - "A" sign -->
+  <path
+    d="M30 35 L30 65 M30 35 L40 40 M30 50 L40 45 M30 65 L40 60"
+    stroke="white"
+    strokeWidth="3"
+    strokeLinecap="round"
+  />
+  
+  <!-- Left hand - "S" sign -->
+  <path
+    d="M70 35 Q60 40 60 50 Q60 60 70 65 M60 50 Q70 50 70 50"
+    stroke="white"
+    strokeWidth="3"
+    strokeLinecap="round"
+    fill="none"
+  />
+  
+  <!-- Stars representing astronomy theme -->
+  <circle cx="25" cy="25" r="2" fill="white" opacity="0.8" />
+  <circle cx="75" cy="25" r="2" fill="white" opacity="0.8" />
+  <circle cx="50" cy="20" r="1.5" fill="white" opacity="0.6" />
+  <circle cx="25" cy="75" r="1.5" fill="white" opacity="0.6" />
+  <circle cx="75" cy="75" r="1.5" fill="white" opacity="0.6" />
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#6366f1" />
+      <stop offset="50%" stopColor="#8b5cf6" />
+      <stop offset="100%" stopColor="#ec4899" />
+    </linearGradient>
+  </defs>
+</svg>

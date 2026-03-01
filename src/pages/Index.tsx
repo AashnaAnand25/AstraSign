@@ -1,19 +1,19 @@
 import { useState } from "react";
-import LandingScreen from "@/components/neurosign/LandingScreen";
-import ModeSelection from "@/components/neurosign/ModeSelection";
-import SignToVoice from "@/components/neurosign/SignToVoice";
-import SignToVoiceEnhanced from "@/components/neurosign/SignToVoiceEnhanced";
-import VoiceToSign from "@/components/neurosign/VoiceToSign";
-import CleanVoiceToSign from "@/components/neurosign/CleanVoiceToSign";
-import GuaranteedVoiceToSign from "@/components/neurosign/GuaranteedVoiceToSign";
-import AccessibilityPanel from "@/components/neurosign/AccessibilityPanel";
-import ConversationMode from "@/components/neurosign/ConversationMode";
-import OnboardingOne from "@/components/neurosign/OnboardingOne";
-import OnboardingTwo from "@/components/neurosign/OnboardingTwo";
-import MainLayout from "@/components/neurosign/MainLayout";
-import ReverseMode from "@/components/neurosign/ReverseMode";
-import ScreenWithNav from "@/components/neurosign/ScreenWithNav";
-import type { TabId } from "@/components/neurosign/BottomNav";
+import MinimalLandingScreen from "@/components/astraign/MinimalLandingScreen";
+import ModeSelection from "@/components/astraign/ModeSelection";
+import SignToVoice from "@/components/astraign/SignToVoice";
+import VoiceToSign from "@/components/astraign/VoiceToSign";
+import CleanVoiceToSign from "@/components/astraign/CleanVoiceToSign";
+import GuaranteedVoiceToSign from "@/components/astraign/GuaranteedVoiceToSign";
+import AccessibilityPanel from "@/components/astraign/AccessibilityPanel";
+import ConversationMode from "@/components/astraign/ConversationMode";
+import OnboardingOne from "@/components/astraign/OnboardingOne";
+import OnboardingTwo from "@/components/astraign/OnboardingTwo";
+import MainLayout from "@/components/astraign/MainLayout";
+import ReverseMode from "@/components/astraign/ReverseMode";
+import ScreenWithNav from "@/components/astraign/ScreenWithNav";
+import MainNavigationHub from "@/components/astraign/MainNavigationHub";
+import type { TabId } from "@/components/astraign/BottomNav";
 
 export type Screen =
   | "landing"
@@ -24,9 +24,9 @@ export type Screen =
   | "reverse"
   | "modes"
   | "sign-to-voice"
-  | "sign-to-voice-enhanced"
   | "voice-to-sign"
-  | "conversation";
+  | "conversation"
+  | "translation-hub";
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>("landing");
@@ -47,7 +47,7 @@ const Index = () => {
         </div>
 
         {screen === "landing" && (
-          <LandingScreen onStart={() => setScreen("onboarding-1")} />
+          <MinimalLandingScreen onStart={() => setScreen("onboarding-1")} />
         )}
 
         {screen === "onboarding-1" && (
@@ -68,9 +68,9 @@ const Index = () => {
             onStartLive={() => setScreen("live")}
             onReverseMode={() => setScreen("reverse")}
             onCameraMode={() => setScreen("sign-to-voice")}
-            onEnhancedCameraMode={() => setScreen("sign-to-voice-enhanced")}
             onConversation={() => setScreen("conversation")}
             onSettings={() => goToTab("settings")}
+            onTranslationHub={() => setScreen("translation-hub")}
             activeTab={activeTab}
             onTabChange={setActiveTab}
           />
@@ -113,15 +113,6 @@ const Index = () => {
           </ScreenWithNav>
         )}
 
-        {screen === "sign-to-voice-enhanced" && (
-          <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
-            <SignToVoiceEnhanced
-              onBack={() => setScreen("home")}
-              onSettings={() => goToTab("settings")}
-            />
-          </ScreenWithNav>
-        )}
-
         {screen === "voice-to-sign" && (
           <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
             <VoiceToSign
@@ -135,6 +126,13 @@ const Index = () => {
           <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
             <ConversationMode onBack={() => setScreen("home")} />
           </ScreenWithNav>
+        )}
+
+        {screen === "translation-hub" && (
+          <MainNavigationHub
+            onBack={() => setScreen("home")}
+            onHome={() => setScreen("home")}
+          />
         )}
       </div>
     </div>
