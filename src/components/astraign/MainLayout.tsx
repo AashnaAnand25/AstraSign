@@ -41,7 +41,7 @@ export default function MainLayout({
   const setActiveTab = onTabChange ?? setInternalTab;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center">
       <div className="relative w-full max-w-[430px] min-h-screen mx-auto flex flex-col h-screen overflow-visible">
         {/* Subtle gradient overlay */}
         <div className="fixed inset-0 max-w-[430px] mx-auto pointer-events-none overflow-hidden z-0 opacity-30">
@@ -49,7 +49,7 @@ export default function MainLayout({
           <div className="absolute bottom-0 right-1/3 w-64 h-64 rounded-full bg-primary/3 blur-3xl" />
         </div>
 
-        <main className="flex-1 min-h-0 relative z-10 overflow-y-auto pb-20">
+        <main className="flex-1 min-h-0 relative z-10 overflow-y-auto pt-16 pb-24">
           {activeTab === "home" && (
             <HomeScreen
               onStartLive={onStartLive}

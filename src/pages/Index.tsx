@@ -40,7 +40,7 @@ const Index = () => {
   return (
     <GlobalAccessibilityProvider>
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="relative w-full max-w-[430px] min-h-screen mx-auto">
+        <div className="relative w-full max-w-[430px] min-h-screen mx-auto overflow-hidden">
           {/* Subtle gradient overlay */}
           <div className="fixed inset-0 max-w-[430px] mx-auto pointer-events-none overflow-hidden z-0 opacity-30">
             <div className="absolute top-0 left-1/3 w-64 h-64 rounded-full bg-primary/5 blur-3xl" />
@@ -128,7 +128,7 @@ const Index = () => {
           )}
         </div>
       </div>
-    </GlobalAccessibilityProvider>
+    </GlobalAccessibilityProvider >
   );
 };
 

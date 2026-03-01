@@ -51,15 +51,13 @@ export default function ReverseMode({ onBack, onSettings }: Props) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
-      <div className="absolute inset-0" style={{ background: "hsl(240 20% 4%)" }} />
-
-      <div className={`relative z-10 flex items-center justify-between px-5 pt-12 pb-4 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
+    <div className="min-h-screen flex flex-col relative overflow-hidden px-6 pt-16 pb-24">
+      <div className={`relative z-10 flex items-center justify-between mb-8 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
         <button
           onClick={onBack}
           className="w-9 h-9 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-all duration-200"
         >
-          <ArrowLeft size={16} />
+          <ArrowLeft size={18} />
         </button>
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
@@ -69,13 +67,13 @@ export default function ReverseMode({ onBack, onSettings }: Props) {
           onClick={onSettings}
           className="w-9 h-9 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-all duration-200"
         >
-          <Settings size={16} />
+          <Settings size={18} />
         </button>
       </div>
 
-      <div className={`relative z-10 px-5 pb-4 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
-        <div className="text-xs text-muted-foreground mb-2">Quick phrases</div>
-        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+      <div className={`relative z-10 mb-6 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
+        <div className="text-[10px] text-muted-foreground tracking-wider uppercase mb-3">Quick phrases</div>
+        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
           {QUICK_PHRASES.map((p) => (
             <button
               key={p}
@@ -88,12 +86,12 @@ export default function ReverseMode({ onBack, onSettings }: Props) {
         </div>
       </div>
 
-      <div className={`relative z-10 mx-5 bg-card border border-border rounded-2xl p-4 ${settings.focusMode ? "a11y-focus-content" : ""}`}>
+      <div className={`relative z-10 bg-card border border-border rounded-2xl p-4 mb-6 ${settings.focusMode ? "a11y-focus-content" : ""}`}>
         <div className="text-xs text-muted-foreground mb-2">Type message</div>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          className="w-full min-h-[120px] bg-transparent outline-none resize-none text-sm text-foreground"
+          className="w-full min-h-[120px] bg-transparent outline-none resize-none text-sm text-foreground placeholder:text-muted-foreground/50"
           placeholder="Type what you want spoken aloud…"
         />
       </div>

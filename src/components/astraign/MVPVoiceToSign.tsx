@@ -400,19 +400,21 @@ export default function MVPVoiceToSign({ onBack, embedded }: Props) {
     };
 
     return (
-        <div className="w-full min-h-screen bg-background flex flex-col overflow-y-auto">
+        <div className={`w-full min-h-screen bg-background flex flex-col pt-16 pb-24 ${!embedded ? "px-6" : ""}`}>
             {!embedded && (
-            <div className="flex items-center p-4 border-b border-border shrink-0">
-                {onBack && (
-                    <button onClick={onBack} className="p-2 mr-3 rounded-lg bg-muted hover:bg-muted/80 text-foreground">
-                        <ArrowLeft size={20} />
+                <div className="flex items-center justify-between mb-8 shrink-0">
+                    <button
+                        onClick={onBack}
+                        className="w-10 h-10 rounded-2xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
+                    >
+                        <ArrowLeft size={18} />
                     </button>
-                )}
-                <div>
-                    <h1 className="text-xl font-bold text-foreground">AstraSign MVP</h1>
-                    <p className="text-xs text-muted-foreground">Text/Voice → ASL</p>
+                    <div className="flex flex-col items-center">
+                        <h1 className="font-display text-sm font-bold gradient-text-purple-cyan uppercase tracking-widest text-center">Translation</h1>
+                        <p className="text-[10px] text-muted-foreground uppercase opacity-70">Voice → ASL</p>
+                    </div>
+                    <div className="w-10" />
                 </div>
-            </div>
             )}
 
             {/* 3D Canvas — hands lower, centered, palms facing camera */}

@@ -34,7 +34,7 @@ const BigCard = ({ title, subtitle, desc, onClick }: { title: string; subtitle: 
 
 export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, onEnhancedCameraMode, onVoiceToSign, onConversation, onSettings, onTranslationHub }: Props) {
   return (
-    <div className="flex flex-col px-5 pt-14 pb-4">
+    <div className="min-h-screen flex flex-col px-6 pt-16 pb-24">
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -50,7 +50,6 @@ export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, o
           <Users size={18} />
         </button>
       </div>
-
 
       <div className="flex flex-col gap-4 flex-1">
         <BigCard
