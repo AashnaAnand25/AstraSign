@@ -1,7 +1,0 @@
-tensorflow
-mediapipe
-opencv-python
-numpy
-yt-dlp
-scikit-learn
-h5py
