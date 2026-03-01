@@ -195,14 +195,14 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
                 boxShadow: "inset 0 0 30px hsl(272 76% 53% / 0.03)",
               }}
             >
-              {[["top-0 left-0","border-t border-l"], ["top-0 right-0","border-t border-r"], ["bottom-0 left-0","border-b border-l"], ["bottom-0 right-0","border-b border-r"]].map(([pos, border], i) => (
+              {[["top-0 left-0", "border-t border-l"], ["top-0 right-0", "border-t border-r"], ["bottom-0 left-0", "border-b border-l"], ["bottom-0 right-0", "border-b border-r"]].map(([pos, border], i) => (
                 <div key={i} className={`absolute w-4 h-4 ${pos} ${border}`}
                   style={{ borderColor: "hsl(183 100% 50% / 0.5)", margin: "-1px" }} />
               ))}
               <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 100 100" fill="none">
                 <path d="M50 90 C30 90 20 75 20 60 L20 35 C20 30 24 27 28 27 C32 27 36 30 36 35 L36 50 L36 30 C36 25 40 22 44 22 C48 22 52 25 52 30 L52 48 L52 25 C52 20 56 17 60 17 C64 17 68 20 68 25 L68 48 L68 32 C68 27 72 24 76 24 C80 24 84 27 84 32 L84 62 C84 78 70 90 50 90Z"
                   stroke="hsl(183 100% 50%)" strokeWidth="1.5" strokeLinejoin="round" />
-                {[[36,27],[50,22],[64,18],[76,27]].map(([x,y],i) => (
+                {[[36, 27], [50, 22], [64, 18], [76, 27]].map(([x, y], i) => (
                   <circle key={i} cx={x} cy={y} r="2.5" fill="hsl(183 100% 50%)" />
                 ))}
               </svg>
@@ -278,19 +278,18 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
       )}
 
       {/* Floating confidence badge - "HELP – 92% Match" style */}
-      {translation && settings.confidenceDisplay && (
+      {translation && (
         <div
           className="fixed top-24 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-xl font-semibold text-sm"
           style={{
             background: "hsl(240 15% 9% / 0.95)",
-            border: `1px solid ${
-              confidence >= 90 ? "hsl(142 70% 50% / 0.5)" : confidence >= 70 ? "hsl(40 90% 55% / 0.5)" : "hsl(0 80% 55% / 0.5)"
-            }`,
+            border: `1px solid ${confidence >= 90 ? "hsl(142 70% 50% / 0.5)" : confidence >= 70 ? "hsl(40 90% 55% / 0.5)" : "hsl(0 80% 55% / 0.5)"
+              }`,
             color: confidence >= 90 ? "hsl(142 70% 50%)" : confidence >= 70 ? "hsl(40 90% 55%)" : "hsl(0 80% 65%)",
             boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
           }}
         >
-          {translation.split(" ").slice(0, 2).join(" ").replace(/\.$/, "")} – {confidence}% Match
+          {translation.split(" ").slice(0, 2).join(" ").replace(/\.$/, "")} – {confidence}% Accuracy
         </div>
       )}
 
@@ -308,9 +307,7 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
             <div className="flex items-center gap-2 mb-2">
               <div className="w-2 h-2 rounded-full bg-neon-cyan animate-glow-pulse" />
               <span className="text-xs text-neon-cyan tracking-wider font-medium">TRANSLATED</span>
-              {settings.confidenceDisplay && (
-                <span className="ml-auto text-xs font-bold text-neon-cyan">{confidence}%</span>
-              )}
+              <span className="ml-auto text-xs font-bold text-neon-cyan">{confidence}% Accuracy</span>
             </div>
             <p className="text-foreground font-medium text-base leading-relaxed">{translation}</p>
           </div>
@@ -321,130 +318,130 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
           className={`sticky bottom-0 mx-3 mb-6 mt-auto glass-strong rounded-3xl p-5 ${focusMode ? "a11y-focus-dim" : ""}`}
           style={{ boxShadow: "0 -10px 40px hsl(272 76% 53% / 0.1)" }}
         >
-        {/* Waveform */}
-        {isPlaying && (
-          <div className="flex items-center justify-center gap-0.5 mb-4 h-8">
-            {Array.from({ length: 24 }).map((_, i) => (
-              <WaveformBar key={i} i={i} />
-            ))}
-          </div>
-        )}
-
-        {/* Mode toggle */}
-        <div className="flex items-center justify-between mb-4 px-1">
-          <span className="text-xs text-muted-foreground font-medium">Mode</span>
-          <button
-            type="button"
-            onClick={() => setLiveMode(!liveMode)}
-            className="flex items-center gap-2 glass rounded-full px-3 py-1.5 neon-border-purple transition-all cursor-pointer"
-          >
-            {liveMode ? <ToggleRight size={16} className="text-neon-cyan" /> : <ToggleLeft size={16} className="text-muted-foreground" />}
-            <span className="text-xs font-medium" style={{ color: liveMode ? "hsl(183 100% 50%)" : "hsl(240 5% 55%)" }}>
-              {liveMode ? "Live" : "Sentence"}
-            </span>
-          </button>
-        </div>
-
-        {/* Confidence ring + Record button */}
-        <div className="flex items-center justify-center gap-6">
-          {/* Confidence — dynamic color */}
-          <div className="text-center group relative">
-            <div className="relative w-12 h-12 mx-auto">
-              <svg viewBox="0 0 48 48" className="-rotate-90 w-12 h-12">
-                <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(240 10% 18%)" strokeWidth="3" />
-                <circle
-                  cx="24" cy="24" r="20"
-                  fill="none"
-                  stroke={confidence >= 90 ? "hsl(142 70% 50%)" : confidence >= 70 ? "hsl(40 90% 55%)" : confidence > 0 ? "hsl(0 80% 55%)" : "hsl(272 76% 53%)"}
-                  strokeWidth="3"
-                  strokeDasharray={`${(confidence / 100) * 125.6} 125.6`}
-                  strokeLinecap="round"
-                  style={{ transition: "stroke 0.4s, stroke-dasharray 0.4s" }}
-                />
-              </svg>
-              <span
-                className="absolute inset-0 flex items-center justify-center text-[10px] font-bold"
-                style={{ color: confidence >= 90 ? "hsl(142 70% 50%)" : confidence >= 70 ? "hsl(40 90% 55%)" : confidence > 0 ? "hsl(0 80% 55%)" : "hsl(var(--neon-purple))" }}
-              >
-                {settings.confidenceDisplay ? (confidence ? `${confidence}%` : "--") : "--"}
-              </span>
+          {/* Waveform */}
+          {isPlaying && (
+            <div className="flex items-center justify-center gap-0.5 mb-4 h-8">
+              {Array.from({ length: 24 }).map((_, i) => (
+                <WaveformBar key={i} i={i} />
+              ))}
             </div>
-            <span className="text-[10px] text-muted-foreground mt-1 block">AI Score</span>
-            {/* Tooltip on low confidence */}
-            {settings.confidenceDisplay && confidence > 0 && confidence < 70 && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 text-[10px] text-center rounded-xl px-2 py-1.5 pointer-events-none"
-                style={{ background: "hsl(240 15% 10%)", border: "1px solid hsl(0 80% 55% / 0.4)", color: "hsl(0 80% 65%)" }}>
-                Low confidence. Try clearer gesture.
-              </div>
-            )}
-          </div>
+          )}
 
-          {/* Record button */}
-          <div className="relative">
-            {isRecording && (
-              <>
-                <div className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ background: "hsl(272 76% 53%)", transform: "scale(1.5)" }} />
-                <div className="absolute inset-0 rounded-full" style={{
-                  width: "88px", height: "88px", top: "-12px", left: "-12px",
-                  border: "2px solid hsl(272 76% 53% / 0.4)",
-                  borderRadius: "50%",
-                  animation: "pulse-purple 1.5s ease-in-out infinite",
-                }} />
-              </>
-            )}
+          {/* Mode toggle */}
+          <div className="flex items-center justify-between mb-4 px-1">
+            <span className="text-xs text-muted-foreground font-medium">Mode</span>
             <button
               type="button"
-              onClick={() => {
-                setIsRecording(!isRecording);
-                setTranslation("");
-                setConfidence(0);
-              }}
-              className="w-16 h-16 rounded-full flex items-center justify-center transition-transform active:scale-90 relative z-10 cursor-pointer"
-              style={{
-                background: isRecording
-                  ? "linear-gradient(135deg, hsl(316 80% 60%), hsl(272 76% 53%))"
-                  : "linear-gradient(135deg, hsl(272 76% 53%), hsl(272 76% 40%))",
-                boxShadow: isRecording
-                  ? "0 0 30px hsl(316 80% 60% / 0.6), 0 0 60px hsl(316 80% 60% / 0.3)"
-                  : "0 0 25px hsl(272 76% 53% / 0.5)",
-              }}
+              onClick={() => setLiveMode(!liveMode)}
+              className="flex items-center gap-2 glass rounded-full px-3 py-1.5 neon-border-purple transition-all cursor-pointer"
             >
-              {isRecording ? (
-                <div className="w-5 h-5 rounded bg-white" />
-              ) : (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <rect x="8" y="3" width="8" height="14" rx="4" fill="white" />
-                  <path d="M4 12a8 8 0 0016 0" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" />
-                  <line x1="12" y1="20" x2="12" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                  <line x1="9" y1="23" x2="15" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round" />
+              {liveMode ? <ToggleRight size={16} className="text-neon-cyan" /> : <ToggleLeft size={16} className="text-muted-foreground" />}
+              <span className="text-xs font-medium" style={{ color: liveMode ? "hsl(183 100% 50%)" : "hsl(240 5% 55%)" }}>
+                {liveMode ? "Live" : "Sentence"}
+              </span>
+            </button>
+          </div>
+
+          {/* Confidence ring + Record button */}
+          <div className="flex items-center justify-center gap-6">
+            {/* Confidence — dynamic color */}
+            <div className="text-center group relative">
+              <div className="relative w-12 h-12 mx-auto">
+                <svg viewBox="0 0 48 48" className="-rotate-90 w-12 h-12">
+                  <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(240 10% 18%)" strokeWidth="3" />
+                  <circle
+                    cx="24" cy="24" r="20"
+                    fill="none"
+                    stroke={confidence >= 90 ? "hsl(142 70% 50%)" : confidence >= 70 ? "hsl(40 90% 55%)" : confidence > 0 ? "hsl(0 80% 55%)" : "hsl(272 76% 53%)"}
+                    strokeWidth="3"
+                    strokeDasharray={`${(confidence / 100) * 125.6} 125.6`}
+                    strokeLinecap="round"
+                    style={{ transition: "stroke 0.4s, stroke-dasharray 0.4s" }}
+                  />
                 </svg>
+                <span
+                  className="absolute inset-0 flex items-center justify-center text-[10px] font-bold"
+                  style={{ color: confidence >= 90 ? "hsl(142 70% 50%)" : confidence >= 70 ? "hsl(40 90% 55%)" : confidence > 0 ? "hsl(0 80% 55%)" : "hsl(var(--neon-purple))" }}
+                >
+                  {confidence ? `${confidence}%` : "--"}
+                </span>
+              </div>
+              <span className="text-[10px] text-muted-foreground mt-1 block">Accuracy</span>
+              {/* Tooltip on low confidence */}
+              {confidence > 0 && confidence < 70 && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 text-[10px] text-center rounded-xl px-2 py-1.5 pointer-events-none"
+                  style={{ background: "hsl(240 15% 10%)", border: "1px solid hsl(0 80% 55% / 0.4)", color: "hsl(0 80% 65%)" }}>
+                  Low accuracy. Try clearer gesture.
+                </div>
               )}
-            </button>
+            </div>
+
+            {/* Record button */}
+            <div className="relative">
+              {isRecording && (
+                <>
+                  <div className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ background: "hsl(272 76% 53%)", transform: "scale(1.5)" }} />
+                  <div className="absolute inset-0 rounded-full" style={{
+                    width: "88px", height: "88px", top: "-12px", left: "-12px",
+                    border: "2px solid hsl(272 76% 53% / 0.4)",
+                    borderRadius: "50%",
+                    animation: "pulse-purple 1.5s ease-in-out infinite",
+                  }} />
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRecording(!isRecording);
+                  setTranslation("");
+                  setConfidence(0);
+                }}
+                className="w-16 h-16 rounded-full flex items-center justify-center transition-transform active:scale-90 relative z-10 cursor-pointer"
+                style={{
+                  background: isRecording
+                    ? "linear-gradient(135deg, hsl(316 80% 60%), hsl(272 76% 53%))"
+                    : "linear-gradient(135deg, hsl(272 76% 53%), hsl(272 76% 40%))",
+                  boxShadow: isRecording
+                    ? "0 0 30px hsl(316 80% 60% / 0.6), 0 0 60px hsl(316 80% 60% / 0.3)"
+                    : "0 0 25px hsl(272 76% 53% / 0.5)",
+                }}
+              >
+                {isRecording ? (
+                  <div className="w-5 h-5 rounded bg-white" />
+                ) : (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <rect x="8" y="3" width="8" height="14" rx="4" fill="white" />
+                    <path d="M4 12a8 8 0 0016 0" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" />
+                    <line x1="12" y1="20" x2="12" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                    <line x1="9" y1="23" x2="15" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                )}
+              </button>
+            </div>
+
+            {/* Play button */}
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setIsPlaying(!isPlaying)}
+                disabled={!translation}
+                className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all disabled:opacity-30 cursor-pointer"
+                style={{
+                  background: "hsl(183 100% 50% / 0.15)",
+                  border: "1px solid hsl(183 100% 50% / 0.3)",
+                  color: "hsl(183 100% 50%)",
+                  boxShadow: translation ? "0 0 15px hsl(183 100% 50% / 0.2)" : "none",
+                }}
+              >
+                {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+              </button>
+              <span className="text-[10px] text-muted-foreground mt-1 block">Play</span>
+            </div>
           </div>
 
-          {/* Play button */}
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setIsPlaying(!isPlaying)}
-              disabled={!translation}
-              className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all disabled:opacity-30 cursor-pointer"
-              style={{
-                background: "hsl(183 100% 50% / 0.15)",
-                border: "1px solid hsl(183 100% 50% / 0.3)",
-                color: "hsl(183 100% 50%)",
-                boxShadow: translation ? "0 0 15px hsl(183 100% 50% / 0.2)" : "none",
-              }}
-            >
-              {isPlaying ? <Pause size={18} /> : <Play size={18} />}
-            </button>
-            <span className="text-[10px] text-muted-foreground mt-1 block">Play</span>
-          </div>
-        </div>
-
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          {isRecording ? "Detecting hand gestures..." : "Tap to start recognition"}
-        </p>
+          <p className="text-center text-xs text-muted-foreground mt-4">
+            {isRecording ? "Detecting hand gestures..." : "Tap to start recognition"}
+          </p>
         </div>
       </div>
     </div>
