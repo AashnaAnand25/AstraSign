@@ -10,6 +10,7 @@ import { ArrowLeft, Settings, Mic, MicOff, Volume2, Trash2, Undo2 } from "lucide
 import { useAccessibility } from "@/accessibility/AccessibilityProvider";
 import { useHandTracking } from "@/hooks/useHandTracking";
 import { useFastSignPipeline } from "@/hooks/useFastSignPipeline";
+import { useLetterTrackingPipeline } from "@/hooks/useLetterTrackingPipeline";
 import type { Landmark } from "@/hooks/useHandTracking";
 
 interface Props {
@@ -77,6 +78,8 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
   const [camError, setCamError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
+  const [mode, setMode] = useState<"words" | "letters">("words");
+
   const { landmarks, isReady: mpReady, error: mpError } = useHandTracking(videoRef);
 
   const {
@@ -95,7 +98,22 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
     undoLastWord,
     clearGloss,
     setGlossWords,
-  } = useFastSignPipeline(videoRef, landmarks);
+  } = useFastSignPipeline(videoRef, mode === "words" ? landmarks : null);
+
+  const {
+    spelledPhrase,
+    detectedLetter,
+    suggestions: letterSuggestions,
+    beginSpelling,
+    commitSegment: commitLetterSegment,
+    triggerTranslate: triggerLetterTranslate,
+    undoLastLetter,
+    clearSpelling,
+    isTranslating: isLetterTranslating,
+    audioUrl: letterAudioUrl,
+    status: letterStatus,
+    setSpelledPhrase,
+  } = useLetterTrackingPipeline(videoRef, mode === "letters" ? landmarks : null);
 
   // ── Start webcam ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -158,15 +176,15 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
 
   useEffect(() => { drawSkeleton(landmarks); }, [landmarks, drawSkeleton]);
 
-  // ── ElevenLabs audio playback ───────────────────────────────────────────────
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !audioUrl) return;
-    audio.src = audioUrl;
+    const url = mode === "words" ? audioUrl : letterAudioUrl;
+    if (!audio || !url) return;
+    audio.src = url;
     audio.play().catch(() => { });
     setIsPlaying(true);
     audio.onended = () => setIsPlaying(false);
-  }, [audioUrl]);
+  }, [audioUrl, letterAudioUrl, mode]);
 
   // ── Haptic feedback on new word ─────────────────────────────────────────────
   useEffect(() => {
@@ -176,27 +194,36 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
     }
   }, [glossWords.length, settings.hapticFeedback]);
 
-  // ── UI helpers ──────────────────────────────────────────────────────────────
   const toggleRecord = () => {
     if (!isRecording) {
-      beginRecording();
+      if (mode === "words") beginRecording();
+      else beginSpelling();
       setIsRecording(true);
     } else {
       setIsRecording(false);
-      commitSegment();
+      if (mode === "words") commitSegment();
+      else commitLetterSegment();
     }
   };
 
   const handleSpeak = () => {
     if (isPlaying) { audioRef.current?.pause(); setIsPlaying(false); }
-    else if (audioUrl) { audioRef.current?.play(); setIsPlaying(true); }
-    else { triggerTranslate(); }
+    else if ((mode === "words" && audioUrl) || (mode === "letters" && letterAudioUrl)) {
+      audioRef.current?.play();
+      setIsPlaying(true);
+    }
+    else {
+      if (mode === "words") triggerTranslate();
+      else triggerLetterTranslate();
+    }
   };
 
   const isLoading = !mpReady || !camReady;
   const hasError = !!(camError || mpError);
-  const hasGloss = glossWords.length > 0;
-  const canSpeak = (hasGloss && !isTranslating) || !!audioUrl;
+  const currentHasGloss = mode === "words" ? glossWords.length > 0 : spelledPhrase.length > 0;
+  const currentIsTranslating = mode === "words" ? isTranslating : isLetterTranslating;
+  const currentAudioUrl = mode === "words" ? audioUrl : letterAudioUrl;
+  const canSpeak = (currentHasGloss && !currentIsTranslating) || !!currentAudioUrl;
 
   const dotColor = isRecognizing ? "hsl(40 90% 55%)"
     : isDetectingSign ? "hsl(142 70% 50%)"
@@ -232,6 +259,24 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
         </button>
       </div>
 
+      {/* Mode Toggle */}
+      <div className="relative z-20 flex justify-center mb-4">
+        <div className="bg-background/40 backdrop-blur-md border border-border/50 p-1 rounded-2xl flex gap-1">
+          <button
+            onClick={() => { setMode("words"); /* clearSpelling(); */ }}
+            className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${mode === "words" ? "bg-neon-purple text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Words
+          </button>
+          <button
+            onClick={() => { setMode("letters"); /* clearGloss(); */ }}
+            className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${mode === "letters" ? "bg-neon-cyan text-black shadow-[0_0_15px_rgba(6,182,212,0.4)]" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Letters
+          </button>
+        </div>
+      </div>
+
       {/* Camera */}
       <div className="relative z-10 mx-4 rounded-3xl overflow-hidden"
         style={{ aspectRatio: "4/3", border: "1px solid hsl(272 76% 53% / 0.3)" }}>
@@ -247,15 +292,21 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
       {/* Status */}
       <div className="relative z-10 mx-4 mt-2 px-3 py-1.5 rounded-xl bg-muted/40 border border-border/50">
         <p className="text-[10px] text-muted-foreground tracking-wide truncate">
-          {status} {detectedGesture && <span className="ml-2 text-neon-cyan">({detectedGesture})</span>}
+          {mode === "words" ? status : letterStatus}
+          {mode === "words" && detectedGesture && <span className="ml-2 text-neon-cyan">({detectedGesture})</span>}
+          {mode === "letters" && detectedLetter && <span className="ml-2 text-neon-cyan">({detectedLetter})</span>}
         </p>
       </div>
 
       {/* v4.0 Suggestions */}
-      {isDetectingSign && suggestions.length > 0 && (
+      {isDetectingSign && (mode === "words" ? suggestions : letterSuggestions).length > 0 && (
         <div className="relative z-10 mx-4 mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {suggestions.map((s) => (
-            <button key={s} onClick={() => setGlossWords((prev: string[]) => [...prev, s])}
+          {(mode === "words" ? suggestions : letterSuggestions).map((s) => (
+            <button key={s}
+              onClick={() => {
+                if (mode === "words") setGlossWords((prev: string[]) => [...prev, s]);
+                else setSpelledPhrase((prev) => prev + s);
+              }}
               className="px-3 py-1.5 rounded-xl text-[10px] font-bold tracking-wider glass neon-border-cyan text-neon-cyan active:scale-95 transition-all">
               {s}
             </button>
@@ -265,17 +316,24 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
 
       {/* Gloss */}
       <div className="relative z-10 mx-4 mt-2 min-h-[32px]">
-        {hasGloss ? (
-          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-            {glossWords.map((w, i) => (
-              <GlossChip key={i} word={w} isLast={i === glossWords.length - 1} />
-            ))}
-          </div>
+        {currentHasGloss ? (
+          mode === "words" ? (
+            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+              {glossWords.map((w, i) => (
+                <GlossChip key={i} word={w} isLast={i === glossWords.length - 1} />
+              ))}
+            </div>
+          ) : (
+            <div className="p-3 rounded-2xl glass neon-border-purple text-foreground text-sm font-medium break-words space-pre-wrap">
+              {spelledPhrase}
+              <span className="animate-pulse ml-1 inline-block w-1.5 h-4 bg-neon-purple align-middle"></span>
+            </div>
+          )
         ) : <p className="text-[10px] text-muted-foreground italic">Sign to begin…</p>}
       </div>
 
-      {/* Translated Text */}
-      {translatedText && (
+      {/* Translated Text (Words only) */}
+      {mode === "words" && translatedText && (
         <div className="relative z-10 mx-4 mt-2 p-3 rounded-2xl glass neon-border-cyan animate-fade-in-up">
           <p className="text-foreground text-sm font-medium">{translatedText}</p>
         </div>
@@ -291,15 +349,15 @@ export default function SignToVoice({ onBack, onSettings, focusMode }: Props) {
           </div>
         )}
         <div className="flex items-center justify-between gap-3">
-          <button onClick={undoLastWord} disabled={!hasGloss} className="w-11 h-11 rounded-2xl flex items-center justify-center bg-muted/20 border border-border/50 disabled:opacity-20"><Undo2 size={16} /></button>
+          <button onClick={mode === "words" ? undoLastWord : undoLastLetter} disabled={!currentHasGloss} className="w-11 h-11 rounded-2xl flex items-center justify-center bg-muted/20 border border-border/50 disabled:opacity-20"><Undo2 size={16} /></button>
           <button onClick={toggleRecord} disabled={isLoading || hasError}
             className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${isRecording ? "bg-red-500 shadow-[0_0_30px_rgba(239,68,68,0.5)]" : "bg-neon-purple shadow-[0_0_20px_rgba(168,85,247,0.4)]"}`}>
             {isRecording ? <MicOff size={22} color="white" /> : <Mic size={22} color="white" />}
           </button>
           <button onClick={handleSpeak} disabled={!canSpeak} className="w-11 h-11 rounded-2xl flex items-center justify-center bg-neon-cyan/10 border border-neon-cyan/40 text-neon-cyan disabled:opacity-20">
-            {isTranslating ? <div className="w-4 h-4 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin" /> : <Volume2 size={18} />}
+            {currentIsTranslating ? <div className="w-4 h-4 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin" /> : <Volume2 size={18} />}
           </button>
-          <button onClick={clearGloss} disabled={!hasGloss && !translatedText} className="w-11 h-11 rounded-2xl flex items-center justify-center bg-muted/20 border border-border/50 disabled:opacity-20"><Trash2 size={16} /></button>
+          <button onClick={mode === "words" ? clearGloss : clearSpelling} disabled={!currentHasGloss && !translatedText} className="w-11 h-11 rounded-2xl flex items-center justify-center bg-muted/20 border border-border/50 disabled:opacity-20"><Trash2 size={16} /></button>
         </div>
       </div>
 
