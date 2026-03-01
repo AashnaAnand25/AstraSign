@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ArrowLeft, Settings, Play, Pause, ToggleLeft, ToggleRight, Glasses } from "lucide-react";
+import { ArrowLeft, Settings, Play, Pause, ToggleLeft, ToggleRight, Glasses, Trash2, Undo2 } from "lucide-react";
 import { useAccessibility } from "@/accessibility/AccessibilityProvider";
 import HandTracker from "@/components/astraign/HandTracker";
 import { gestureToWord } from "@/utils/aslStaticPoses";
 import { useWearableDevice } from "@/hooks/useWearableDevice";
 import { useFastSignPipeline } from "@/hooks/useFastSignPipeline";
+import { useLetterTrackingPipeline } from "@/hooks/useLetterTrackingPipeline";
+import { Landmark } from "@/services/AslEngine";
 
 interface Props {
   onBack?: () => void;
@@ -51,6 +53,7 @@ const COOLDOWN_MS = 1800;
 export default function SignToVoice({ onBack, onSettings, focusMode: focusModeProp, embedded, onStatusChange, onAddToHistory }: Props) {
   const { settings } = useAccessibility();
   const focusMode = focusModeProp ?? settings.focusMode;
+  const [mode, setMode] = useState<"words" | "letters">("words");
   const [isRecording, setIsRecording] = useState(false);
   const [liveMode, setLiveMode] = useState(true);
   const [translation, setTranslation] = useState("");
@@ -85,16 +88,29 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
     glossWords,
     beginRecording,
     commitSegment,
-  } = useFastSignPipeline(dummyRef, landmarks);
+  } = useFastSignPipeline(dummyRef, mode === "words" ? (landmarks as Landmark[][] | null) : null);
 
-  // Sync recording state with FastSign pipeline
+  const {
+    spelledPhrase,
+    detectedLetter,
+    suggestions: letterSuggestions,
+    beginSpelling,
+    commitSegment: commitLetterSegment,
+    setSpelledPhrase,
+    clearSpelling,
+    undoLastLetter,
+  } = useLetterTrackingPipeline(dummyRef, mode === "letters" ? (landmarks as Landmark[][] | null) : null);
+
+  // Sync recording state with pipelines
   useEffect(() => {
     if (isRecording) {
-      beginRecording();
+      if (mode === "words") beginRecording();
+      else beginSpelling();
     } else {
-      commitSegment();
+      if (mode === "words") commitSegment();
+      else commitLetterSegment();
     }
-  }, [isRecording, beginRecording, commitSegment]);
+  }, [isRecording, mode, beginRecording, commitSegment, beginSpelling, commitLetterSegment]);
 
   // Read from advanced ML pipeline
   useEffect(() => {
@@ -360,17 +376,36 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
       {/* Bottom interactive layer: translation + control panel — above decorative layer, below app nav (z-50) */}
       <div className="relative z-20 flex flex-col pointer-events-auto shrink-0">
         {/* Translation text - focus content when focus mode */}
-        {translation && (
+        {(translation || spelledPhrase) && (
           <div
             className={`mx-5 mb-3 p-4 glass rounded-2xl neon-border-cyan animate-fade-in-up ${focusMode ? "a11y-focus-content" : ""}`}
             style={{ boxShadow: "0 0 20px hsl(183 100% 50% / 0.1)" }}
           >
             <div className="flex items-center gap-2 mb-2">
               <div className="w-2 h-2 rounded-full bg-neon-cyan animate-glow-pulse" />
-              <span className="text-xs text-neon-cyan tracking-wider font-medium">TRANSLATED</span>
-              <span className="ml-auto text-xs font-bold text-neon-cyan">{confidence}% Accuracy</span>
+              <span className="text-xs text-neon-cyan tracking-wider font-medium">
+                {mode === "words" ? "TRANSLATED" : "FINGERSPELLING"}
+              </span>
+              <span className="ml-auto text-xs font-bold text-neon-cyan">
+                {mode === "words" ? `${confidence}% Accuracy` : "ASL Alphabet"}
+              </span>
             </div>
-            <p className="text-foreground font-medium text-base leading-relaxed">{translation}</p>
+
+            {mode === "words" ? (
+              <p className="text-foreground font-medium text-base leading-relaxed">{translation}</p>
+            ) : (
+              <div className="flex items-center gap-1 flex-wrap">
+                <p className="text-foreground font-medium text-base leading-relaxed">{spelledPhrase}</p>
+                {detectedLetter && (
+                  <span className="text-neon-purple font-bold text-lg animate-pulse">
+                    {detectedLetter}
+                  </span>
+                )}
+                {!detectedLetter && isRecording && (
+                  <span className="w-2 h-4 bg-neon-cyan animate-pulse opacity-50 ml-1" />
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -393,12 +428,12 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
             <span className="text-xs text-muted-foreground font-medium">Mode</span>
             <button
               type="button"
-              onClick={() => setLiveMode(!liveMode)}
+              onClick={() => setMode(mode === "words" ? "letters" : "words")}
               className="flex items-center gap-2 glass rounded-full px-3 py-1.5 neon-border-purple transition-all cursor-pointer"
             >
-              {liveMode ? <ToggleRight size={16} className="text-neon-cyan" /> : <ToggleLeft size={16} className="text-muted-foreground" />}
-              <span className="text-xs font-medium" style={{ color: liveMode ? "hsl(183 100% 50%)" : "hsl(240 5% 55%)" }}>
-                {liveMode ? "Live" : "Sentence"}
+              {mode === "letters" ? <ToggleRight size={16} className="text-neon-cyan" /> : <ToggleLeft size={16} className="text-muted-foreground" />}
+              <span className="text-xs font-medium" style={{ color: mode === "letters" ? "hsl(183 100% 50%)" : "hsl(240 5% 55%)" }}>
+                {mode === "letters" ? "Letters" : "Words"}
               </span>
             </button>
           </div>
@@ -485,13 +520,13 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
               <button
                 type="button"
                 onClick={() => setIsPlaying(!isPlaying)}
-                disabled={!translation}
+                disabled={mode === "words" ? !translation : !spelledPhrase}
                 className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all disabled:opacity-30 cursor-pointer"
                 style={{
                   background: "hsl(183 100% 50% / 0.15)",
                   border: "1px solid hsl(183 100% 50% / 0.3)",
                   color: "hsl(183 100% 50%)",
-                  boxShadow: translation ? "0 0 15px hsl(183 100% 50% / 0.2)" : "none",
+                  boxShadow: (mode === "words" ? translation : spelledPhrase) ? "0 0 15px hsl(183 100% 50% / 0.2)" : "none",
                 }}
               >
                 {isPlaying ? <Pause size={18} /> : <Play size={18} />}
@@ -499,11 +534,34 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
               <span className="text-[10px] text-muted-foreground mt-1 block">Play</span>
             </div>
           </div>
-
-          <p className="text-center text-xs text-muted-foreground mt-4">
-            {isRecording ? "Detecting hand gestures..." : "Tap to start recognition"}
-          </p>
         </div>
+
+        <p className="text-center text-xs text-muted-foreground mt-4">
+          {isRecording ? "Detecting hand gestures..." : "Tap to start recognition"}
+        </p>
+      </div>
+
+      {/* Secondary controls overlay */}
+      <div className="absolute right-4 bottom-24 flex flex-col gap-3 z-30 pointer-events-auto">
+        <button
+          onClick={() => {
+            if (mode === "words") setTranslation("");
+            else clearSpelling();
+          }}
+          disabled={mode === "words" ? !translation : !spelledPhrase}
+          className="w-10 h-10 rounded-xl glass flex items-center justify-center text-muted-foreground hover:text-red-400 hover:border-red-400/50 transition-colors disabled:opacity-30 shadow-lg"
+          title="Clear"
+        >
+          <Trash2 size={16} />
+        </button>
+        <button
+          onClick={mode === "words" ? undefined : undoLastLetter}
+          disabled={mode === "words" ? !translation : !spelledPhrase}
+          className="w-10 h-10 rounded-xl glass flex items-center justify-center text-muted-foreground hover:text-neon-cyan hover:border-neon-cyan/50 transition-colors disabled:opacity-30 shadow-lg"
+          title="Undo"
+        >
+          <Undo2 size={16} />
+        </button>
       </div>
     </div>
   );

@@ -151,7 +151,7 @@ export default function HandTracker({ onGestureDetected, onLandmarks, isActive, 
         if (onLandmarks) {
           if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
             const formatted = results.multiHandLandmarks.map(hand =>
-              hand.map(pt => ({ x: pt.x, y: pt.y, z: pt.z }))
+              hand.map(pt => ({ x: pt.x, y: pt.y, z: pt.z ?? 0 }))
             );
             onLandmarks(formatted);
           } else {
