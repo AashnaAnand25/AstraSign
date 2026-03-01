@@ -11,12 +11,6 @@ interface Props {
   onTranslationHub?: () => void;
 }
 
-const Stat = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex-1 glass rounded-2xl p-3" style={{ border: "1px solid hsl(240 10% 14%)" }}>
-    <div className="text-[10px] text-muted-foreground tracking-wider uppercase">{label}</div>
-    <div className="text-sm font-semibold text-foreground mt-1">{value}</div>
-  </div>
-);
 
 const BigCard = ({ title, subtitle, desc, color, onClick }: { title: string; subtitle: string; desc: string; color: "purple" | "cyan" | "pink"; onClick: () => void }) => {
   const c = color === "purple" ? "hsl(272 76% 53%)" : color === "cyan" ? "hsl(183 100% 50%)" : "hsl(316 80% 60%)";
@@ -59,11 +53,6 @@ export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, o
         </button>
       </div>
 
-      <div className="flex gap-3 mb-5">
-        <Stat label="Signs" value="500+" />
-        <Stat label="Latency" value="~1s" />
-        <Stat label="Mode" value="Live" />
-      </div>
 
       <div className="flex flex-col gap-4 flex-1">
         <BigCard
