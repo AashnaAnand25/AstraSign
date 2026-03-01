@@ -68,6 +68,8 @@ const Index = () => {
             onStartLive={() => setScreen("live")}
             onReverseMode={() => setScreen("reverse")}
             onCameraMode={() => setScreen("sign-to-voice")}
+            onVoiceToSign={() => setScreen("voice-to-sign")}
+            onEnhancedCameraMode={() => setScreen("sign-to-voice-enhanced")}
             onConversation={() => setScreen("conversation")}
             onSettings={() => goToTab("settings")}
             onTranslationHub={() => setScreen("translation-hub")}
