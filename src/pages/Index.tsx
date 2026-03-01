@@ -1,6 +1,5 @@
 import { useState } from "react";
 import MinimalLandingScreen from "@/components/astraign/MinimalLandingScreen";
-import ModeSelection from "@/components/astraign/ModeSelection";
 import MVPVoiceToSign from "@/components/astraign/MVPVoiceToSign";
 import ConversationMode from "@/components/astraign/ConversationMode";
 import OnboardingOne from "@/components/astraign/OnboardingOne";
@@ -21,7 +20,6 @@ export type Screen =
   | "home"
   | "live"
   | "reverse"
-  | "modes"
   | "sign-to-voice"
   | "voice-to-sign"
   | "conversation"
@@ -99,13 +97,6 @@ const Index = () => {
                 onBack={() => setScreen("home")}
                 onSettings={() => goToTab("settings")}
               />
-            </ScreenWithNav>
-          )}
-
-          {/* Mode Selection */}
-          {screen === "modes" && (
-            <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
-              <ModeSelection onBack={() => setScreen("home")} />
             </ScreenWithNav>
           )}
 
