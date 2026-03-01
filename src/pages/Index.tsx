@@ -49,13 +49,14 @@ const Index = () => {
 
           {/* Landing Screen */}
           {screen === "landing" && (
-            <MinimalLandingScreen onStart={() => setScreen("home")} />
+            <MinimalLandingScreen onStart={() => setScreen("onboarding-1")} />
           )}
 
           {/* Onboarding */}
           {screen === "onboarding-1" && (
             <OnboardingOne
-              onBack={() => setScreen("home")}
+              onNext={() => setScreen("onboarding-2")}
+              onSkip={() => setScreen("home")}
             />
           )}
 
@@ -120,7 +121,7 @@ const Index = () => {
 
           {/* Info Screen (How it works) */}
           {screen === "info" && (
-            <OnboardingOne onBack={() => setScreen("home")} />
+            <OnboardingOne onNext={() => setScreen("home")} onSkip={() => setScreen("home")} />
           )}
         </div>
       </div>

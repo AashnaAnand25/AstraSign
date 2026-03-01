@@ -1,15 +1,16 @@
 import { ArrowRight } from "lucide-react";
 
 interface Props {
-  onBack: () => void;
+  onNext: () => void;
+  onSkip: () => void;
 }
 
-export default function OnboardingOne({ onBack }: Props) {
+export default function OnboardingOne({ onNext, onSkip }: Props) {
   return (
     <div className="min-h-screen flex flex-col px-6 pt-14 pb-10">
       <div className="flex items-center justify-between mb-10">
         <div className="text-sm font-bold text-primary">AstraSign</div>
-        <button onClick={onBack} className="text-xs text-muted-foreground hover:text-foreground transition-colors font-medium">Close</button>
+        <button onClick={onSkip} className="text-xs text-muted-foreground hover:text-foreground transition-colors font-medium underline underline-offset-4">Skip</button>
       </div>
 
       <div className="flex-1 flex flex-col justify-center">
@@ -61,10 +62,11 @@ export default function OnboardingOne({ onBack }: Props) {
       </div>
 
       <button
-        onClick={onBack}
+        onClick={onNext}
         className="w-full py-4 rounded-xl bg-primary hover:bg-primary-hover font-bold text-sm tracking-widest text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
       >
-        Back to Home
+        <span>Next</span>
+        <ArrowRight size={18} />
       </button>
     </div>
   );

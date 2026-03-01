@@ -30,7 +30,7 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
     }
 
     const landmarks = results.multiHandLandmarks[0];
-    
+
     // Convert MediaPipe landmarks to our format
     const formattedLandmarks = landmarks.map(landmark => [
       landmark.x,
@@ -41,7 +41,7 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
     try {
       // Classify gesture using simple rules
       const result = handClassifier.classifyHand(formattedLandmarks);
-      
+
       if (result.confidence > 0.5) {
         setCurrentGesture(result.gesture);
         setConfidence(result.confidence);
@@ -58,18 +58,25 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
     setIsLoading(true);
 
     try {
+      console.log("[HandTracker] Requesting camera access...");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 640, height: 480 },
         audio: false
       });
+      console.log("[HandTracker] Camera access granted.");
 
       videoRef.current.srcObject = stream;
-      await videoRef.current.play().catch(() => {});
+      await videoRef.current.play().catch(() => { });
 
       // Initialize MediaPipe Hands
       const hands = new Hands({
         locateFile: (file) => {
-          return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+          // If the file is requested with a path (e.g. /third_party/...), just use the filename
+          // to ensure it points correctly to the CDN asset root.
+          const fileName = file.includes('/') ? file.split('/').pop() : file;
+          const url = `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${fileName}`;
+          console.log(`[HandTracker] MediaPipe locateFile: ${file} -> ${url}`);
+          return url;
         }
       });
 
@@ -92,10 +99,10 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
 
         canvasCtx.save();
         canvasCtx.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
-        
+
         // Draw video frame
         canvasCtx.drawImage(results.image, 0, 0, canvasRef.current!.width, canvasRef.current!.height);
-        
+
         // Draw hand landmarks
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
           for (const landmarks of results.multiHandLandmarks) {
@@ -125,7 +132,7 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
             landmarks.forEach((landmark, index) => {
               const x = landmark.x * canvasRef.current!.width;
               const y = landmark.y * canvasRef.current!.height;
-              
+
               canvasCtx.beginPath();
               canvasCtx.arc(x, y, 5, 0, 2 * Math.PI);
               canvasCtx.fillStyle = index === 0 ? '#ff006e' : '#00ffff'; // Wrist in different color
@@ -137,7 +144,18 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
         canvasCtx.restore();
 
         // Process for gesture recognition
-        processHandResults(results);
+        try {
+          processHandResults(results);
+        } catch (err) {
+          console.error("[HandTracker] processHandResults error:", err);
+        }
+      });
+
+      hands.onResults((results) => {
+        // Redundant log for first frame
+        if (!firstFrameRef.current) {
+          console.log("[HandTracker] MediaPipe Hands first results received.");
+        }
       });
 
       // Start camera (MediaPipe Camera handles video.play and requestAnimationFrame loop)
@@ -149,10 +167,15 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
         height: 480
       });
 
-      camera.start();
+      camera.start()
+        .then(() => console.log("[HandTracker] MediaPipe Camera started successfully."))
+        .catch((err) => console.error("[HandTracker] MediaPipe Camera start failed:", err));
 
       // Clear loading once video is running; also fallback in case first frame is slow (e.g. model load)
-      setTimeout(() => setIsLoading(false), 1500);
+      setTimeout(() => {
+        setIsLoading(false);
+        console.log("[HandTracker] Loading state cleared via timeout.");
+      }, 3000);
     } catch (error) {
       console.error('Camera initialization failed:', error);
       setIsLoading(false);
