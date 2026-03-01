@@ -210,6 +210,5 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
 7. **Frontend hot-reloads** automatically for `.ts`/`.tsx` changes via Vite
 8. The active branch is `feature/asl-sign-to-voice` — push changes there
 9. **Current Model State**: 
-   - `action.h5`: Patched 3-word LSTM (hello, thanks, iloveyou) - uses 1662 features.
-   - `asl_model.keras`: Custom 67-word LSTM (90% training acc, but sensitive to body noise).
-   - `main.py`: Current **Rule-Based v3.1** - high speed, zero-training, detects geometric finger states. Refined thumb detection and 0.4s (6-f) stability window. Works on any person.
+   - `main.py`: Current **Active Model** — **Rule-Based v3.5 Pro**. Features **Adaptive EMA Smoothing** (lag-free) and **Frequency-Based Gesture Analysis** (nodding/tapping).
+   - `hand_landmarker.task`: Only active MediaPipe asset. All face/pose tasks and legacy 120MB+ data purged for a clean, optimized repo.
