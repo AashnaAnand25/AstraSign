@@ -5,6 +5,7 @@ import TranslateTab from "./TranslateTab";
 import QuickPhrasesTab from "./QuickPhrasesTab";
 import HistoryTab from "./HistoryTab";
 import SettingsTab from "./SettingsTab";
+import type { TranslateMode } from "./TranslateTab";
 
 interface Props {
   onStartLive: () => void;
@@ -15,6 +16,8 @@ interface Props {
   onTranslationHub?: () => void;
   activeTab?: TabId;
   onTabChange?: (tab: TabId) => void;
+  initialTranslateMode?: TranslateMode | null;
+  onClearTranslateInitialMode?: () => void;
 }
 
 export default function MainLayout({
@@ -26,6 +29,8 @@ export default function MainLayout({
   onTranslationHub,
   activeTab: controlledTab,
   onTabChange,
+  initialTranslateMode,
+  onClearTranslateInitialMode,
 }: Props) {
   const [internalTab, setInternalTab] = useState<TabId>("home");
   const activeTab = controlledTab ?? internalTab;
@@ -51,7 +56,12 @@ export default function MainLayout({
               onTranslationHub={onTranslationHub}
             />
           )}
-          {activeTab === "translate" && <TranslateTab />}
+          {activeTab === "translate" && (
+            <TranslateTab
+              initialMode={initialTranslateMode ?? undefined}
+              onInitialModeConsumed={onClearTranslateInitialMode}
+            />
+          )}
           {activeTab === "quick" && <QuickPhrasesTab />}
           {activeTab === "history" && <HistoryTab />}
           {activeTab === "settings" && <SettingsTab />}

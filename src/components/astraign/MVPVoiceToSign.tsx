@@ -53,16 +53,45 @@ function HandMaterial({ gradientTex }: { gradientTex: THREE.CanvasTexture | null
     );
 }
 
-// One realistic-looking hand: palm + 5 fingers (each 2 segments)
-function HandMesh({ isLeft, gradientTex }: { isLeft: boolean; gradientTex: THREE.CanvasTexture | null }) {
+// Curl amount -> rotation (radians) for finger bend. One rotation per finger (whole finger curls).
+const CURL_STRENGTH = 1.1;
+
+// One hand: palm + 5 fingers; finger groups get rotation from fingerCurlsRef for folding
+function HandMesh({
+    isLeft,
+    gradientTex,
+    fingerCurlsRef,
+}: {
+    isLeft: boolean;
+    gradientTex: THREE.CanvasTexture | null;
+    fingerCurlsRef?: React.MutableRefObject<FingerCurls>;
+}) {
     const s = isLeft ? -1 : 1;
+    const thumbRef = useRef<THREE.Group>(null);
+    const indexRef = useRef<THREE.Group>(null);
+    const middleRef = useRef<THREE.Group>(null);
+    const ringRef = useRef<THREE.Group>(null);
+    const pinkyRef = useRef<THREE.Group>(null);
+
+    useFrame(() => {
+        const curls = fingerCurlsRef?.current ?? FLAT;
+        const setCurl = (ref: React.RefObject<THREE.Group | null>, c: number) => {
+            if (ref.current) ref.current.rotation.x = -c * CURL_STRENGTH;
+        };
+        setCurl(thumbRef, curls[0]);
+        setCurl(indexRef, curls[1]);
+        setCurl(middleRef, curls[2]);
+        setCurl(ringRef, curls[3]);
+        setCurl(pinkyRef, curls[4]);
+    });
+
     return (
         <group scale={[s, 1, 1]}>
             <mesh position={[0, 0, 0]} castShadow>
                 <boxGeometry args={[0.14, 0.08, 0.04]} />
                 <HandMaterial gradientTex={gradientTex} />
             </mesh>
-            <group position={[s * 0.06, -0.02, 0.02]}>
+            <group ref={thumbRef} position={[s * 0.06, -0.02, 0.02]}>
                 <mesh castShadow>
                     <boxGeometry args={[0.04, 0.035, 0.025]} />
                     <HandMaterial gradientTex={gradientTex} />
@@ -72,7 +101,7 @@ function HandMesh({ isLeft, gradientTex }: { isLeft: boolean; gradientTex: THREE
                     <HandMaterial gradientTex={gradientTex} />
                 </mesh>
             </group>
-            <group position={[s * 0.055, 0.055, 0.01]}>
+            <group ref={indexRef} position={[s * 0.055, 0.055, 0.01]}>
                 <mesh castShadow>
                     <boxGeometry args={[0.022, 0.045, 0.02]} />
                     <HandMaterial gradientTex={gradientTex} />
@@ -82,7 +111,7 @@ function HandMesh({ isLeft, gradientTex }: { isLeft: boolean; gradientTex: THREE
                     <HandMaterial gradientTex={gradientTex} />
                 </mesh>
             </group>
-            <group position={[s * 0.02, 0.07, 0.01]}>
+            <group ref={middleRef} position={[s * 0.02, 0.07, 0.01]}>
                 <mesh castShadow>
                     <boxGeometry args={[0.022, 0.05, 0.02]} />
                     <HandMaterial gradientTex={gradientTex} />
@@ -92,7 +121,7 @@ function HandMesh({ isLeft, gradientTex }: { isLeft: boolean; gradientTex: THREE
                     <HandMaterial gradientTex={gradientTex} />
                 </mesh>
             </group>
-            <group position={[s * -0.02, 0.065, 0.01]}>
+            <group ref={ringRef} position={[s * -0.02, 0.065, 0.01]}>
                 <mesh castShadow>
                     <boxGeometry args={[0.02, 0.046, 0.018]} />
                     <HandMaterial gradientTex={gradientTex} />
@@ -102,7 +131,7 @@ function HandMesh({ isLeft, gradientTex }: { isLeft: boolean; gradientTex: THREE
                     <HandMaterial gradientTex={gradientTex} />
                 </mesh>
             </group>
-            <group position={[s * -0.055, 0.05, 0.01]}>
+            <group ref={pinkyRef} position={[s * -0.055, 0.05, 0.01]}>
                 <mesh castShadow>
                     <boxGeometry args={[0.018, 0.038, 0.016]} />
                     <HandMaterial gradientTex={gradientTex} />
@@ -240,10 +269,11 @@ function getSignPose(word: string, t: number, motion: number): { left: HandPose;
     }
 }
 
-// One hand (dominant right), hardcoded ASL signs per word
+// One hand (dominant right), hardcoded ASL signs per word; finger curls passed via ref for per-frame pose
 function AnimatedHands({ word, gradientTex }: { word: string; gradientTex: THREE.CanvasTexture | null }) {
     const handRef = useRef<THREE.Group>(null);
     const startRef = useRef<number | null>(null);
+    const fingerCurlsRef = useRef<FingerCurls>(FLAT);
 
     useFrame((state) => {
         if (startRef.current === null) startRef.current = state.clock.elapsedTime;
@@ -252,8 +282,9 @@ function AnimatedHands({ word, gradientTex }: { word: string; gradientTex: THREE
 
         const motion = t > 0.3 ? t - 0.3 : 0;
         const pose = getSignPose(word, t, motion);
-        const h = pose.right; // use right-hand pose for single hand
+        const h = pose.right;
 
+        fingerCurlsRef.current = h.fingerCurls;
         if (handRef.current) {
             handRef.current.position.set(0, h.y, h.z);
             handRef.current.rotation.set(h.rotX, h.rotY + FACE_CAMERA_Y_RIGHT, h.rotZ);
@@ -262,7 +293,7 @@ function AnimatedHands({ word, gradientTex }: { word: string; gradientTex: THREE
 
     return (
         <group ref={handRef} position={[0, Y_DOWN, HAND_Z]} scale={2.2}>
-            <HandMesh isLeft={false} gradientTex={gradientTex} />
+            <HandMesh isLeft={false} gradientTex={gradientTex} fingerCurlsRef={fingerCurlsRef} />
         </group>
     );
 }

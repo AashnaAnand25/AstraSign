@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ArrowLeft, Settings, Play, Pause, ToggleLeft, ToggleRight } from "lucide-react";
 import { useAccessibility } from "@/accessibility/AccessibilityProvider";
+import HandTracker from "@/components/astraign/HandTracker";
+import { gestureToWord } from "@/utils/aslStaticPoses";
 
 interface Props {
   onBack?: () => void;
@@ -41,11 +43,8 @@ const WaveformBar = ({ i }: { i: number }) => {
   );
 };
 
-const SAMPLE_TRANSLATIONS = [
-  "Hello, I am happy to meet you.",
-  "Can you help me find the library?",
-  "Thank you so much for your kindness.",
-];
+const POSE_HOLD_MS = 500;
+const COOLDOWN_MS = 1800;
 
 export default function SignToVoice({ onBack, onSettings, focusMode: focusModeProp, embedded, onStatusChange, onAddToHistory }: Props) {
   const { settings } = useAccessibility();
@@ -56,28 +55,46 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
   const [confidence, setConfidence] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showParticles, setShowParticles] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const lastGestureRef = useRef<string>("");
+  const lastGestureTimeRef = useRef<number>(0);
+  const lastSpokenWordRef = useRef<string>("");
+  const lastSpokenTimeRef = useRef<number>(0);
 
   useEffect(() => {
     onStatusChange?.(isRecording ? "processing" : translation ? "ready" : "ready");
   }, [isRecording, translation, onStatusChange]);
 
-  useEffect(() => {
-    if (isRecording) {
-      timerRef.current = setTimeout(() => {
-        const t = SAMPLE_TRANSLATIONS[Math.floor(Math.random() * SAMPLE_TRANSLATIONS.length)];
-        setTranslation(t);
-        setConfidence(92 + Math.floor(Math.random() * 7));
-        setShowParticles(true);
-        setTimeout(() => setShowParticles(false), 2000);
-        onAddToHistory?.(t, "Sign detected");
-      }, 2200);
-    } else {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    }
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [isRecording]);
+  const handleGestureDetected = useCallback(
+    (gesture: string, conf: number) => {
+      const word = gestureToWord(gesture);
+      if (!word || conf < 0.55) {
+        lastGestureRef.current = "";
+        return;
+      }
+      const now = Date.now();
+      if (lastGestureRef.current === gesture) {
+        const held = now - lastGestureTimeRef.current;
+        if (held >= POSE_HOLD_MS) {
+          const canSpeak =
+            lastSpokenWordRef.current !== word || now - lastSpokenTimeRef.current >= COOLDOWN_MS;
+          if (canSpeak) {
+            setTranslation(word);
+            setConfidence(Math.round(conf * 100));
+            setShowParticles(true);
+            setTimeout(() => setShowParticles(false), 1500);
+            lastSpokenWordRef.current = word;
+            lastSpokenTimeRef.current = now;
+            onAddToHistory?.(word, gesture);
+          }
+        }
+      } else {
+        lastGestureRef.current = gesture;
+        lastGestureTimeRef.current = now;
+      }
+    },
+    [onAddToHistory]
+  );
 
   useEffect(() => {
     if (!translation) return;
@@ -156,9 +173,9 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Camera preview simulation */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-[#0d0a15] to-[#080810]">
-        {/* Grid overlay */}
+      {/* Single non-interactive layer: background + grid + hand guide + particles — never block clicks */}
+      <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-[#0d0a15] to-[#080810]" />
         <div
           className="absolute inset-0 opacity-10"
           style={{
@@ -166,97 +183,62 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
             backgroundSize: "30px 30px",
           }}
         />
-        {/* Scan line */}
-        {isRecording && (
-          <div
-            className="absolute left-0 right-0 h-px opacity-30"
-            style={{
-              background: "hsl(183 100% 50%)",
-              boxShadow: "0 0 10px hsl(183 100% 50%)",
-              animation: "scan-line 3s linear infinite",
-              top: "40%",
-            }}
-          />
+        {/* Hand guide — only top 50% of screen so bottom controls are never covered */}
+        {!isRecording && (
+          <div className="absolute left-0 right-0 top-0 bottom-[50%] flex items-end justify-center pb-4">
+            <div
+              className="relative rounded-3xl flex-shrink-0"
+              style={{
+                width: "55%",
+                aspectRatio: "0.7",
+                border: "1.5px dashed hsl(272 76% 53% / 0.25)",
+                boxShadow: "inset 0 0 30px hsl(272 76% 53% / 0.03)",
+              }}
+            >
+              {[["top-0 left-0","border-t border-l"], ["top-0 right-0","border-t border-r"], ["bottom-0 left-0","border-b border-l"], ["bottom-0 right-0","border-b border-r"]].map(([pos, border], i) => (
+                <div key={i} className={`absolute w-4 h-4 ${pos} ${border}`}
+                  style={{ borderColor: "hsl(183 100% 50% / 0.5)", margin: "-1px" }} />
+              ))}
+              <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 100 100" fill="none">
+                <path d="M50 90 C30 90 20 75 20 60 L20 35 C20 30 24 27 28 27 C32 27 36 30 36 35 L36 50 L36 30 C36 25 40 22 44 22 C48 22 52 25 52 30 L52 48 L52 25 C52 20 56 17 60 17 C64 17 68 20 68 25 L68 48 L68 32 C68 27 72 24 76 24 C80 24 84 27 84 32 L84 62 C84 78 70 90 50 90Z"
+                  stroke="hsl(183 100% 50%)" strokeWidth="1.5" strokeLinejoin="round" />
+                {[[36,27],[50,22],[64,18],[76,27]].map(([x,y],i) => (
+                  <circle key={i} cx={x} cy={y} r="2.5" fill="hsl(183 100% 50%)" />
+                ))}
+              </svg>
+            </div>
+          </div>
         )}
+        {!isRecording && (
+          <div className="absolute left-0 right-0 top-[42%] text-center">
+            <p className="text-xs text-muted-foreground tracking-wider">Hold pose: 👍 Yes · ✊ No · ✋ Stop · ☝️ One · ✌️ Two</p>
+          </div>
+        )}
+        {showParticles && Array.from({ length: 12 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1.5 h-1.5 rounded-full"
+            style={{
+              left: `${30 + Math.random() * 40}%`,
+              top: `${40 + Math.random() * 20}%`,
+              background: i % 2 === 0 ? "hsl(272 76% 53%)" : "hsl(183 100% 50%)",
+              boxShadow: `0 0 6px ${i % 2 === 0 ? "hsl(272 76% 53%)" : "hsl(183 100% 50%)"}`,
+              animation: `particle-float 1.5s ease-out ${i * 0.1}s forwards`,
+              "--tx": `${(Math.random() - 0.5) * 80}px`,
+            } as React.CSSProperties}
+          />
+        ))}
       </div>
 
-      {/* Hand guide skeleton — shown before recording */}
-      {!isRecording && (
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-center" style={{ top: "15%", height: "50%" }}>
-          {/* Guide boundary */}
-          <div
-            className="relative rounded-3xl"
-            style={{
-              width: "55%",
-              height: "80%",
-              border: "1.5px dashed hsl(272 76% 53% / 0.25)",
-              boxShadow: "inset 0 0 30px hsl(272 76% 53% / 0.03)",
-            }}
-          >
-            {/* Corner accents */}
-            {[["top-0 left-0","border-t border-l"], ["top-0 right-0","border-t border-r"], ["bottom-0 left-0","border-b border-l"], ["bottom-0 right-0","border-b border-r"]].map(([pos, border], i) => (
-              <div key={i} className={`absolute w-4 h-4 ${pos} ${border}`}
-                style={{ borderColor: "hsl(183 100% 50% / 0.5)", margin: "-1px" }} />
-            ))}
-            {/* Ghost hand skeleton */}
-            <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 100 100" fill="none">
-              <path d="M50 90 C30 90 20 75 20 60 L20 35 C20 30 24 27 28 27 C32 27 36 30 36 35 L36 50 L36 30 C36 25 40 22 44 22 C48 22 52 25 52 30 L52 48 L52 25 C52 20 56 17 60 17 C64 17 68 20 68 25 L68 48 L68 32 C68 27 72 24 76 24 C80 24 84 27 84 32 L84 62 C84 78 70 90 50 90Z"
-                stroke="hsl(183 100% 50%)" strokeWidth="1.5" strokeLinejoin="round" />
-              {[[36,27],[50,22],[64,18],[76,27]].map(([x,y],i) => (
-                <circle key={i} cx={x} cy={y} r="2.5" fill="hsl(183 100% 50%)" />
-              ))}
-            </svg>
-          </div>
-          <div className="absolute bottom-2 text-center">
-            <p className="text-xs text-muted-foreground tracking-wider">Position hands inside frame</p>
-          </div>
-        </div>
-      )}
-
-      {/* Hand landmarks overlay */}
+      {/* Camera + MediaPipe when recording — constrained so it doesn't cover bottom controls */}
       {isRecording && (
-        <div className="absolute inset-0 pointer-events-none" style={{ top: "15%", height: "55%" }}>
-          {handLandmarks.map((lm, i) => (
-            <HandLandmark key={i} x={lm.x} y={lm.y} />
-          ))}
-          {/* Connection lines */}
-          <svg className="absolute inset-0 w-full h-full opacity-40">
-            {[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],[0,17],[17,18],[18,19],[19,20]].map(([a,b], i) => (
-              <line
-                key={i}
-                x1={`${handLandmarks[a].x}%`} y1={`${handLandmarks[a].y}%`}
-                x2={`${handLandmarks[b].x}%`} y2={`${handLandmarks[b].y}%`}
-                stroke="hsl(183 100% 50%)"
-                strokeWidth="1"
-              />
-            ))}
-          </svg>
-          {/* Glow when recognizing */}
-          <div
-            className="absolute rounded-full animate-pulse"
-            style={{
-              left: "30%", top: "5%", width: "40%", height: "90%",
-              background: "radial-gradient(ellipse, hsl(183 100% 50% / 0.08) 0%, transparent 70%)",
-            }}
-          />
+        <div
+          className="absolute left-4 right-4 top-4 bottom-[320px] rounded-2xl overflow-hidden border border-border z-[5] pointer-events-auto"
+          style={{ boxShadow: "0 0 24px hsl(272 76% 53% / 0.15)" }}
+        >
+          <HandTracker isActive={true} onGestureDetected={handleGestureDetected} />
         </div>
       )}
-
-      {/* Particles */}
-      {showParticles && Array.from({ length: 12 }).map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1.5 h-1.5 rounded-full"
-          style={{
-            left: `${30 + Math.random() * 40}%`,
-            top: `${40 + Math.random() * 20}%`,
-            background: i % 2 === 0 ? "hsl(272 76% 53%)" : "hsl(183 100% 50%)",
-            boxShadow: `0 0 6px ${i % 2 === 0 ? "hsl(272 76% 53%)" : "hsl(183 100% 50%)"}`,
-            animation: `particle-float 1.5s ease-out ${i * 0.1}s forwards`,
-            "--tx": `${(Math.random() - 0.5) * 80}px`,
-          } as React.CSSProperties}
-        />
-      ))}
 
       {/* Top bar - hidden when embedded */}
       {!embedded && (
@@ -313,27 +295,32 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
       )}
 
       {/* Spacer for camera area */}
-      <div className="flex-1" />
+      <div className="flex-1 min-h-[120px]" />
 
-      {/* Translation text - focus content when focus mode */}
-      {translation && (
-        <div
-          className={`relative z-10 mx-5 mb-3 p-4 glass rounded-2xl neon-border-cyan animate-fade-in-up ${focusMode ? "a11y-focus-content" : ""}`}
-          style={{ boxShadow: "0 0 20px hsl(183 100% 50% / 0.1)" }}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-neon-cyan animate-glow-pulse" />
-            <span className="text-xs text-neon-cyan tracking-wider font-medium">TRANSLATED</span>
-            {settings.confidenceDisplay && (
-              <span className="ml-auto text-xs font-bold text-neon-cyan">{confidence}%</span>
-            )}
+      {/* Bottom interactive layer: translation + control panel — above decorative layer, below app nav (z-50) */}
+      <div className="relative z-20 flex flex-col pointer-events-auto shrink-0">
+        {/* Translation text - focus content when focus mode */}
+        {translation && (
+          <div
+            className={`mx-5 mb-3 p-4 glass rounded-2xl neon-border-cyan animate-fade-in-up ${focusMode ? "a11y-focus-content" : ""}`}
+            style={{ boxShadow: "0 0 20px hsl(183 100% 50% / 0.1)" }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 rounded-full bg-neon-cyan animate-glow-pulse" />
+              <span className="text-xs text-neon-cyan tracking-wider font-medium">TRANSLATED</span>
+              {settings.confidenceDisplay && (
+                <span className="ml-auto text-xs font-bold text-neon-cyan">{confidence}%</span>
+              )}
+            </div>
+            <p className="text-foreground font-medium text-base leading-relaxed">{translation}</p>
           </div>
-          <p className="text-foreground font-medium text-base leading-relaxed">{translation}</p>
-        </div>
-      )}
+        )}
 
-      {/* Control Panel */}
-      <div className={`relative z-10 mx-3 mb-6 glass-strong rounded-3xl p-5 ${focusMode ? "a11y-focus-dim" : ""}`} style={{ boxShadow: "0 -10px 40px hsl(272 76% 53% / 0.1)" }}>
+        {/* Control Panel — sticky at bottom so it's always visible and clickable */}
+        <div
+          className={`sticky bottom-0 mx-3 mb-6 mt-auto glass-strong rounded-3xl p-5 ${focusMode ? "a11y-focus-dim" : ""}`}
+          style={{ boxShadow: "0 -10px 40px hsl(272 76% 53% / 0.1)" }}
+        >
         {/* Waveform */}
         {isPlaying && (
           <div className="flex items-center justify-center gap-0.5 mb-4 h-8">
@@ -347,8 +334,9 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
         <div className="flex items-center justify-between mb-4 px-1">
           <span className="text-xs text-muted-foreground font-medium">Mode</span>
           <button
+            type="button"
             onClick={() => setLiveMode(!liveMode)}
-            className="flex items-center gap-2 glass rounded-full px-3 py-1.5 neon-border-purple transition-all"
+            className="flex items-center gap-2 glass rounded-full px-3 py-1.5 neon-border-purple transition-all cursor-pointer"
           >
             {liveMode ? <ToggleRight size={16} className="text-neon-cyan" /> : <ToggleLeft size={16} className="text-muted-foreground" />}
             <span className="text-xs font-medium" style={{ color: liveMode ? "hsl(183 100% 50%)" : "hsl(240 5% 55%)" }}>
@@ -405,8 +393,13 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
               </>
             )}
             <button
-              onClick={() => { setIsRecording(!isRecording); if (!isRecording) { setTranslation(""); setConfidence(0); } }}
-              className="w-16 h-16 rounded-full flex items-center justify-center transition-transform active:scale-90 relative z-10"
+              type="button"
+              onClick={() => {
+                setIsRecording(!isRecording);
+                setTranslation("");
+                setConfidence(0);
+              }}
+              className="w-16 h-16 rounded-full flex items-center justify-center transition-transform active:scale-90 relative z-10 cursor-pointer"
               style={{
                 background: isRecording
                   ? "linear-gradient(135deg, hsl(316 80% 60%), hsl(272 76% 53%))"
@@ -432,9 +425,10 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
           {/* Play button */}
           <div className="text-center">
             <button
+              type="button"
               onClick={() => setIsPlaying(!isPlaying)}
               disabled={!translation}
-              className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all disabled:opacity-30"
+              className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all disabled:opacity-30 cursor-pointer"
               style={{
                 background: "hsl(183 100% 50% / 0.15)",
                 border: "1px solid hsl(183 100% 50% / 0.3)",
@@ -451,6 +445,7 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
         <p className="text-center text-xs text-muted-foreground mt-4">
           {isRecording ? "Detecting hand gestures..." : "Tap to start recognition"}
         </p>
+        </div>
       </div>
     </div>
   );
