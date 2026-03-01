@@ -67,6 +67,7 @@ const Index = () => {
           <MainLayout
             onStartLive={() => setScreen("live")}
             onReverseMode={() => setScreen("reverse")}
+            onVoiceToSign={() => setScreen("voice-to-sign")}
             onCameraMode={() => setScreen("sign-to-voice")}
             onEnhancedCameraMode={() => setScreen("sign-to-voice-enhanced")}
             onConversation={() => setScreen("conversation")}

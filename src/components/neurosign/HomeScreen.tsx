@@ -3,6 +3,7 @@ import { Settings, Users } from "lucide-react";
 interface Props {
   onStartLive: () => void;
   onReverseMode: () => void;
+  onVoiceToSign: () => void;
   onCameraMode: () => void;
   onEnhancedCameraMode: () => void;
   onConversation: () => void;
@@ -38,7 +39,7 @@ const BigCard = ({ title, subtitle, desc, color, onClick }: { title: string; sub
   );
 };
 
-export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, onEnhancedCameraMode, onConversation, onSettings }: Props) {
+export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, onEnhancedCameraMode, onVoiceToSign, onConversation, onSettings }: Props) {
   return (
     <div className="min-h-screen flex flex-col px-5 pt-14 pb-8">
       <div className="flex items-center justify-between mb-6">
@@ -74,9 +75,16 @@ export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, o
         <BigCard
           color="pink"
           title="Deaf → Hearing"
-          subtitle="Reverse Mode"
+          subtitle="Text to Speech"
           desc="Type or tap a phrase and speak it aloud for the hearing person."
           onClick={onReverseMode}
+        />
+        <BigCard
+          color="cyan"
+          title="Hearing → Deaf"
+          subtitle="Voice → Sign (v4.0)"
+          desc="Listen to voice and visualize as ASL symbols in real-time."
+          onClick={onVoiceToSign}
         />
         <BigCard
           color="purple"
