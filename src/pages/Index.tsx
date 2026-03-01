@@ -27,7 +27,7 @@ export type Screen =
   | "info";
 
 const Index = () => {
-  const [screen, setScreen] = useState<Screen>("home");
+  const [screen, setScreen] = useState<Screen>("landing");
   const [activeTab, setActiveTab] = useState<TabId>("home");
   const [initialTranslateMode, setInitialTranslateMode] = useState<TranslateMode | null>(null);
 
