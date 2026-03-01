@@ -14,6 +14,7 @@ export default function HandTracker({ onGestureDetected, onLandmarks, isActive }
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const [currentGesture, setCurrentGesture] = useState<string>("");
   const [confidence, setConfidence] = useState<number>(0);
   const firstFrameRef = useRef(false);
@@ -63,12 +64,38 @@ export default function HandTracker({ onGestureDetected, onLandmarks, isActive }
 
     isStartingRef.current = true;
     setIsLoading(true);
+    setCameraError(null);
 
     try {
+      // Secure context required (HTTPS or localhost) — especially on Android
+      if (!window.isSecureContext) {
+        setCameraError("Camera requires HTTPS. Use https:// or localhost.");
+        setIsLoading(false);
+        isStartingRef.current = false;
+        return;
+      }
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setCameraError("Camera not supported in this browser.");
+        setIsLoading(false);
+        isStartingRef.current = false;
+        return;
+      }
+
       console.log("[HandTracker] Requesting camera access...");
+      // Android-friendly: facingMode 'user' (front cam), flexible resolution
+      const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
+      const videoConstraints: MediaTrackConstraints = isMobile
+        ? {
+            facingMode: { ideal: "user" },
+            width: { ideal: 640, max: 1280 },
+            height: { ideal: 480, max: 720 },
+          }
+        : { width: { ideal: 640 }, height: { ideal: 480 } };
+
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 640 }, height: { ideal: 480 } },
-        audio: false
+        video: videoConstraints,
+        audio: false,
       });
       console.log("[HandTracker] Camera access granted.");
       streamRef.current = stream;
@@ -76,9 +103,12 @@ export default function HandTracker({ onGestureDetected, onLandmarks, isActive }
       videoRef.current.srcObject = stream;
       videoRef.current.onloadedmetadata = () => {
         setIsLoading(false);
-        console.log("[HandTracker] Video metadata loaded, clearing initial loading.");
+        console.log("[HandTracker] Video metadata loaded.");
       };
-      await videoRef.current.play().catch(() => { });
+      // Mobile: play() must be in user gesture context; playsInline prevents fullscreen takeover
+      await videoRef.current.play().catch((e) => {
+        console.warn("[HandTracker] video.play() failed (common on mobile):", e);
+      });
 
       // Initialize MediaPipe Hands
       const hands = new Hands({
@@ -197,14 +227,25 @@ export default function HandTracker({ onGestureDetected, onLandmarks, isActive }
       isStartingRef.current = false;
 
     } catch (error) {
-      console.error('Camera initialization failed:', error);
+      console.error("Camera initialization failed:", error);
       setIsLoading(false);
       isStartingRef.current = false;
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes("Permission") || msg.includes("NotAllowed") || msg.includes("denied")) {
+        setCameraError("Camera access denied. Allow camera in browser or device settings.");
+      } else if (msg.includes("NotFound") || msg.includes("Devices")) {
+        setCameraError("No camera found.");
+      } else if (msg.includes("NotReadable") || msg.includes("in use")) {
+        setCameraError("Camera in use. Close other apps using the camera.");
+      } else {
+        setCameraError("Camera couldn't open. Use HTTPS and allow camera access.");
+      }
     }
   }, [processHandResults]);
 
   const stopCamera = useCallback(() => {
     console.log("[HandTracker] Stopping camera...");
+    setCameraError(null);
     firstFrameRef.current = false;
     isStartingRef.current = false;
 
@@ -261,7 +302,24 @@ export default function HandTracker({ onGestureDetected, onLandmarks, isActive }
         className={`w-full h-full rounded-lg object-cover ${!isLoading ? "block" : "hidden"}`}
         style={{ maxHeight: "100%" }}
       />
-      {isLoading && (
+      {cameraError && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center rounded-lg bg-background/95 p-4 text-center">
+          <p className="text-sm text-muted-foreground mb-3">{cameraError}</p>
+          <p className="text-xs text-muted-foreground/80 mb-3">On Android: allow camera in Chrome → Site settings</p>
+          <button
+            type="button"
+            onClick={() => {
+              setCameraError(null);
+              stopCamera();
+              setTimeout(() => startCamera(), 100);
+            }}
+            className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+      {isLoading && !cameraError && (
         <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-2" />
