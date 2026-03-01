@@ -19,7 +19,6 @@ export type Screen =
   | "onboarding-2"
   | "home"
   | "live"
-  | "reverse"
   | "sign-to-voice"
   | "voice-to-sign"
   | "conversation"
@@ -73,7 +72,7 @@ const Index = () => {
           {screen === "home" && (
             <MainLayout
               onStartLive={() => goToTab("translate")}
-              onReverseMode={() => setScreen("reverse")}
+              onVoiceToSign={() => goToTab("translate")}
               onCameraMode={() => goToTab("translate", "asl-to-audio")}
               onConversation={() => setScreen("conversation")}
               onSettings={() => goToTab("settings")}
@@ -93,15 +92,6 @@ const Index = () => {
             </ScreenWithNav>
           )}
 
-          {/* Reverse Mode (Deaf → Hearing) */}
-          {screen === "reverse" && (
-            <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
-              <ReverseMode
-                onBack={() => setScreen("home")}
-                onSettings={() => goToTab("settings")}
-              />
-            </ScreenWithNav>
-          )}
 
           {/* Conversation Mode */}
           {screen === "conversation" && (

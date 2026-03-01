@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { ArrowLeft, Settings, Play, Pause, ToggleLeft, ToggleRight } from "lucide-react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { ArrowLeft, Settings, Play, Pause, ToggleLeft, ToggleRight, Volume2 } from "lucide-react";
 import { useAccessibility } from "@/accessibility/AccessibilityProvider";
 import HandTracker from "@/components/astraign/HandTracker";
 import { gestureToWord } from "@/utils/aslStaticPoses";
@@ -12,6 +12,15 @@ interface Props {
   onStatusChange?: (status: "ready" | "listening" | "processing") => void;
   onAddToHistory?: (audioText: string, aslTranslation: string) => void;
 }
+
+const QUICK_PHRASES = [
+  "I need help",
+  "Please repeat that",
+  "Thank you",
+  "I understand",
+  "Call 911",
+  "One moment",
+];
 
 const HandLandmark = ({ x, y }: { x: number; y: number }) => (
   <div
@@ -51,14 +60,21 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
   const [isRecording, setIsRecording] = useState(false);
   const [liveMode, setLiveMode] = useState(true);
   const [translation, setTranslation] = useState("");
+  const [manualText, setManualText] = useState("");
   const [confidence, setConfidence] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isSpeakingManual, setIsSpeakingManual] = useState(false);
   const [showParticles, setShowParticles] = useState(false);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const lastGestureRef = useRef<string>("");
   const lastGestureTimeRef = useRef<number>(0);
   const lastSpokenWordRef = useRef<string>("");
   const lastSpokenTimeRef = useRef<number>(0);
+
+  const speechRate = useMemo(() => {
+    const v = Number(getComputedStyle(document.documentElement).getPropertyValue("--a11y-speech-rate"));
+    return Number.isFinite(v) && v > 0 ? v : 1;
+  }, [settings.playbackSpeed]);
 
   useEffect(() => {
     onStatusChange?.(isRecording ? "processing" : translation ? "ready" : "ready");
@@ -162,6 +178,62 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
       }
     }
   }, [isPlaying, translation, settings.playbackSpeed]);
+
+  const speakManual = async () => {
+    if (!manualText.trim()) return;
+    setIsSpeakingManual(true);
+
+    try {
+      // Try ElevenLabs backend first
+      const resp = await fetch("/api/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: manualText.trim(), voice_id: "21m00Tcm4TlvDq8ikWAM" }),
+      });
+
+      if (!resp.ok) {
+        throw new Error("ElevenLabs backend failed");
+      }
+
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+
+      audio.onplay = () => setIsSpeakingManual(true);
+      audio.onended = () => {
+        setIsSpeakingManual(false);
+        URL.revokeObjectURL(url);
+      };
+      audio.onerror = () => {
+        setIsSpeakingManual(false);
+        URL.revokeObjectURL(url);
+        speakNativeManual(); // Final fallback inside audio error
+      };
+
+      await audio.play();
+    } catch (err) {
+      console.warn("ElevenLabs failed, using native fallback:", err);
+      speakNativeManual();
+    }
+  };
+
+  const speakNativeManual = () => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      setIsSpeakingManual(false);
+      return;
+    }
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(manualText.trim());
+      u.rate = speechRate;
+      u.onstart = () => setIsSpeakingManual(true);
+      u.onend = () => setIsSpeakingManual(false);
+      u.onerror = () => setIsSpeakingManual(false);
+      window.speechSynthesis.speak(u);
+    } catch {
+      setIsSpeakingManual(false);
+    }
+  };
 
   const handLandmarks = [
     { x: 48, y: 35 }, { x: 52, y: 22 }, { x: 46, y: 18 }, { x: 42, y: 16 },
@@ -297,16 +369,54 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
       {/* Spacer for camera area */}
       <div className="flex-1 min-h-[120px]" />
 
-      {/* Bottom interactive layer: translation + control panel — above decorative layer, below app nav (z-50) */}
-      <div className="relative z-20 flex flex-col pointer-events-auto shrink-0">
-        {/* Translation text - focus content when focus mode */}
+      {/* Bottom interactive layer: translation + manual text + control panel — above decorative layer, below app nav (z-50) */}
+      <div className="relative z-20 flex flex-col pointer-events-auto shrink-0 mb-2">
+        {/* Quick phrases — added for text integration */}
+        <div className={`relative z-10 px-5 mb-4 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
+          <div className="text-[10px] text-muted-foreground tracking-wider uppercase mb-3 px-1">Quick phrases</div>
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {QUICK_PHRASES.map((p) => (
+              <button
+                key={p}
+                onClick={() => setManualText(p)}
+                className="px-3 py-2 rounded-xl text-xs font-semibold bg-secondary border border-border text-primary hover:bg-accent-subtle transition-colors duration-200 whitespace-nowrap"
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Manual Text Area — integrated for text access */}
+        <div className={`relative z-10 bg-card border border-border rounded-2xl p-4 mx-5 mb-4 shadow-sm ${settings.focusMode ? "a11y-focus-content" : ""}`}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground">Type message</span>
+            <button
+              onClick={speakManual}
+              disabled={!manualText.trim() || isSpeakingManual}
+              className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-[10px] font-bold text-primary-foreground flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-40"
+            >
+              <Volume2 size={12} />
+              {isSpeakingManual ? "SPEAKING" : "SPEAK"}
+            </button>
+          </div>
+          <textarea
+            value={manualText}
+            onChange={(e) => setManualText(e.target.value)}
+            className="w-full min-h-[60px] bg-transparent outline-none resize-none text-sm text-foreground placeholder:text-muted-foreground/30"
+            placeholder="Type what you want spoken aloud…"
+          />
+        </div>
+
+        {/* Translation text - result of ASL detection */}
         {translation && (
           <div
-            className={`mx-5 mb-3 p-4 bg-card border border-primary rounded-2xl shadow-md ${focusMode ? "a11y-focus-content" : ""}`}
+            className={`mx-5 mb-4 p-4 bg-card border border-primary rounded-2xl shadow-md ${focusMode ? "a11y-focus-content" : ""}`}
+            style={{ boxShadow: "0 4px 12px hsl(var(--primary) / 0.1)" }}
           >
             <div className="flex items-center gap-2 mb-2">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-xs text-primary tracking-wider font-medium">TRANSLATED</span>
+              <span className="text-xs text-primary tracking-wider font-medium uppercase">Sign Detected</span>
               <span className="ml-auto text-xs font-bold text-primary">{confidence}% Accuracy</span>
             </div>
             <p className="text-foreground font-medium text-base leading-relaxed">{translation}</p>

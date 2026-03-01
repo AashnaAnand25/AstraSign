@@ -2,7 +2,6 @@ import { Settings, Users, ArrowLeftRight, Info } from "lucide-react";
 
 interface Props {
   onStartLive: () => void;
-  onReverseMode: () => void;
   onVoiceToSign: () => void;
   onCameraMode: () => void;
   onEnhancedCameraMode?: () => void;
@@ -33,7 +32,16 @@ const BigCard = ({ title, subtitle, desc, onClick }: { title: string; subtitle: 
   );
 };
 
-export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, onEnhancedCameraMode, onVoiceToSign, onConversation, onSettings, onTranslationHub, onInfo }: Props) {
+export default function HomeScreen({
+  onStartLive,
+  onVoiceToSign,
+  onCameraMode,
+  onEnhancedCameraMode,
+  onConversation,
+  onSettings,
+  onTranslationHub,
+  onInfo
+}: Props) {
   return (
     <div className="min-h-screen flex flex-col px-6 pt-16 pb-24">
       <div className="flex items-center justify-between mb-6">
@@ -64,27 +72,15 @@ export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, o
 
       <div className="flex flex-col gap-4 flex-1">
         <BigCard
-          title="Start Signing"
-          subtitle="Live"
-          desc="Speak naturally and watch sign output update in real time."
-          onClick={onStartLive}
-        />
-        <BigCard
-          title="Deaf → Hearing"
-          subtitle="Text to Speech"
-          desc="Type or tap a phrase and speak it aloud for the hearing person."
-          onClick={onReverseMode}
-        />
-        <BigCard
           title="Hearing → Deaf"
-          subtitle="Voice → Sign (v4.0)"
-          desc="Listen to voice and visualize as ASL symbols in real-time."
+          subtitle="Voice to ASL"
+          desc="Speak or type Naturally and watch sign output update in real-time."
           onClick={onVoiceToSign}
         />
         <BigCard
-          title="ASL Detection"
-          subtitle="Sign → Voice"
-          desc="Point the camera at signing and generate natural voice output."
+          title="Deaf → Hearing"
+          subtitle="ASL to Voice"
+          desc="Point camera at signing or type manually and watch/hear translations instantly."
           onClick={onCameraMode}
         />
 

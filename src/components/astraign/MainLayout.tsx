@@ -9,7 +9,6 @@ import type { TranslateMode } from "./TranslateTab";
 
 interface Props {
   onStartLive: () => void;
-  onReverseMode: () => void;
   onVoiceToSign?: () => void;
   onCameraMode: () => void;
   onEnhancedCameraMode?: () => void;
@@ -25,7 +24,6 @@ interface Props {
 
 export default function MainLayout({
   onStartLive,
-  onReverseMode,
   onVoiceToSign,
   onCameraMode,
   onEnhancedCameraMode,
@@ -55,7 +53,6 @@ export default function MainLayout({
           {activeTab === "home" && (
             <HomeScreen
               onStartLive={onStartLive}
-              onReverseMode={onReverseMode}
               onVoiceToSign={onVoiceToSign ?? (() => { })}
               onCameraMode={onCameraMode}
               onEnhancedCameraMode={onEnhancedCameraMode}
