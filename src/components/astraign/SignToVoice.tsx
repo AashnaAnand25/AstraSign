@@ -230,69 +230,36 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
   ];
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Single non-interactive layer: background + grid + hand guide + particles — never block clicks */}
-      <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden>
-        <div className="absolute inset-0 bg-background" />
-        <div
-          className="absolute inset-0 opacity-5"
-          style={{
-            backgroundImage: "linear-gradient(hsl(var(--primary) / 0.15) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.15) 1px, transparent 1px)",
-            backgroundSize: "30px 30px",
-          }}
-        />
-        {/* Hand guide — only top 50% of screen so bottom controls are never covered */}
+    <div className="min-h-screen flex flex-col bg-background overflow-auto">
+      {/* Camera slot — fixed height at top, in flow (no overlay) */}
+      <div className="relative w-full shrink-0 rounded-b-2xl overflow-hidden border-b border-border" style={{ height: "min(50vh, 320px)" }}>
         {!isRecording && (
-          <div className="absolute left-0 right-0 top-0 bottom-[50%] flex items-end justify-center pb-4">
-            <div
-              className="relative rounded-3xl flex-shrink-0 border-2 border-dashed border-primary/30 bg-card/30"
-              style={{
-                width: "55%",
-                aspectRatio: "0.7",
-                boxShadow: "inset 0 0 30px hsl(var(--primary) / 0.05)",
-              }}
-            >
-              {[["top-0 left-0", "border-t border-l"], ["top-0 right-0", "border-t border-r"], ["bottom-0 left-0", "border-b border-l"], ["bottom-0 right-0", "border-b border-r"]].map(([pos, border], i) => (
-                <div key={i} className={`absolute w-4 h-4 ${pos} ${border} border-primary/60`}
-                  style={{ margin: "-2px" }} />
-              ))}
-              <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 100 100" fill="none">
-                <path d="M50 90 C30 90 20 75 20 60 L20 35 C20 30 24 27 28 27 C32 27 36 30 36 35 L36 50 L36 30 C36 25 40 22 44 22 C48 22 52 25 52 30 L52 48 L52 25 C52 20 56 17 60 17 C64 17 68 20 68 25 L68 48 L68 32 C68 27 72 24 76 24 C80 24 84 27 84 32 L84 62 C84 78 70 90 50 90Z"
-                  stroke="hsl(var(--primary))" strokeWidth="1.5" strokeLinejoin="round" />
-                {[[36, 27], [50, 22], [64, 18], [76, 27]].map(([x, y], i) => (
-                  <circle key={i} cx={x} cy={y} r="2.5" fill="hsl(var(--primary))" />
-                ))}
+          <div className="absolute inset-0 z-0 flex flex-col items-center justify-center gap-2 bg-card/40">
+            <div className="w-[50%] max-w-[180px] aspect-[0.7] rounded-2xl border-2 border-dashed border-primary/30 flex items-center justify-center">
+              <svg className="w-full h-full opacity-20 p-4" viewBox="0 0 100 100" fill="none">
+                <path d="M50 90 C30 90 20 75 20 60 L20 35 C20 30 24 27 28 27 C32 27 36 30 36 35 L36 50 L36 30 C36 25 40 22 44 22 C48 22 52 25 52 30 L52 48 L52 25 C52 20 56 17 60 17 C64 17 68 20 68 25 L68 48 L68 32 C68 27 72 24 76 24 C80 24 84 27 84 32 L84 62 C84 78 70 90 50 90Z" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeLinejoin="round" />
               </svg>
             </div>
+            <p className="text-[10px] text-muted-foreground">👍 Yes · ✊ No · ✋ Stop</p>
           </div>
         )}
         {!isRecording && (
-          <div className="absolute left-0 right-0 top-[42%] text-center">
-            <p className="text-xs text-muted-foreground tracking-wider">Hold pose: 👍 Yes · ✊ No · ✋ Stop · ☝️ One · ✌️ Two</p>
+          <button
+            type="button"
+            onClick={() => { setIsRecording(true); setTranslation(""); setConfidence(0); }}
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-primary/5 transition-colors"
+            aria-label="Start camera"
+          >
+            <span className="text-sm font-semibold text-primary">Tap to start camera</span>
+            <span className="text-xs text-muted-foreground">Show your hand</span>
+          </button>
+        )}
+        {isRecording && (
+          <div className="absolute inset-0 z-10 bg-card">
+            <HandTracker isActive={true} onLandmarks={setRawLandmarks} />
           </div>
         )}
-        {showParticles && Array.from({ length: 12 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1.5 h-1.5 rounded-full bg-primary shadow-lg"
-            style={{
-              left: `${30 + Math.random() * 40}%`,
-              top: `${40 + Math.random() * 20}%`,
-              animation: `particle-float 1.5s ease-out ${i * 0.1}s forwards`,
-              "--tx": `${(Math.random() - 0.5) * 80}px`,
-            } as React.CSSProperties}
-          />
-        ))}
       </div>
-
-      {/* Camera + MediaPipe when recording — constrained so it doesn't cover bottom controls */}
-      {isRecording && (
-        <div
-          className="absolute inset-0 z-[5] pointer-events-auto bg-card"
-        >
-          <HandTracker isActive={true} onLandmarks={setRawLandmarks} />
-        </div>
-      )}
 
       {/* Top bar - hidden when embedded */}
       {!embedded && (
@@ -347,132 +314,63 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
         </div>
       )}
 
-      {/* Spacer for camera area */}
-      <div className="flex-1 min-h-[120px]" />
-
-      {/* Bottom interactive layer: translation + manual text + control panel — above decorative layer, below app nav (z-50) */}
-      <div className="relative z-20 flex flex-col pointer-events-auto shrink-0 mb-2">
-        {/* Quick phrases — added for text integration */}
-        <div className={`relative z-10 px-5 mb-4 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
-          <div className="text-[10px] text-muted-foreground tracking-wider uppercase mb-3 px-1">Quick phrases</div>
-          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-            {QUICK_PHRASES.map((p) => (
-              <button
-                key={p}
-                onClick={() => setManualText(p)}
-                className="px-3 py-2 rounded-xl text-xs font-semibold bg-secondary border border-border text-primary hover:bg-accent-subtle transition-colors duration-200 whitespace-nowrap"
-              >
-                {p}
-              </button>
-            ))}
-          </div>
+      {/* Compact strip below camera — in flow, no overlay */}
+      <div className="flex flex-col gap-3 px-4 py-3 pb-6 shrink-0">
+        {/* Quick phrases — single row */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider shrink-0">Phrases</span>
+          {QUICK_PHRASES.map((p) => (
+            <button
+              key={p}
+              onClick={() => setManualText(p)}
+              className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-secondary border border-border text-foreground hover:border-primary shrink-0"
+            >
+              {p}
+            </button>
+          ))}
         </div>
 
-        {/* Manual Text Area — integrated for text access */}
-        <div className={`relative z-10 bg-card border border-border rounded-2xl p-4 mx-5 mb-4 shadow-sm ${settings.focusMode ? "a11y-focus-content" : ""}`}>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-muted-foreground">Type message</span>
-            <button
-              onClick={speakManual}
-              disabled={!manualText.trim() || isSpeakingManual}
-              className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-[10px] font-bold text-primary-foreground flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-40"
-            >
-              <Volume2 size={12} />
-              {isSpeakingManual ? "SPEAKING" : "SPEAK"}
-            </button>
-          </div>
-          <textarea
+        {/* Type message — one line: input + SPEAK */}
+        <div className="flex gap-2 items-center">
+          <input
+            type="text"
             value={manualText}
             onChange={(e) => setManualText(e.target.value)}
-            className="w-full min-h-[60px] bg-transparent outline-none resize-none text-sm text-foreground placeholder:text-muted-foreground/30"
-            placeholder="Type what you want spoken aloud…"
+            placeholder="Type to speak aloud…"
+            className="flex-1 min-w-0 py-2.5 px-3 rounded-xl bg-secondary border border-border text-sm outline-none focus:border-primary"
           />
+          <button
+            onClick={speakManual}
+            disabled={!manualText.trim() || isSpeakingManual}
+            className="shrink-0 px-3 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 disabled:opacity-40"
+          >
+            <Volume2 size={14} />
+            {isSpeakingManual ? "…" : "SPEAK"}
+          </button>
         </div>
 
-        {/* Translation text - result of ASL detection */}
+        {/* Translation result — one line when present */}
         {translation && (
-          <div
-            className={`mx-5 mb-4 p-4 bg-card border border-primary rounded-2xl shadow-md ${focusMode ? "a11y-focus-content" : ""}`}
-            style={{ boxShadow: "0 4px 12px hsl(var(--primary) / 0.1)" }}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-xs text-primary tracking-wider font-medium uppercase">Sign Detected</span>
-              <span className="ml-auto text-xs font-bold text-primary">{confidence}% Accuracy</span>
-            </div>
-            <p className="text-foreground font-medium text-base leading-relaxed">{translation}</p>
+          <div className="px-3 py-2 rounded-xl bg-primary/10 border border-primary/30 flex items-center gap-2">
+            <span className="text-xs font-semibold text-primary">{translation}</span>
+            <span className="text-[10px] text-muted-foreground ml-auto">{confidence}%</span>
           </div>
         )}
 
-        {/* Control Panel — sticky at bottom so it's always visible and clickable */}
-        <div
-          className={`sticky bottom-0 mx-3 mb-6 mt-auto bg-card border border-border rounded-3xl p-5 shadow-lg ${focusMode ? "a11y-focus-dim" : ""}`}
-        >
-          {/* Waveform */}
-          {isPlaying && (
-            <div className="flex items-center justify-center gap-0.5 mb-4 h-8">
-              {Array.from({ length: 24 }).map((_, i) => (
-                <WaveformBar key={i} i={i} />
-              ))}
-            </div>
-          )}
-
-          {/* Mode toggle */}
-          <div className="flex items-center justify-between mb-4 px-1">
-            <span className="text-xs text-muted-foreground font-medium">Mode</span>
-            <button
-              type="button"
-              onClick={() => setLiveMode(!liveMode)}
-              className="flex items-center gap-2 bg-secondary border border-border rounded-full px-3 py-1.5 transition-all duration-200 cursor-pointer hover:border-primary"
-            >
-              {liveMode ? <ToggleRight size={16} className="text-primary" /> : <ToggleLeft size={16} className="text-muted-foreground" />}
-              <span className={`text-xs font-medium ${liveMode ? "text-primary" : "text-muted-foreground"}`}>
-                {liveMode ? "Live" : "Sentence"}
-              </span>
-            </button>
+        {/* Record + Accuracy + Play — one compact row */}
+        <div className="flex items-center justify-center gap-3 pt-1">
+          <div className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-border shrink-0" title="Accuracy">
+            <span className="text-[10px] font-bold" style={{ color: confidence >= 90 ? "hsl(142 70% 50%)" : confidence >= 70 ? "hsl(40 90% 55%)" : confidence > 0 ? "hsl(0 80% 55%)" : "hsl(var(--muted-foreground))" }}>
+              {confidence ? `${confidence}%` : "—"}
+            </span>
           </div>
 
-          {/* Confidence ring + Record button */}
-          <div className="flex items-center justify-center gap-6">
-            {/* Confidence — dynamic color */}
-            <div className="text-center group relative">
-              <div className="relative w-12 h-12 mx-auto">
-                <svg viewBox="0 0 48 48" className="-rotate-90 w-12 h-12">
-                  <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
-                  <circle
-                    cx="24" cy="24" r="20"
-                    fill="none"
-                    stroke={confidence >= 90 ? "hsl(142 70% 50%)" : confidence >= 70 ? "hsl(40 90% 55%)" : confidence > 0 ? "hsl(0 80% 55%)" : "hsl(var(--primary))"}
-                    strokeWidth="3"
-                    strokeDasharray={`${(confidence / 100) * 125.6} 125.6`}
-                    strokeLinecap="round"
-                    style={{ transition: "stroke 0.4s, stroke-dasharray 0.4s" }}
-                  />
-                </svg>
-                <span
-                  className="absolute inset-0 flex items-center justify-center text-[10px] font-bold"
-                  style={{ color: confidence >= 90 ? "hsl(142 70% 50%)" : confidence >= 70 ? "hsl(40 90% 55%)" : confidence > 0 ? "hsl(0 80% 55%)" : "hsl(var(--primary))" }}
-                >
-                  {confidence ? `${confidence}%` : "--"}
-                </span>
-              </div>
-              <span className="text-[10px] text-muted-foreground mt-1 block">Accuracy</span>
-              {/* Tooltip on low confidence */}
-              {confidence > 0 && confidence < 70 && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 text-[10px] text-center rounded-xl px-2 py-1.5 pointer-events-none"
-                  style={{ background: "hsl(240 15% 10%)", border: "1px solid hsl(0 80% 55% / 0.4)", color: "hsl(0 80% 65%)" }}>
-                  Low accuracy. Try clearer gesture.
-                </div>
-              )}
-            </div>
-
-            {/* Record button */}
-            <div className="relative">
+          <div className="relative flex items-center justify-center p-2">
               {isRecording && (
                 <>
                   <div className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ background: "hsl(272 76% 53%)", transform: "scale(1.5)" }} />
                   <div className="absolute inset-0 rounded-full" style={{
-                    width: "88px", height: "88px", top: "-12px", left: "-12px",
+                    width: "88px", height: "88px",
                     border: "2px solid hsl(272 76% 53% / 0.4)",
                     borderRadius: "50%",
                     animation: "pulse-purple 1.5s ease-in-out infinite",
@@ -481,12 +379,14 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
               )}
               <button
                 type="button"
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   setIsRecording(!isRecording);
                   setTranslation("");
                   setConfidence(0);
                 }}
-                className="w-16 h-16 rounded-full flex items-center justify-center transition-transform active:scale-90 relative z-10 cursor-pointer"
+                className="w-16 h-16 min-w-[64px] min-h-[64px] rounded-full flex items-center justify-center transition-transform active:scale-90 relative z-30 cursor-pointer touch-manipulation"
                 style={{
                   background: isRecording
                     ? "linear-gradient(135deg, hsl(316 80% 60%), hsl(272 76% 53%))"
@@ -495,6 +395,7 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
                     ? "0 0 30px hsl(316 80% 60% / 0.6), 0 0 60px hsl(316 80% 60% / 0.3)"
                     : "0 0 25px hsl(272 76% 53% / 0.5)",
                 }}
+                aria-label={isRecording ? "Stop camera" : "Start camera for sign recognition"}
               >
                 {isRecording ? (
                   <div className="w-5 h-5 rounded bg-white" />
@@ -509,36 +410,30 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
               </button>
             </div>
 
-            {/* Play button */}
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={handlePlayClick}
-                disabled={pipeline.glossWords.length === 0 || pipeline.isTranslating}
-                className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all disabled:opacity-30 cursor-pointer relative"
-                style={{
-                  background: "hsl(183 100% 50% / 0.15)",
-                  border: "1px solid hsl(183 100% 50% / 0.3)",
-                  color: "hsl(183 100% 50%)",
-                  boxShadow: translation ? "0 0 15px hsl(183 100% 50% / 0.2)" : "none",
-                }}
-              >
-                {pipeline.isTranslating ? (
-                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : isPlaying ? (
-                  <Pause size={18} />
-                ) : (
-                  <Play size={18} />
-                )}
-              </button>
-              <span className="text-[10px] text-muted-foreground mt-1 block">Play</span>
-            </div>
-          </div>
-
-          <p className="text-center text-xs text-muted-foreground mt-4">
-            {isRecording ? pipeline.status : "Tap to start recognition"}
-          </p>
+          <button
+            type="button"
+            onClick={handlePlayClick}
+            disabled={pipeline.glossWords.length === 0 || pipeline.isTranslating}
+            className="w-12 h-12 rounded-xl flex items-center justify-center transition-all disabled:opacity-30 shrink-0"
+            style={{
+              background: "hsl(183 100% 50% / 0.15)",
+              border: "1px solid hsl(183 100% 50% / 0.3)",
+              color: "hsl(183 100% 50%)",
+            }}
+          >
+            {pipeline.isTranslating ? (
+              <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            ) : isPlaying ? (
+              <Pause size={18} />
+            ) : (
+              <Play size={18} />
+            )}
+          </button>
         </div>
+
+        <p className="text-center text-[11px] text-muted-foreground mt-2">
+          {isRecording ? pipeline.status : "Tap above or the mic to start"}
+        </p>
       </div>
     </div>
   );
