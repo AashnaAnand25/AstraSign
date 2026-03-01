@@ -28,11 +28,9 @@ const Toggle = ({
     </div>
     <button
       onClick={onToggle}
-      className="w-10 h-6 rounded-full transition-all relative flex-shrink-0"
-      style={{
-        background: enabled ? "hsl(var(--neon-purple))" : "hsl(240 10% 20%)",
-        boxShadow: enabled ? "0 0 10px hsl(272 76% 53% / 0.45)" : "none",
-      }}
+      className={`w-10 h-6 rounded-full transition-all relative flex-shrink-0 ${
+        enabled ? "bg-primary" : "bg-muted"
+      }`}
     >
       <div
         className="absolute top-1 w-4 h-4 rounded-full bg-white transition-all"
@@ -56,10 +54,7 @@ const SelectControl = ({
   <div className="space-y-2 py-2.5">
     <div className="flex justify-between items-center">
       <span className="text-sm font-medium text-foreground">{label}</span>
-      <span
-        className="text-xs font-semibold text-neon-cyan px-2 py-0.5 rounded-full"
-        style={{ background: "hsl(183 100% 50% / 0.1)" }}
-      >
+      <span className="text-xs font-semibold text-primary bg-accent-subtle px-2 py-0.5 rounded-full">
         {options.find((o) => o.value === value)?.label ?? value}
       </span>
     </div>
@@ -68,17 +63,11 @@ const SelectControl = ({
         <button
           key={o.value}
           onClick={() => onChange(o.value)}
-          className="py-2 rounded-xl text-xs font-semibold transition-colors"
-          style={{
-            background:
-              value === o.value ? "hsl(183 100% 50% / 0.12)" : "hsl(240 15% 9%)",
-            border:
-              value === o.value
-                ? "1px solid hsl(183 100% 50% / 0.35)"
-                : "1px solid hsl(240 10% 14%)",
-            color:
-              value === o.value ? "hsl(var(--neon-cyan))" : "hsl(240 5% 65%)",
-          }}
+          className={`py-2 rounded-lg text-xs font-semibold transition-colors border ${
+            value === o.value
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-secondary text-muted-foreground border-border hover:border-primary/50"
+          }`}
         >
           {o.label}
         </button>
@@ -103,20 +92,15 @@ const SliderControl = ({
   <div className="space-y-2 py-2.5">
     <div className="flex justify-between items-center">
       <span className="text-sm font-medium text-foreground">{label}</span>
-      <span
-        className="text-xs font-semibold text-neon-cyan px-2 py-0.5 rounded-full"
-        style={{ background: "hsl(183 100% 50% / 0.1)" }}
-      >
+      <span className="text-xs font-semibold text-primary bg-accent-subtle px-2 py-0.5 rounded-full">
         {value}/{max}
       </span>
     </div>
-    <div className="relative h-1.5 rounded-full" style={{ background: "hsl(240 10% 15%)" }}>
+    <div className="relative h-1.5 rounded-full bg-secondary">
       <div
-        className="absolute left-0 top-0 h-full rounded-full"
+        className="absolute left-0 top-0 h-full rounded-full bg-primary"
         style={{
           width: `${((value - min) / (max - min)) * 100}%`,
-          background:
-            "linear-gradient(90deg, hsl(var(--neon-purple)), hsl(var(--neon-cyan)))",
         }}
       />
       <input
@@ -144,22 +128,13 @@ const Section = ({
 }) => {
   const [open, setOpen] = useState(true);
   return (
-    <div
-      className="rounded-2xl overflow-hidden"
-      style={{
-        background: "hsl(240 15% 9%)",
-        border: "1px solid hsl(240 10% 14%)",
-      }}
-    >
+    <div className="rounded-xl overflow-hidden bg-card border border-border">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-4 py-3"
       >
         <div className="flex items-center gap-2.5">
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: `${color}18`, color }}
-          >
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-accent-subtle text-primary">
             {icon}
           </div>
           <span className="text-sm font-semibold text-foreground">{title}</span>
@@ -183,7 +158,7 @@ export default function SettingsTab() {
   return (
     <div className="flex flex-col px-5 pt-14 pb-4">
       <div className="mb-6">
-        <h3 className="font-display text-xl font-bold gradient-text-purple-cyan">
+        <h3 className="text-xl font-bold text-foreground">
           Accessibility
         </h3>
         <p className="text-xs text-muted-foreground mt-0.5">
@@ -194,24 +169,14 @@ export default function SettingsTab() {
       {/* Focus Mode — hero row */}
       <div className="mb-4">
         <div
-          className="flex items-center justify-between rounded-2xl px-4 py-3 transition-all"
-          style={{
-            background: settings.focusMode
-              ? "hsl(272 76% 53% / 0.12)"
-              : "hsl(240 15% 9%)",
-            border: `1px solid ${
-              settings.focusMode ? "hsl(272 76% 53% / 0.4)" : "hsl(240 10% 14%)"
-            }`,
-          }}
+          className={`flex items-center justify-between rounded-xl px-4 py-3 transition-all border ${
+            settings.focusMode
+              ? "bg-accent-subtle border-primary"
+              : "bg-card border-border"
+          }`}
         >
           <div className="flex items-center gap-3">
-            <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{
-                background: "hsl(272 76% 53% / 0.15)",
-                color: "hsl(var(--neon-purple))",
-              }}
-            >
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-accent-subtle text-primary">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <circle cx="8" cy="8" r="3" fill="currentColor" />
                 <circle
@@ -237,15 +202,9 @@ export default function SettingsTab() {
             onClick={() =>
               updateSettings({ focusMode: !settings.focusMode })
             }
-            className="w-10 h-6 rounded-full transition-all relative flex-shrink-0"
-            style={{
-              background: settings.focusMode
-                ? "hsl(var(--neon-purple))"
-                : "hsl(240 10% 20%)",
-              boxShadow: settings.focusMode
-                ? "0 0 10px hsl(272 76% 53% / 0.45)"
-                : "none",
-            }}
+            className={`w-10 h-6 rounded-full transition-all relative flex-shrink-0 ${
+              settings.focusMode ? "bg-primary" : "bg-muted"
+            }`}
           >
             <div
               className="absolute top-1 w-4 h-4 rounded-full bg-white transition-all"
@@ -262,7 +221,7 @@ export default function SettingsTab() {
         <Section
           icon={<Monitor size={14} />}
           title="Display"
-          color="hsl(var(--neon-purple))"
+          color=""
         >
           <SliderControl
             label="Text Size"
@@ -276,10 +235,7 @@ export default function SettingsTab() {
               <span className="text-sm font-medium text-foreground">
                 Content Scaling
               </span>
-              <span
-                className="text-xs font-semibold text-neon-cyan px-2 py-0.5 rounded-full"
-                style={{ background: "hsl(183 100% 50% / 0.1)" }}
-              >
+              <span className="text-xs font-semibold text-primary bg-accent-subtle px-2 py-0.5 rounded-full">
                 {Math.round(settings.contentScale * 100)}%
               </span>
             </div>
@@ -290,21 +246,11 @@ export default function SettingsTab() {
                   onClick={() =>
                     updateSettings({ contentScale: s as 1 | 1.1 | 1.25 | 1.5 })
                   }
-                  className="py-2 rounded-xl text-xs font-semibold transition-colors"
-                  style={{
-                    background:
-                      settings.contentScale === s
-                        ? "hsl(272 76% 53% / 0.16)"
-                        : "hsl(240 15% 9%)",
-                    border:
-                      settings.contentScale === s
-                        ? "1px solid hsl(272 76% 53% / 0.4)"
-                        : "1px solid hsl(240 10% 14%)",
-                    color:
-                      settings.contentScale === s
-                        ? "hsl(var(--neon-purple))"
-                        : "hsl(240 5% 65%)",
-                  }}
+                  className={`py-2 rounded-lg text-xs font-semibold transition-colors border ${
+                    settings.contentScale === s
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-secondary text-muted-foreground border-border hover:border-primary/50"
+                  }`}
                 >
                   {Math.round(s * 100)}%
                 </button>
@@ -357,7 +303,7 @@ export default function SettingsTab() {
         <Section
           icon={<BookOpen size={14} />}
           title="Reading"
-          color="hsl(var(--neon-cyan))"
+          color=""
         >
           <Toggle
             label="Dyslexia Font"
@@ -390,10 +336,7 @@ export default function SettingsTab() {
               <span className="text-sm font-medium text-foreground">
                 Letter Spacing
               </span>
-              <span
-                className="text-xs font-semibold text-neon-cyan px-2 py-0.5 rounded-full"
-                style={{ background: "hsl(183 100% 50% / 0.1)" }}
-              >
+              <span className="text-xs font-semibold text-primary bg-accent-subtle px-2 py-0.5 rounded-full">
                 {settings.letterSpacing === 0
                   ? "Default"
                   : settings.letterSpacing === 0.02
@@ -408,21 +351,11 @@ export default function SettingsTab() {
                   onClick={() =>
                     updateSettings({ letterSpacing: s as 0 | 0.02 | 0.05 })
                   }
-                  className="py-2 rounded-xl text-xs font-semibold transition-colors"
-                  style={{
-                    background:
-                      settings.letterSpacing === s
-                        ? "hsl(183 100% 50% / 0.12)"
-                        : "hsl(240 15% 9%)",
-                    border:
-                      settings.letterSpacing === s
-                        ? "1px solid hsl(183 100% 50% / 0.35)"
-                        : "1px solid hsl(240 10% 14%)",
-                    color:
-                      settings.letterSpacing === s
-                        ? "hsl(var(--neon-cyan))"
-                        : "hsl(240 5% 65%)",
-                  }}
+                  className={`py-2 rounded-lg text-xs font-semibold transition-colors border ${
+                    settings.letterSpacing === s
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-secondary text-muted-foreground border-border hover:border-primary/50"
+                  }`}
                 >
                   {s === 0 ? "Default" : s === 0.02 ? "Medium" : "Large"}
                 </button>
@@ -591,7 +524,7 @@ export default function SettingsTab() {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-xs font-bold text-neon-cyan">97%</div>
+            <div className="text-xs font-bold text-primary">97%</div>
             <div className="text-xs text-muted-foreground">Uptime</div>
           </div>
         </div>
