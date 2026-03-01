@@ -51,6 +51,7 @@ const Index = () => {
           <HomeScreen
             onStartLive={() => setScreen("live")}
             onReverseMode={() => setScreen("reverse")}
+            onVoiceToSign={() => setScreen("voice-to-sign")}
             onCameraMode={() => setScreen("sign-to-voice")}
             onConversation={() => setScreen("conversation")}
             onSettings={() => setShowAccessibility(true)}

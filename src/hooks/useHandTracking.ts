@@ -19,8 +19,8 @@ export interface Landmark {
 }
 
 interface HandTrackingState {
-  /** 21 landmarks for the first detected hand, or null if no hand visible */
-  landmarks: Landmark[] | null;
+  /** landmarks for all detected hands (up to 2) */
+  landmarks: Landmark[][] | null;
   /** true once the MediaPipe model has finished loading */
   isReady: boolean;
   /** non-null if MediaPipe failed to initialize */
@@ -64,7 +64,7 @@ export function useHandTracking(
             delegate: "GPU",
           },
           runningMode: "VIDEO",
-          numHands: 1,                    // one hand is enough for recognition
+          numHands: 2,                    // Enable 2nd hand tracking
           minHandDetectionConfidence: 0.5,
           minHandPresenceConfidence: 0.5,
           minTrackingConfidence: 0.5,
@@ -109,12 +109,10 @@ export function useHandTracking(
 
             if (results.landmarks.length > 0) {
               // Map from MediaPipe NormalizedLandmark to our Landmark type
-              const lms: Landmark[] = results.landmarks[0].map((lm) => ({
-                x: lm.x,
-                y: lm.y,
-                z: lm.z,
-              }));
-              setState((s) => ({ ...s, landmarks: lms }));
+              const allHands: Landmark[][] = results.landmarks.map(hand =>
+                hand.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }))
+              );
+              setState((s) => ({ ...s, landmarks: allHands }));
             } else {
               setState((s) => ({ ...s, landmarks: null }));
             }

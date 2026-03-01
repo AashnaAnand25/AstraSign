@@ -8,24 +8,9 @@
  * ✊ YES, ☝️ UP, and more.
  */
 
-import { useCallback, useRef, useState, useEffect } from "react";
-import { GestureRecognizer, FilesetResolver } from "@mediapipe/tasks-vision";
-
-// MediaPipe gesture to ASL word mapping
-const GESTURE_MAP: Record<string, string> = {
-  "Thumb_Up": "GOOD",
-  "Thumb_Down": "BAD",
-  "Open_Palm": "HELLO",
-  "Closed_Fist": "YES",
-  "Victory": "PEACE",
-  "ILoveYou": "ILOVEYOU",
-  "Pointing_Up": "UP",
-  "Pointing_Down": "DOWN",
-};
-
-// WASM CDN paths
-const WASM_PATH = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm";
-const MODEL_URL = "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task";
+import { useCallback, useRef, useState, useEffect, Dispatch, SetStateAction, RefObject } from "react";
+import { Landmark, LandmarkSmoother, HandHistory, classifyAslSign, RecognitionResult } from "@/services/AslEngine";
+import { getContextBias, fuseScores } from "@/services/ContextModel";
 
 export interface FastSignPipelineResult {
   glossWords: string[];
@@ -36,15 +21,18 @@ export interface FastSignPipelineResult {
   isTranslating: boolean;
   status: string;
   detectedGesture: string | null;
+  suggestions: string[];
   beginRecording: () => void;
   commitSegment: () => void;
   triggerTranslate: () => Promise<void>;
   undoLastWord: () => void;
   clearGloss: () => void;
+  setGlossWords: Dispatch<SetStateAction<string[]>>;
 }
 
 export function useFastSignPipeline(
-  videoRef: React.RefObject<HTMLVideoElement>
+  videoRef: RefObject<HTMLVideoElement>,
+  landmarks: Landmark[][] | null
 ): FastSignPipelineResult {
   const [glossWords, setGlossWords] = useState<string[]>([]);
   const [translatedText, setTranslatedText] = useState("");
@@ -52,192 +40,121 @@ export function useFastSignPipeline(
   const [isTranslating, setIsTranslating] = useState(false);
   const [isDetectingSign, setIsDetectingSign] = useState(false);
   const [isRecognizing, setIsRecognizing] = useState(false);
-  const [status, setStatus] = useState("Loading gesture model…");
+  const [status, setStatus] = useState("Awaiting hand sign…");
   const [detectedGesture, setDetectedGesture] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
-  const recognizerRef = useRef<GestureRecognizer | null>(null);
-  const detectionStartTime = useRef<number>(0);
-  const rafRef = useRef<number | null>(null);
-  const gestureCountsRef = useRef<Record<string, number>>({});
-  const lastTopGestureRef = useRef<string | null>(null);
+  const smootherRef = useRef<LandmarkSmoother>(new LandmarkSmoother());
+  const historyRef = useRef<HandHistory>(new HandHistory());
+  const confidenceAccumulator = useRef<Record<string, number>>({});
+  const lastSignRef = useRef<string | null>(null);
 
-  // Initialize MediaPipe Gesture Recognizer
+  // Confidence threshold to commit a sign (integrated over time)
+  const COMMIT_THRESHOLD = 3.5;
+
+  // Run recognition engine whenever landmarks update
   useEffect(() => {
-    let mounted = true;
+    if (!landmarks || landmarks.length === 0 || !isDetectingSign) {
+      if (!landmarks || landmarks.length === 0) setDetectedGesture(null);
+      return;
+    }
 
-    async function init() {
-      try {
-        const vision = await FilesetResolver.forVisionTasks(WASM_PATH);
+    // Process all hands (for now we use the first hand as primary, but check both for BREATHE/MEDICINE)
+    const handResults = landmarks.map((handLms) => {
+      // In a more complex app, we'd use separate smoothers/histories per hand index. 
+      // For this MVP, we analyze the 'focus' hand but allow multi-hand combos.
+      const vel = historyRef.current.getVelocity();
+      const smoothed = smootherRef.current.smooth(handLms, vel);
+      historyRef.current.add(smoothed);
 
-        // GPU delegate can fail on some machines/browsers. Fallback to CPU.
-        let recognizer: GestureRecognizer | null = null;
-        try {
-          recognizer = await GestureRecognizer.createFromOptions(vision, {
-            baseOptions: {
-              modelAssetPath: MODEL_URL,
-              delegate: "GPU",
-            },
-            runningMode: "VIDEO",
-            numHands: 1,
-          });
-        } catch {
-          recognizer = await GestureRecognizer.createFromOptions(vision, {
-            baseOptions: {
-              modelAssetPath: MODEL_URL,
-              delegate: "CPU",
-            },
-            runningMode: "VIDEO",
-            numHands: 1,
-          });
+      const { word, confidence, allScores } = classifyAslSign(smoothed, historyRef.current);
+      return { word, confidence, allScores, pts: smoothed };
+    });
+
+    let finalWord = handResults[0].word;
+    let finalConf = handResults[0].confidence;
+
+    // Multi-hand proximity logic (v3.5 Pro)
+    if (handResults.length === 2) {
+      const h1 = handResults[0];
+      const h2 = handResults[1];
+      const dist = Math.sqrt(
+        Math.pow(h1.pts[0].x - h2.pts[0].x, 2) +
+        Math.pow(h1.pts[0].y - h2.pts[0].y, 2)
+      );
+
+      if (dist < 0.25) {
+        if (h1.word === "STOP" && h2.word === "STOP") {
+          finalWord = "BREATHE";
+          finalConf = 0.98;
+        } else if ((h1.word === "STOP" && h2.word === "HURT / PAIN") ||
+          (h2.word === "STOP" && h1.word === "HURT / PAIN")) {
+          finalWord = "MEDICINE";
+          finalConf = 0.98;
         }
-
-        if (!mounted) {
-          recognizer?.close();
-          return;
-        }
-
-        recognizerRef.current = recognizer;
-        setStatus("Ready — hold a sign for 2 seconds");
-      } catch (err) {
-        setStatus(`Error: ${String(err)}`);
       }
     }
 
-    init();
+    // 4. Score Fusion (Geo + Context)
+    const lastWord = glossWords.length > 0 ? glossWords[glossWords.length - 1] : null;
+    const contextWeights = getContextBias(lastWord);
+    const fusedScores = fuseScores(handResults[0].allScores, contextWeights);
 
-    return () => {
-      mounted = false;
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      recognizerRef.current?.close();
-    };
-  }, []);
+    // 5. High-Speed Rolling Accumulation
+    let currentBestWord = "NONE";
+    let currentBestScore = 0;
 
-  // Continuous gesture detection while recording
-  useEffect(() => {
-    if (!isDetectingSign || !recognizerRef.current) return;
-
-    const video = videoRef.current;
-    if (!video) return;
-
-    gestureCountsRef.current = {};
-    lastTopGestureRef.current = null;
-    let frameCount = 0;
-
-    const detectLoop = () => {
-      if (!isDetectingSign) return;
-
-      try {
-        const result = recognizerRef.current!.recognizeForVideo(video, Date.now());
-        
-        if (result.gestures && result.gestures.length > 0 && result.gestures[0].length > 0) {
-          const gesture = result.gestures[0][0].categoryName;
-          const confidence = result.gestures[0][0].score;
-
-          if (confidence > 0.5 && GESTURE_MAP[gesture]) {
-            const counts = gestureCountsRef.current;
-            counts[gesture] = (counts[gesture] || 0) + 1;
-
-            // Update UI at a lower frequency to avoid flicker.
-            if (frameCount % 6 === 0) {
-              let top: string | null = null;
-              let topCount = 0;
-              for (const [g, c] of Object.entries(counts)) {
-                if (c > topCount) {
-                  top = g;
-                  topCount = c;
-                }
-              }
-              if (top && top !== lastTopGestureRef.current) {
-                lastTopGestureRef.current = top;
-                setDetectedGesture(GESTURE_MAP[top]);
-              }
-            }
-          }
-        } else {
-          setDetectedGesture(null);
-        }
-      } catch (e) {
-        // Ignore intermittent frame errors.
+    for (const [word, score] of Object.entries(fusedScores)) {
+      if (score > 0.4) {
+        confidenceAccumulator.current[word] = (confidenceAccumulator.current[word] || 0) + score;
+      } else {
+        // Natural decay for scores not actively detected
+        confidenceAccumulator.current[word] = Math.max(0, (confidenceAccumulator.current[word] || 0) - 0.25);
       }
 
-      frameCount++;
-      rafRef.current = requestAnimationFrame(detectLoop);
-    };
+      if (confidenceAccumulator.current[word] > currentBestScore) {
+        currentBestScore = confidenceAccumulator.current[word];
+        currentBestWord = word;
+      }
+    }
 
-    detectLoop();
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [isDetectingSign, videoRef]);
+    setDetectedGesture(currentBestWord !== "NONE" ? currentBestWord : null);
+
+    // 6. Update Top-3 Suggestions for UI
+    const tops = Object.entries(confidenceAccumulator.current as Record<string, number>)
+      .filter(([_, score]) => score > 0.5)
+      .sort((a, b) => (b[1] as number) - (a[1] as number))
+      .slice(0, 3)
+      .map(([word]) => word);
+    setSuggestions(tops);
+
+    // 7. Threshold-based Commitment (v4.0 Speed)
+    if (currentBestScore >= COMMIT_THRESHOLD) {
+      const finalWord = currentBestWord;
+      setGlossWords((prev) => {
+        if (prev.length > 0 && prev[prev.length - 1] === finalWord) return prev;
+        return [...prev, finalWord];
+      });
+      setStatus(`✓ ${finalWord} — recognized!`);
+
+      // Flash reset accumulator after commit
+      confidenceAccumulator.current = {};
+    }
+
+  }, [landmarks, isDetectingSign]);
 
   const beginRecording = useCallback(() => {
     setIsDetectingSign(true);
-    detectionStartTime.current = Date.now();
-    gestureCountsRef.current = {};
-    lastTopGestureRef.current = null;
     setDetectedGesture(null);
-    setStatus("Hold the sign steady…");
+    setStatus("Position hand and start signing…");
+    confidenceAccumulator.current = {};
+    lastSignRef.current = null;
   }, []);
 
   const commitSegment = useCallback(() => {
     setIsDetectingSign(false);
-    setIsRecognizing(true);
-
-    const video = videoRef.current;
-    const recognizer = recognizerRef.current;
-
-    if (!video || !recognizer) {
-      setStatus("Not ready — try again");
-      setIsRecognizing(false);
-      return;
-    }
-
-    // Final recognition (use stabilized / majority-vote result first)
-    try {
-      const counts = gestureCountsRef.current;
-      let top: string | null = null;
-      let topCount = 0;
-      for (const [g, c] of Object.entries(counts)) {
-        if (c > topCount) {
-          top = g;
-          topCount = c;
-        }
-      }
-
-      if (top && GESTURE_MAP[top]) {
-        const word = GESTURE_MAP[top];
-        setGlossWords((prev) => [...prev, word]);
-        setStatus(`✓ ${word} — add more or tap Translate`);
-        setIsRecognizing(false);
-        setDetectedGesture(null);
-        return;
-      }
-
-      const result = recognizer.recognizeForVideo(video, Date.now());
-      
-      if (result.gestures.length > 0 && result.gestures[0].length > 0) {
-        const gesture = result.gestures[0][0].categoryName;
-        const confidence = result.gestures[0][0].score;
-        const aslWord = GESTURE_MAP[gesture];
-
-        if (aslWord && confidence > 0.6) {
-          setGlossWords((prev) => [...prev, aslWord]);
-          setStatus(`✓ ${aslWord} — add more or tap Translate`);
-        } else if (aslWord) {
-          setStatus(`? ${aslWord} — hold sign more steadily`);
-        } else {
-          setStatus(`Unrecognized: ${gesture} — try a common sign`);
-        }
-      } else {
-        setStatus("No hand detected — try again");
-      }
-    } catch (err) {
-      setStatus(`Error: ${String(err)}`);
-    }
-
-    setIsRecognizing(false);
-    setDetectedGesture(null);
-  }, [videoRef]);
+    setStatus("Ready for next sign");
+  }, []);
 
   const triggerTranslate = useCallback(async () => {
     if (glossWords.length === 0) {
@@ -304,10 +221,12 @@ export function useFastSignPipeline(
     isTranslating,
     status,
     detectedGesture,
+    suggestions,
     beginRecording,
     commitSegment,
     triggerTranslate,
     undoLastWord,
     clearGloss,
+    setGlossWords,
   };
 }
