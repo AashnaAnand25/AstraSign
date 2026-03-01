@@ -4,6 +4,7 @@ import { useAccessibility } from "@/accessibility/AccessibilityProvider";
 import HandTracker from "@/components/astraign/HandTracker";
 import { gestureToWord } from "@/utils/aslStaticPoses";
 import { useWearableDevice } from "@/hooks/useWearableDevice";
+import { useFastSignPipeline } from "@/hooks/useFastSignPipeline";
 
 interface Props {
   onBack?: () => void;
@@ -75,6 +76,44 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
       setGlassesStream(null);
     }
   }, [wearableStatus, isRecording, getGlassesVideoStream]);
+
+  // ML Pipeline Integration for advanced gestures (Breathe, Hello)
+  const dummyRef = useRef<HTMLVideoElement>(null);
+  const [landmarks, setLandmarks] = useState<{ x: number; y: number; z?: number }[][] | null>(null);
+
+  const {
+    glossWords,
+    beginRecording,
+    commitSegment,
+  } = useFastSignPipeline(dummyRef, landmarks);
+
+  // Sync recording state with FastSign pipeline
+  useEffect(() => {
+    if (isRecording) {
+      beginRecording();
+    } else {
+      commitSegment();
+    }
+  }, [isRecording, beginRecording, commitSegment]);
+
+  // Read from advanced ML pipeline
+  useEffect(() => {
+    if (glossWords.length > 0) {
+      const newWord = glossWords[glossWords.length - 1];
+      const now = Date.now();
+      const canSpeak = lastSpokenWordRef.current !== newWord || now - lastSpokenTimeRef.current >= COOLDOWN_MS;
+
+      if (canSpeak) {
+        setTranslation(newWord);
+        setConfidence(96); // ML pipeline commits are high confidence
+        setShowParticles(true);
+        setTimeout(() => setShowParticles(false), 1500);
+        lastSpokenWordRef.current = newWord;
+        lastSpokenTimeRef.current = now;
+        onAddToHistory?.(newWord, newWord);
+      }
+    }
+  }, [glossWords, onAddToHistory]);
 
   useEffect(() => {
     onStatusChange?.(isRecording ? "processing" : translation ? "ready" : "ready");
@@ -254,6 +293,7 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
           <HandTracker
             isActive={true}
             onGestureDetected={handleGestureDetected}
+            onLandmarks={setLandmarks}
             externalStream={glassesStream}
           />
         </div>

@@ -6,11 +6,12 @@ import { gestureToWord } from "@/utils/aslStaticPoses";
 
 interface HandTrackerProps {
   onGestureDetected: (gesture: string, confidence: number) => void;
+  onLandmarks?: (landmarks: { x: number; y: number; z?: number }[][] | null) => void;
   isActive: boolean;
   externalStream?: MediaStream | null;
 }
 
-export default function HandTracker({ onGestureDetected, isActive, externalStream }: HandTrackerProps) {
+export default function HandTracker({ onGestureDetected, onLandmarks, isActive, externalStream }: HandTrackerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -18,11 +19,11 @@ export default function HandTracker({ onGestureDetected, isActive, externalStrea
   const [confidence, setConfidence] = useState<number>(0);
   const firstFrameRef = useRef(false);
 
-  const handClassifier = new SimpleHandClassifier();
+  const handClassifier = useRef(new SimpleHandClassifier());
 
   useEffect(() => {
     // Initialize the classifier when component mounts
-    handClassifier.initialize();
+    handClassifier.current.initialize();
   }, []);
 
   const processHandResults = useCallback(async (results: Results) => {
@@ -41,7 +42,7 @@ export default function HandTracker({ onGestureDetected, isActive, externalStrea
 
     try {
       // Classify gesture using simple rules
-      const result = handClassifier.classifyHand(formattedLandmarks);
+      const result = handClassifier.current.classifyHand(formattedLandmarks);
 
       if (result.confidence > 0.5) {
         setCurrentGesture(result.gesture);
@@ -51,7 +52,7 @@ export default function HandTracker({ onGestureDetected, isActive, externalStrea
     } catch (error) {
       console.error('Gesture classification failed:', error);
     }
-  }, [onGestureDetected, handClassifier]);
+  }, [onGestureDetected]);
 
   const startCamera = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -145,6 +146,18 @@ export default function HandTracker({ onGestureDetected, isActive, externalStrea
 
         // Process for gesture recognition
         processHandResults(results);
+
+        // Pass raw coordinates up for advanced ML pipelines
+        if (onLandmarks) {
+          if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+            const formatted = results.multiHandLandmarks.map(hand =>
+              hand.map(pt => ({ x: pt.x, y: pt.y, z: pt.z }))
+            );
+            onLandmarks(formatted);
+          } else {
+            onLandmarks(null);
+          }
+        }
       });
 
       // Start camera (MediaPipe Camera handles video.play and requestAnimationFrame loop)
