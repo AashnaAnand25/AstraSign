@@ -1,19 +1,18 @@
 import { ArrowRight } from "lucide-react";
 
 interface Props {
-  onNext: () => void;
-  onSkip: () => void;
+  onBack: () => void;
 }
 
-export default function OnboardingOne({ onNext, onSkip }: Props) {
+export default function OnboardingOne({ onBack }: Props) {
   return (
     <div className="min-h-screen flex flex-col px-6 pt-14 pb-10">
       <div className="flex items-center justify-between mb-10">
         <div className="text-sm font-bold text-primary">AstraSign</div>
-        <button onClick={onSkip} className="text-xs text-muted-foreground hover:text-foreground transition-colors font-medium underline underline-offset-4">Skip</button>
+        <button onClick={onBack} className="text-xs text-muted-foreground hover:text-foreground transition-colors font-medium">Close</button>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center">
+      <div className="flex-1 flex flex-col justify-center gap-6 overflow-y-auto py-8">
         <div className="bg-card border border-border rounded-2xl p-6">
           <div className="text-xs font-semibold tracking-widest uppercase text-primary mb-3">How it works</div>
           <div className="space-y-4">
@@ -59,14 +58,35 @@ export default function OnboardingOne({ onNext, onSkip }: Props) {
             ))}
           </div>
         </div>
+
+        <div className="bg-card border border-border rounded-2xl p-6">
+          <div className="text-xs font-semibold tracking-widest uppercase text-primary mb-3">Future vision</div>
+          <div className="text-sm text-foreground font-semibold mb-1">Meta glasses display</div>
+          <div className="text-xs text-muted-foreground leading-relaxed">
+            The same live sign output can be mirrored to wearable displays for hands-free communication.
+          </div>
+          <div className="mt-4 flex items-center gap-2">
+            <div className="flex-1 h-1.5 rounded-full bg-secondary">
+              <div className="h-full rounded-full bg-primary" style={{ width: "72%" }} />
+            </div>
+            <div className="text-[10px] text-muted-foreground">Prototype</div>
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-2xl p-6">
+          <div className="text-xs font-semibold tracking-widest uppercase text-primary mb-3">Two-way</div>
+          <div className="text-sm text-foreground font-semibold mb-1">Deaf → Hearing mode</div>
+          <div className="text-xs text-muted-foreground leading-relaxed">
+            Type or choose quick phrases and speak them aloud for the hearing person.
+          </div>
+        </div>
       </div>
 
       <button
-        onClick={onNext}
-        className="w-full py-4 rounded-xl bg-primary hover:bg-primary-hover font-bold text-sm tracking-widest text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
+        onClick={onBack}
+        className="w-full py-4 rounded-xl bg-primary hover:bg-primary-hover font-bold text-sm tracking-widest text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 mt-4"
       >
-        <span>Next</span>
-        <ArrowRight size={18} />
+        Back to Home
       </button>
     </div>
   );
