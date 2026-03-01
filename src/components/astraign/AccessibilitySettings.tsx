@@ -107,10 +107,10 @@ export default function AccessibilitySettings({ onBack }: AccessibilitySettingsP
   };
 
   const SettingCard = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
-    <Card className="glass" style={{ border: "1px solid hsl(240 10% 14%)" }}>
+    <Card className="bg-card border-border">
       <CardContent className="p-4">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-neon-purple/20 flex items-center justify-center text-neon-purple">
+          <div className="w-8 h-8 rounded-lg bg-accent-subtle flex items-center justify-center text-primary">
             {icon}
           </div>
           <h3 className="font-semibold text-foreground">{title}</h3>
@@ -129,7 +129,7 @@ export default function AccessibilitySettings({ onBack }: AccessibilitySettingsP
       <button
         onClick={() => onChange(!value)}
         className={`w-12 h-6 rounded-full transition-colors ${
-          value ? 'bg-neon-purple' : 'bg-gray-600'
+          value ? 'bg-primary' : 'bg-muted'
         }`}
       >
         <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
@@ -143,7 +143,7 @@ export default function AccessibilitySettings({ onBack }: AccessibilitySettingsP
     <div className="py-2">
       <div className="flex justify-between items-center mb-2">
         <p className="text-sm font-medium text-foreground">{label}</p>
-        <span className="text-sm text-neon-cyan">{value}{unit}</span>
+        <span className="text-sm text-primary font-medium">{value}{unit}</span>
       </div>
       <input
         type="range"
@@ -159,14 +159,14 @@ export default function AccessibilitySettings({ onBack }: AccessibilitySettingsP
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="relative w-full max-w-[430px] min-h-screen mx-auto overflow-hidden">
-        {/* Ambient glow */}
-        <div className="fixed inset-0 max-w-[430px] mx-auto pointer-events-none overflow-hidden">
-          <div className="absolute top-0 left-1/3 w-48 h-48 rounded-full bg-neon-purple/[0.06] blur-[90px]" />
-          <div className="absolute bottom-0 right-1/3 w-48 h-48 rounded-full bg-neon-cyan/[0.04] blur-[90px]" />
+        {/* Subtle gradient overlay */}
+        <div className="fixed inset-0 max-w-[430px] mx-auto pointer-events-none overflow-hidden opacity-30">
+          <div className="absolute top-0 left-1/3 w-64 h-64 rounded-full bg-primary/5 blur-3xl" />
+          <div className="absolute bottom-0 right-1/3 w-64 h-64 rounded-full bg-primary/3 blur-3xl" />
         </div>
 
         {/* Header */}
-        <div className="glass rounded-2xl p-4 m-4" style={{ border: "1px solid hsl(240 10% 14%)" }}>
+        <div className="bg-card border border-border rounded-xl p-4 m-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {onBack && (
@@ -176,7 +176,7 @@ export default function AccessibilitySettings({ onBack }: AccessibilitySettingsP
               )}
               <h1 className="text-lg font-semibold text-foreground">Accessibility</h1>
             </div>
-            <div className="w-8 h-8 rounded-lg bg-neon-cyan/20 flex items-center justify-center text-neon-cyan">
+            <div className="w-8 h-8 rounded-lg bg-accent-subtle flex items-center justify-center text-primary">
               <Settings className="w-4 h-4" />
             </div>
           </div>
@@ -218,8 +218,8 @@ export default function AccessibilitySettings({ onBack }: AccessibilitySettingsP
                       onClick={() => updateSetting('contentScaling', scale)}
                       className={`py-2 px-3 rounded-lg text-xs transition-colors ${
                         settings.contentScaling === scale
-                          ? 'bg-neon-purple text-white'
-                          : 'bg-gray-700/50 text-muted-foreground'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-muted-foreground'
                       }`}
                     >
                       {scale}%
@@ -298,8 +298,8 @@ export default function AccessibilitySettings({ onBack }: AccessibilitySettingsP
                       onClick={() => updateSetting('letterSpacing', spacing.toLowerCase())}
                       className={`py-2 px-3 rounded-lg text-xs transition-colors ${
                         settings.letterSpacing === spacing.toLowerCase()
-                          ? 'bg-neon-cyan text-white'
-                          : 'bg-gray-700/50 text-muted-foreground'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-muted-foreground'
                       }`}
                     >
                       {spacing}
@@ -403,8 +403,8 @@ export default function AccessibilitySettings({ onBack }: AccessibilitySettingsP
                       onClick={() => updateSetting('speechProvider', provider.toLowerCase())}
                       className={`py-2 px-3 rounded-lg text-xs transition-colors ${
                         settings.speechProvider === provider.toLowerCase()
-                          ? 'bg-neon-purple text-white'
-                          : 'bg-gray-700/50 text-muted-foreground'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-muted-foreground'
                       }`}
                     >
                       {provider}
@@ -435,7 +435,7 @@ export default function AccessibilitySettings({ onBack }: AccessibilitySettingsP
           </SettingCard>
 
           {/* App Status */}
-          <div className="glass rounded-2xl p-4 text-center" style={{ border: "1px solid hsl(240 10% 14%)" }}>
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">AstraSign v2.4</p>
               <p className="text-xs text-muted-foreground">All systems operational</p>
