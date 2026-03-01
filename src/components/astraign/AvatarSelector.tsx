@@ -24,23 +24,23 @@ export default function AvatarSelector({ selectedAvatar, onAvatarChange }: Avata
           <button
             key={avatar.type}
             onClick={() => onAvatarChange(avatar.type)}
-            className={`p-3 rounded-lg transition-all ${
+            className={`p-3 rounded-lg transition-all duration-200 ${
               selectedAvatar === avatar.type
-                ? 'bg-neon-cyan/20 border-2 border-neon-cyan shadow-lg shadow-neon-cyan/30'
-                : 'bg-background/50 border-2 border-border hover:border-neon-cyan/50'
+                ? 'bg-accent-subtle border-2 border-primary shadow-md'
+                : 'bg-secondary border-2 border-border hover:border-primary/50'
             }`}
             title={avatar.name}
           >
-            <div 
+            <div
               className="transition-colors"
-              style={{ color: selectedAvatar === avatar.type ? '#00ffff' : avatar.color }}
+              style={{ color: selectedAvatar === avatar.type ? 'hsl(var(--primary))' : avatar.color }}
             >
               {avatar.icon}
             </div>
           </button>
         ))}
       </div>
-      <div className="text-xs text-neon-cyan font-medium">
+      <div className="text-xs text-primary font-medium">
         {avatars.find(a => a.type === selectedAvatar)?.name}
       </div>
     </div>
