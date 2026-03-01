@@ -122,10 +122,10 @@ export const ASL_SIGNS = {
     description: 'Thumb taps index finger'
   },
   'U': {
-    handshape: 'index',
-    movement: 'circle',
+    handshape: 'index_middle',
+    movement: 'static',
     location: 'neutral_space',
-    description: 'Index finger circles up'
+    description: 'Index and middle fingers up, together; thumb and others down'
   },
   'V': {
     handshape: 'v',

@@ -12,6 +12,7 @@ export const GESTURE_TO_WORD: Record<string, string> = {
   L: "L",
   O: "O",
   P: "P",
+  U: "U",
   V: "V",
   W: "W",
   Y: "Y",

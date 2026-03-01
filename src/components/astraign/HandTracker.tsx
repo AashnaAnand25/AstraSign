@@ -18,6 +18,8 @@ export default function HandTracker({ onGestureDetected, onLandmarks, isActive }
   const [currentGesture, setCurrentGesture] = useState<string>("");
   const [confidence, setConfidence] = useState<number>(0);
   const firstFrameRef = useRef(false);
+  const videoDrawLoopRef = useRef(false);
+  const rafIdRef = useRef<number>(0);
   const cameraRef = useRef<Camera | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const handsRef = useRef<Hands | null>(null);
@@ -101,14 +103,32 @@ export default function HandTracker({ onGestureDetected, onLandmarks, isActive }
       streamRef.current = stream;
 
       videoRef.current.srcObject = stream;
-      videoRef.current.onloadedmetadata = () => {
-        setIsLoading(false);
-        console.log("[HandTracker] Video metadata loaded.");
-      };
       // Mobile: play() must be in user gesture context; playsInline prevents fullscreen takeover
       await videoRef.current.play().catch((e) => {
         console.warn("[HandTracker] video.play() failed (common on mobile):", e);
       });
+
+      // Draw video to canvas immediately so user sees themselves while MediaPipe loads (avoids grey screen)
+      videoDrawLoopRef.current = true;
+      const drawVideoLoop = () => {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        if (!videoDrawLoopRef.current || !video || !canvas || !video.videoWidth) {
+          rafIdRef.current = 0;
+          return;
+        }
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        }
+        rafIdRef.current = requestAnimationFrame(drawVideoLoop);
+      };
+      rafIdRef.current = requestAnimationFrame(drawVideoLoop);
+
+      // Hide loading overlay quickly so user sees video (we're drawing it to canvas now)
+      setTimeout(() => setIsLoading(false), 600);
 
       // Initialize MediaPipe Hands
       const hands = new Hands({
@@ -130,8 +150,8 @@ export default function HandTracker({ onGestureDetected, onLandmarks, isActive }
       hands.onResults((results) => {
         if (!firstFrameRef.current) {
           firstFrameRef.current = true;
-          setIsLoading(false);
-          console.log("[HandTracker] First frame with landmarks received, clearing loading state.");
+          videoDrawLoopRef.current = false; // Stop our video-only loop; MediaPipe takes over
+          console.log("[HandTracker] First MediaPipe frame received.");
         }
 
         const canvasCtx = canvasRef.current?.getContext('2d');
@@ -228,6 +248,8 @@ export default function HandTracker({ onGestureDetected, onLandmarks, isActive }
 
     } catch (error) {
       console.error("Camera initialization failed:", error);
+      videoDrawLoopRef.current = false;
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
       setIsLoading(false);
       isStartingRef.current = false;
       const msg = error instanceof Error ? error.message : String(error);
@@ -247,6 +269,9 @@ export default function HandTracker({ onGestureDetected, onLandmarks, isActive }
     console.log("[HandTracker] Stopping camera...");
     setCameraError(null);
     firstFrameRef.current = false;
+    videoDrawLoopRef.current = false;
+    if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+    rafIdRef.current = 0;
     isStartingRef.current = false;
 
     if (cameraRef.current) {
@@ -291,16 +316,11 @@ export default function HandTracker({ onGestureDetected, onLandmarks, isActive }
 
   return (
     <div className="relative w-full h-full min-h-[200px]">
-      <video
-        ref={videoRef}
-        className={`w-full h-full rounded-lg object-cover ${isLoading ? "block" : "hidden"}`}
-        playsInline
-        muted
-      />
+      <video ref={videoRef} className="hidden" playsInline muted />
       <canvas
         ref={canvasRef}
-        className={`w-full h-full rounded-lg object-cover ${!isLoading ? "block" : "hidden"}`}
-        style={{ maxHeight: "100%" }}
+        className="w-full h-full rounded-lg object-cover block"
+        style={{ maxHeight: "100%", display: "block" }}
       />
       {cameraError && (
         <div className="absolute inset-0 flex flex-col items-center justify-center rounded-lg bg-background/95 p-4 text-center">

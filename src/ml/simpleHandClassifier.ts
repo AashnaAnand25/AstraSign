@@ -191,13 +191,16 @@ export class SimpleHandClassifier {
       };
     }
 
-    // Rule 4: V shape (V, 2)
+    // Rule 4: U or V shape — index+middle up, ring+pinky down. U = fingers together, V = spread
     if (features.indexExtended && features.middleExtended &&
       !features.ringExtended && !features.pinkyExtended) {
+      const fingersTogether = features.indexToMiddle < 0.06;
       return {
-        gesture: 'V',
+        gesture: fingersTogether ? 'U' : 'V',
         confidence: 0.8,
-        description: ASL_SIGNS['V']?.description || 'V shape hand'
+        description: fingersTogether
+          ? (ASL_SIGNS['U']?.description || 'U: index and middle together')
+          : (ASL_SIGNS['V']?.description || 'V shape hand')
       };
     }
 
