@@ -1,19 +1,17 @@
 import { useState } from "react";
-import LandingScreen from "@/components/neurosign/LandingScreen";
-import ModeSelection from "@/components/neurosign/ModeSelection";
-import SignToVoice from "@/components/neurosign/SignToVoice";
-import SignToVoiceEnhanced from "@/components/neurosign/SignToVoiceEnhanced";
-import VoiceToSign from "@/components/neurosign/VoiceToSign";
-import CleanVoiceToSign from "@/components/neurosign/CleanVoiceToSign";
-import GuaranteedVoiceToSign from "@/components/neurosign/GuaranteedVoiceToSign";
-import AccessibilityPanel from "@/components/neurosign/AccessibilityPanel";
-import ConversationMode from "@/components/neurosign/ConversationMode";
-import OnboardingOne from "@/components/neurosign/OnboardingOne";
-import OnboardingTwo from "@/components/neurosign/OnboardingTwo";
-import MainLayout from "@/components/neurosign/MainLayout";
-import ReverseMode from "@/components/neurosign/ReverseMode";
-import ScreenWithNav from "@/components/neurosign/ScreenWithNav";
-import type { TabId } from "@/components/neurosign/BottomNav";
+import MinimalLandingScreen from "@/components/astraign/MinimalLandingScreen";
+import MVPVoiceToSign from "@/components/astraign/MVPVoiceToSign";
+import ConversationMode from "@/components/astraign/ConversationMode";
+import OnboardingOne from "@/components/astraign/OnboardingOne";
+import OnboardingTwo from "@/components/astraign/OnboardingTwo";
+import MainLayout from "@/components/astraign/MainLayout";
+import ReverseMode from "@/components/astraign/ReverseMode";
+import ScreenWithNav from "@/components/astraign/ScreenWithNav";
+import MainNavigationHub from "@/components/astraign/MainNavigationHub";
+import AccessibilitySettings from "@/components/astraign/AccessibilitySettings";
+import { GlobalAccessibilityProvider } from "@/components/astraign/GlobalAccessibilityProvider";
+import type { TabId } from "@/components/astraign/BottomNav";
+import type { TranslateMode } from "@/components/astraign/TranslateTab";
 
 export type Screen =
   | "landing"
@@ -22,123 +20,115 @@ export type Screen =
   | "home"
   | "live"
   | "reverse"
-  | "modes"
   | "sign-to-voice"
-  | "sign-to-voice-enhanced"
   | "voice-to-sign"
-  | "conversation";
+  | "conversation"
+  | "translation-hub"
+  | "accessibility";
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>("landing");
   const [activeTab, setActiveTab] = useState<TabId>("home");
+  const [initialTranslateMode, setInitialTranslateMode] = useState<TranslateMode | null>(null);
 
-  const goToTab = (tab: TabId) => {
+  const goToTab = (tab: TabId, translateMode?: TranslateMode) => {
     setScreen("home");
     setActiveTab(tab);
+    if (translateMode) setInitialTranslateMode(translateMode);
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="relative w-full max-w-[430px] min-h-screen mx-auto overflow-hidden">
-        {/* Ambient glow */}
-        <div className="fixed inset-0 max-w-[430px] mx-auto pointer-events-none overflow-hidden">
-          <div className="absolute top-0 left-1/3 w-48 h-48 rounded-full bg-neon-purple/[0.06] blur-[90px]" />
-          <div className="absolute bottom-0 right-1/3 w-48 h-48 rounded-full bg-neon-cyan/[0.04] blur-[90px]" />
-        </div>
+    <GlobalAccessibilityProvider>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="relative w-full max-w-[430px] min-h-screen mx-auto overflow-hidden">
+          {/* Ambient glow */}
+          <div className="fixed inset-0 max-w-[430px] mx-auto pointer-events-none overflow-hidden">
+            <div className="absolute top-0 left-1/3 w-48 h-48 rounded-full bg-neon-purple/[0.06] blur-[90px]" />
+            <div className="absolute bottom-0 right-1/3 w-48 h-48 rounded-full bg-neon-cyan/[0.04] blur-[90px]" />
+          </div>
 
-        {screen === "landing" && (
-          <LandingScreen onStart={() => setScreen("onboarding-1")} />
-        )}
+          {/* Landing Screen */}
+          {screen === "landing" && (
+            <MinimalLandingScreen onStart={() => setScreen("onboarding-1")} />
+          )}
 
-        {screen === "onboarding-1" && (
-          <OnboardingOne
-            onNext={() => setScreen("onboarding-2")}
-            onSkip={() => setScreen("home")}
-          />
-        )}
-        {screen === "onboarding-2" && (
-          <OnboardingTwo
-            onNext={() => setScreen("home")}
-            onBack={() => setScreen("onboarding-1")}
-          />
-        )}
-
-        {screen === "home" && (
-          <MainLayout
-            onStartLive={() => setScreen("live")}
-            onReverseMode={() => setScreen("reverse")}
-            onVoiceToSign={() => setScreen("voice-to-sign")}
-            onCameraMode={() => setScreen("sign-to-voice")}
-            onEnhancedCameraMode={() => setScreen("sign-to-voice-enhanced")}
-            onConversation={() => setScreen("conversation")}
-            onSettings={() => goToTab("settings")}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
-        )}
-
-        {screen === "live" && (
-          <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
-            <GuaranteedVoiceToSign
-              onBack={() => setScreen("home")}
-              onSettings={() => goToTab("settings")}
+          {/* Onboarding */}
+          {screen === "onboarding-1" && (
+            <OnboardingOne
+              onNext={() => setScreen("onboarding-2")}
+              onSkip={() => setScreen("home")}
             />
-          </ScreenWithNav>
-        )}
+          )}
 
-        {screen === "reverse" && (
-          <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
-            <ReverseMode
-              onBack={() => setScreen("home")}
-              onSettings={() => goToTab("settings")}
+          {screen === "onboarding-2" && (
+            <OnboardingTwo
+              onNext={() => setScreen("home")}
+              onBack={() => setScreen("onboarding-1")}
             />
-          </ScreenWithNav>
-        )}
+          )}
 
-        {screen === "modes" && (
-          <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
-            <ModeSelection
-              onSelect={(mode) => setScreen(mode)}
-              onSettings={() => goToTab("settings")}
+
+
+          {/* Main App (tabs: Home, Translate, Quick, History, Settings) */}
+          {screen === "home" && (
+            <MainLayout
+              onStartLive={() => goToTab("translate")}
+              onReverseMode={() => setScreen("reverse")}
+              onCameraMode={() => goToTab("translate", "asl-to-audio")}
               onConversation={() => setScreen("conversation")}
-            />
-          </ScreenWithNav>
-        )}
-
-        {screen === "sign-to-voice" && (
-          <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
-            <SignToVoice
-              onBack={() => setScreen("home")}
               onSettings={() => goToTab("settings")}
+              onTranslationHub={() => setScreen("translation-hub")}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              initialTranslateMode={initialTranslateMode}
+              onClearTranslateInitialMode={() => setInitialTranslateMode(null)}
             />
-          </ScreenWithNav>
-        )}
+          )}
 
-        {screen === "sign-to-voice-enhanced" && (
-          <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
-            <SignToVoiceEnhanced
+          {/* Live (Start Signing) → same as Translate tab */}
+          {screen === "live" && (
+            <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
+              <MVPVoiceToSign onBack={() => setScreen("home")} />
+            </ScreenWithNav>
+          )}
+
+          {/* Reverse Mode (Deaf → Hearing) */}
+          {screen === "reverse" && (
+            <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
+              <ReverseMode
+                onBack={() => setScreen("home")}
+                onSettings={() => goToTab("settings")}
+              />
+            </ScreenWithNav>
+          )}
+
+          {/* Conversation Mode */}
+          {screen === "conversation" && (
+            <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
+              <ConversationMode onBack={() => setScreen("home")} />
+            </ScreenWithNav>
+          )}
+
+          {/* Translation Hub */}
+          {screen === "translation-hub" && (
+            <MainNavigationHub
               onBack={() => setScreen("home")}
-              onSettings={() => goToTab("settings")}
+              onHome={() => setScreen("home")}
+              onGoToTranslate={(mode) => {
+                setScreen("home");
+                setActiveTab("translate");
+                if (mode) setInitialTranslateMode(mode);
+              }}
             />
-          </ScreenWithNav>
-        )}
+          )}
 
-        {screen === "voice-to-sign" && (
-          <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
-            <VoiceToSign
-              onBack={() => setScreen("home")}
-              onSettings={() => goToTab("settings")}
-            />
-          </ScreenWithNav>
-        )}
-
-        {screen === "conversation" && (
-          <ScreenWithNav activeTab={activeTab} onNavChange={goToTab}>
-            <ConversationMode onBack={() => setScreen("home")} />
-          </ScreenWithNav>
-        )}
+          {/* Accessibility Settings */}
+          {screen === "accessibility" && (
+            <AccessibilitySettings onBack={() => setScreen("home")} />
+          )}
+        </div>
       </div>
-    </div>
+    </GlobalAccessibilityProvider>
   );
 };
 
