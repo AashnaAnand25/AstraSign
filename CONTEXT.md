@@ -57,6 +57,10 @@
 - **Python 3.14** with venv at `signbridge/backend/venv/`
 - **httpx** — async HTTP client (used for direct Gemini REST calls)
 - **python-dotenv** — loads `signbridge/backend/.env`
+- **Python 3.13/3.14** — Main development environment.
+- **MediaPipe 0.10.32** — Uses the new **Tasks API** (HandLandmarker, PoseLandmarker, FaceLandmarker) to resolve `mp.solutions.holistic` removal in Python 3.13.
+- **TensorFlow / Keras 3.x** — Local LSTM training and inference.
+- **scikit-learn** — Random Forest classifiers for hand-only landmarks.
 
 ### AI / External APIs
 | Service | Used For | Key in .env |
@@ -179,7 +183,10 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
 | Gemini 2.0 Flash free tier quota = 0 | Use `gemini-1.5-flash` |
 | Auto-segmentation false-triggering on hand entry | Replaced with push-to-sign (beginRecording/commitSegment) |
 | MediaPipe WASM/Vite bundling issues | Load WASM from CDN, not bundled |
-| Canvas skeleton mirrored wrong | Mirror x-coord: `px = (1 - lm.x) * w` to match `scaleX(-1)` video |
+| canvas skeleton mirrored wrong | Mirror x-coord: `px = (1 - lm.x) * w` to match `scaleX(-1)` video |
+| `AttributeError: mediapipe has no attribute solutions` | Migrated `main.py` to **MediaPipe Tasks API** (pose, hand, face .task models) |
+| `ValueError: Unrecognized keyword arguments passed to LSTM: {'time_major': False}` | Patched `action.h5` model config using `patch_model.py` to strip deprecated Keras args |
+| LSTM accuracy/lag issues | Pivoted to **Geometric Rule-Based Recognition** in `main.py` for zero-lag, user-independent static signs |
 
 ---
 
@@ -202,3 +209,7 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
 6. **Backend restart required** after `.env` changes — `--reload` only watches Python files
 7. **Frontend hot-reloads** automatically for `.ts`/`.tsx` changes via Vite
 8. The active branch is `feature/asl-sign-to-voice` — push changes there
+9. **Current Model State**: 
+   - `action.h5`: Patched 3-word LSTM (hello, thanks, iloveyou) - uses 1662 features.
+   - `asl_model.keras`: Custom 67-word LSTM (90% training acc, but sensitive to body noise).
+   - `main.py`: Current **Rule-Based v3.1** - high speed, zero-training, detects geometric finger states. Refined thumb detection and 0.4s (6-f) stability window. Works on any person.
