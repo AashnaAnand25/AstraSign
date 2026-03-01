@@ -8,29 +8,21 @@ interface Props {
 export default function MinimalLandingScreen({ onStart }: Props) {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 relative overflow-hidden">
-      {/* Ambient glow — theme purple/cyan so logo and text pop */}
-      <div className="absolute inset-0 max-w-[430px] mx-auto pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-neon-purple/0.15 blur-[100px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full bg-neon-cyan/0.12 blur-[100px]" />
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 max-w-[430px] mx-auto pointer-events-none opacity-30">
+        <div className="absolute top-1/4 left-1/4 w-80 h-80 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
       </div>
 
       <div className="text-center space-y-8 relative z-10 w-full max-w-sm flex flex-col items-center">
-        {/* Logo + wordmark — theme colors so they don’t blend into background */}
+        {/* Logo + wordmark */}
         <div className="flex flex-col items-center gap-5">
           <AstraSignLogo size="lg" iconOnly />
-          <h1
-            className="font-display text-4xl sm:text-5xl font-black tracking-wider"
-            style={{
-              background: "linear-gradient(135deg, hsl(var(--neon-purple)), hsl(var(--neon-cyan)))",
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              color: "transparent",
-            }}
-          >
+          <h1 className="text-4xl sm:text-5xl font-black tracking-wider text-foreground">
             AstraSign
           </h1>
         </div>
-        <p className="text-sm tracking-wider uppercase" style={{ color: "hsl(183 100% 50% / 0.95)" }}>
+        <p className="text-sm tracking-wider uppercase text-primary font-medium">
           ASL Translation
         </p>
 
@@ -39,37 +31,21 @@ export default function MinimalLandingScreen({ onStart }: Props) {
           Breaking Communication Barriers
         </p>
 
-        {/* CTA — theme gradient button */}
+        {/* CTA button */}
         <button
           type="button"
           onClick={onStart}
-          className="w-full py-4 rounded-2xl font-display font-semibold text-sm tracking-wider text-primary-foreground transition-all active:scale-[0.98] hover:opacity-95 cursor-pointer"
-          style={{
-            background: "linear-gradient(135deg, hsl(var(--neon-purple)), hsl(var(--neon-cyan)))",
-            boxShadow: "0 0 24px hsl(var(--neon-purple) / 0.35)",
-          }}
+          className="w-full py-4 rounded-xl bg-primary hover:bg-primary-hover font-semibold text-sm tracking-wider text-primary-foreground transition-all duration-200 active:scale-[0.98] shadow-md hover:shadow-lg cursor-pointer"
         >
           Get Started
         </button>
 
-        {/* Feature pills — theme borders */}
+        {/* Feature pills */}
         <div className="flex flex-wrap gap-2 justify-center pt-2">
-          <span
-            className="px-3 py-1.5 rounded-full text-xs font-medium text-foreground"
-            style={{
-              background: "hsl(240 15% 10% / 0.8)",
-              border: "1px solid hsl(272 76% 53% / 0.35)",
-            }}
-          >
+          <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-secondary border border-border text-foreground">
             Audio → ASL
           </span>
-          <span
-            className="px-3 py-1.5 rounded-full text-xs font-medium text-foreground"
-            style={{
-              background: "hsl(240 15% 10% / 0.8)",
-              border: "1px solid hsl(183 100% 50% / 0.35)",
-            }}
-          >
+          <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-secondary border border-border text-foreground">
             ASL → Audio
           </span>
         </div>
