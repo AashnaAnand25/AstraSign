@@ -7,7 +7,7 @@ interface Props {
   onSettings: () => void;
 }
 
-const SAMPLE = "HELLO MY NAME IS SIGNBRIDGE NICE TO MEET YOU".split(" ");
+const SAMPLE = "HELLO MY NAME IS AstraSign NICE TO MEET YOU".split(" ");
 
 const WaveBar = ({ i, active }: { i: number; active: boolean }) => {
   const [h, setH] = useState(4);

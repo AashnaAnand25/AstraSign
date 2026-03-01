@@ -9,7 +9,7 @@ export default function OnboardingOne({ onNext, onSkip }: Props) {
   return (
     <div className="min-h-screen flex flex-col px-6 pt-14 pb-10">
       <div className="flex items-center justify-between mb-10">
-        <div className="font-display text-sm font-bold gradient-text-purple-cyan">SIGNBRIDGE</div>
+        <div className="font-display text-sm font-bold gradient-text-purple-cyan">AstraSign</div>
         <button onClick={onSkip} className="text-xs text-muted-foreground">Skip</button>
       </div>
 

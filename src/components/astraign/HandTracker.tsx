@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { Camera } from "@mediapipe/camera_utils";
 import { Hands, Results } from "@mediapipe/hands";
 import SimpleHandClassifier from "@/ml/simpleHandClassifier";
+import { gestureToWord } from "@/utils/aslStaticPoses";
 
 interface HandTrackerProps {
   onGestureDetected: (gesture: string, confidence: number) => void;
@@ -14,8 +15,8 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
   const [isLoading, setIsLoading] = useState(false);
   const [currentGesture, setCurrentGesture] = useState<string>("");
   const [confidence, setConfidence] = useState<number>(0);
-  
-  // Initialize simple hand classifier
+  const firstFrameRef = useRef(false);
+
   const handClassifier = new SimpleHandClassifier();
 
   useEffect(() => {
@@ -63,6 +64,7 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
       });
 
       videoRef.current.srcObject = stream;
+      await videoRef.current.play().catch(() => {});
 
       // Initialize MediaPipe Hands
       const hands = new Hands({
@@ -78,7 +80,10 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
       });
 
       hands.onResults((results) => {
-        // Draw hand landmarks on canvas
+        if (!firstFrameRef.current) {
+          firstFrameRef.current = true;
+          setIsLoading(false);
+        }
         const canvasCtx = canvasRef.current?.getContext('2d');
         if (!canvasCtx) return;
 
@@ -135,7 +140,7 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
         processHandResults(results);
       });
 
-      // Start camera
+      // Start camera (MediaPipe Camera handles video.play and requestAnimationFrame loop)
       const camera = new Camera(videoRef.current, {
         onFrame: async () => {
           await hands.send({ image: videoRef.current! });
@@ -143,9 +148,11 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
         width: 640,
         height: 480
       });
-      
+
       camera.start();
-      
+
+      // Clear loading once video is running; also fallback in case first frame is slow (e.g. model load)
+      setTimeout(() => setIsLoading(false), 1500);
     } catch (error) {
       console.error('Camera initialization failed:', error);
       setIsLoading(false);
@@ -153,6 +160,7 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
   }, [processHandResults]);
 
   const stopCamera = useCallback(() => {
+    firstFrameRef.current = false;
     if (videoRef.current?.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach(track => track.stop());
@@ -174,45 +182,29 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
   }, [isActive, startCamera, stopCamera]);
 
   return (
-    <div className="relative">
-      {/* Video element (hidden) */}
-      <video
-        ref={videoRef}
-        className="hidden"
-        playsInline
-        muted
-      />
-      
-      {/* Canvas for visualization */}
+    <div className="relative w-full h-full min-h-[200px]">
+      <video ref={videoRef} className="hidden" playsInline muted />
       <canvas
         ref={canvasRef}
-        className="w-full h-full rounded-lg"
-        style={{ maxHeight: '300px' }}
+        className="w-full h-full rounded-lg object-cover"
+        style={{ maxHeight: "100%", display: "block" }}
       />
-      
-      {/* Loading indicator */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
-          <div className="text-white text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
-            <p className="text-sm">Initializing Hand Tracker...</p>
+        <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">Initializing camera…</p>
           </div>
         </div>
       )}
-      
-      {/* Gesture indicator */}
       {currentGesture && confidence > 0.5 && (
-        <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-2 rounded-lg">
-          <div className="text-xs text-gray-300">Detected:</div>
-          <div className="font-bold text-neon-cyan">{currentGesture}</div>
-          <div className="text-xs text-gray-400">Confidence: {(confidence * 100).toFixed(0)}%</div>
+        <div className="absolute top-3 left-3 px-3 py-2 rounded-xl bg-card/95 border border-border backdrop-blur-sm">
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Detected</div>
+          <div className="font-bold text-primary">{gestureToWord(currentGesture) ?? currentGesture}</div>
+          <div className="text-xs text-muted-foreground">{(confidence * 100).toFixed(0)}%</div>
         </div>
       )}
-      
-      {/* Status indicator */}
-      <div className="absolute bottom-4 right-4">
-        <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
-      </div>
+      <div className="absolute bottom-3 right-3 w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" title={isActive ? "Live" : "Off"} />
     </div>
   );
 }

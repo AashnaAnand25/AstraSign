@@ -74,7 +74,7 @@ const processTextToASL = (text: string): { letters: string[], words: string[] } 
 
 // API Configuration
 const API_BASE_URL = "http://localhost:8001/api";
-const API_SECRET = "neurosign-secret-key-123";
+const API_SECRET = "AstraSign-secret-key-123";
 
 // API call helper
 const apiCall = async (endpoint: string, data: any) => {
@@ -469,7 +469,7 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
           </button>
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-glow-pulse" />
-            <span className="font-display text-sm font-bold gradient-text-purple-cyan">NEUROSIGN</span>
+            <span className="font-display text-sm font-bold gradient-text-purple-cyan">AstraSign</span>
           </div>
           <button
             onClick={onSettings}

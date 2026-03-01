@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from "react";
 import { useLocation } from "react-router-dom";
-import AstraSignLogo from "@/components/AstraSignLogo";
+import AstraSignLogo from "@/components/astraign/AstraSignLogo";
 
 export type ContentScale = 1 | 1.1 | 1.25 | 1.5;
 export type TextSize = 1 | 2 | 3 | 4;

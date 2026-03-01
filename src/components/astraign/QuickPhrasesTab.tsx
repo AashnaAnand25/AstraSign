@@ -67,11 +67,12 @@ export default function QuickPhrasesTab() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col px-5 pt-14 pb-24">
-      <div className="mb-6">
+    <div className="min-h-screen flex flex-col px-5 pt-14 pb-24 bg-background">
+      {/* Header — matches Home / History tab theme */}
+      <div className="mb-5">
         <div className="flex items-center gap-2 mb-1">
           <div className="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-pulse" />
-          <span className="text-xs text-neon-cyan font-medium tracking-wider">
+          <span className="text-xs font-medium tracking-wider text-neon-cyan">
             RAPID COMMUNICATION
           </span>
         </div>
@@ -83,28 +84,24 @@ export default function QuickPhrasesTab() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 flex-1 content-start">
+      {/* Phrase grid — glass cards, theme borders, emergency accent */}
+      <div className="grid grid-cols-2 gap-3 flex-1 content-start">
         {PHRASES.map((phrase) => (
           <button
             key={phrase.text}
             onClick={() => speak(phrase)}
-            className="rounded-2xl p-6 text-left transition-all active:scale-95 flex flex-col items-start justify-center min-h-[100px]"
-            style={{
-              background: phrase.emergency
-                ? "linear-gradient(135deg, hsl(0 80% 55% / 0.2), hsl(316 80% 60% / 0.15)"
-                : "hsl(240 15% 9%)",
-              border: phrase.emergency
-                ? "1px solid hsl(0 80% 55% / 0.5)"
-                : "1px solid hsl(240 10% 14%)",
-              boxShadow: phrase.emergency
-                ? "0 0 20px hsl(0 80% 55% / 0.2)"
-                : "0 0 12px hsl(183 100% 50% / 0.05)",
-            }}
+            className={`rounded-2xl p-5 text-left transition-all duration-200 active:scale-[0.98] flex flex-col items-start justify-center min-h-[88px] hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+              phrase.emergency
+                ? "glass border border-destructive/50 hover:border-destructive/70 shadow-[0_0_16px_hsl(0_84%_60%_/_0.15)]"
+                : "glass neon-border-purple hover:border-primary/50"
+            }`}
           >
-            <span className="text-2xl mb-2">{phrase.emoji}</span>
+            <span className="text-2xl mb-1.5" aria-hidden>
+              {phrase.emoji}
+            </span>
             <span
-              className={`font-semibold text-base leading-tight ${
-                phrase.emergency ? "text-red-400" : "text-foreground"
+              className={`font-semibold text-sm leading-tight ${
+                phrase.emergency ? "text-destructive" : "text-foreground"
               }`}
             >
               {phrase.text}

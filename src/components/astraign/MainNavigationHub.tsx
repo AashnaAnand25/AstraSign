@@ -18,9 +18,11 @@ import DefaultASLSigning from './DefaultASLSigning';
 import Person2DHands from './Person2DHands';
 import ChooseAvatar from './ChooseAvatar';
 import ReadyComponent from './ReadyComponent';
+import AccessibilitySettings from './AccessibilitySettings';
 import MinimalAudioToASL from './MinimalAudioToASL';
 import MinimalASLToAudio from './MinimalASLToAudio';
 import MinimalAvatar from './MinimalAvatar';
+import { useAccessibility } from './GlobalAccessibilityProvider';
 
 type NavigationScreen = 'home' | 'audio-to-asl' | 'asl-to-audio' | 'avatar' | 'ready' | 'default-signing' | 'person-2d' | 'choose-avatar';
 
@@ -31,6 +33,7 @@ interface MainNavigationHubProps {
 
 export default function MainNavigationHub({ onBack, onHome }: MainNavigationHubProps) {
   const [currentScreen, setCurrentScreen] = useState<NavigationScreen>('home');
+  const { settings } = useAccessibility();
 
   const navigationItems = [
     {

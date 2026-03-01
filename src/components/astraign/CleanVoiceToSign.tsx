@@ -178,7 +178,7 @@ export default function CleanVoiceToSign({ onBack, onSettings, embedded = false 
           )}
           <div>
             <h1 className="text-xl font-bold text-white">
-              NeuroSign AI
+              AstraSign
             </h1>
             <p className="text-sm text-white/70">
               {isMLInitialized ? 'Ready' : 'Initializing...'}

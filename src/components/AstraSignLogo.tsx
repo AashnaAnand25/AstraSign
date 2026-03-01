@@ -3,9 +3,11 @@ import React from 'react';
 interface AstraSignLogoProps {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  /** Show only the icon (no "AstraSign" / "ASL Translation" text) */
+  iconOnly?: boolean;
 }
 
-export default function AstraSignLogo({ size = 'md', className = '' }: AstraSignLogoProps) {
+export default function AstraSignLogo({ size = 'md', className = '', iconOnly = false }: AstraSignLogoProps) {
   const sizeClasses = {
     sm: 'w-8 h-8',
     md: 'w-12 h-12',
@@ -13,8 +15,8 @@ export default function AstraSignLogo({ size = 'md', className = '' }: AstraSign
   };
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      <div className={`${sizeClasses[size]} relative`}>
+    <div className={`flex items-center gap-2 ${iconOnly ? 'flex-col' : ''} ${className}`}>
+      <div className={`${sizeClasses[size]} relative flex-shrink-0`}>
         {/* Logo SVG - AstraSign branding */}
         <svg
           viewBox="0 0 100 100"
@@ -32,55 +34,53 @@ export default function AstraSignLogo({ size = 'md', className = '' }: AstraSign
             strokeWidth="2"
           />
           
-          {/* ASL hand shapes stylized */}
-          {/* Right hand - "A" sign */}
+          {/* ASL hand shapes — cyan so they pop on dark */}
           <path
             d="M30 35 L30 65 M30 35 L40 40 M30 50 L40 45 M30 65 L40 60"
-            stroke="white"
+            stroke="hsl(183, 100%, 50%)"
             strokeWidth="3"
             strokeLinecap="round"
           />
-          
-          {/* Left hand - "S" sign */}
           <path
             d="M70 35 Q60 40 60 50 Q60 60 70 65 M60 50 Q70 50 70 50"
-            stroke="white"
+            stroke="hsl(183, 100%, 50%)"
             strokeWidth="3"
             strokeLinecap="round"
             fill="none"
           />
+          {/* Stars — theme cyan */}
+          <circle cx="25" cy="25" r="2" fill="hsl(183, 100%, 50%)" opacity="0.9" />
+          <circle cx="75" cy="25" r="2" fill="hsl(183, 100%, 50%)" opacity="0.9" />
+          <circle cx="50" cy="20" r="1.5" fill="hsl(272, 76%, 53%)" opacity="0.9" />
+          <circle cx="25" cy="75" r="1.5" fill="hsl(272, 76%, 53%)" opacity="0.8" />
+          <circle cx="75" cy="75" r="1.5" fill="hsl(272, 76%, 53%)" opacity="0.8" />
           
-          {/* Stars representing astronomy/astronomy theme */}
-          <circle cx="25" cy="25" r="2" fill="white" opacity="0.8" />
-          <circle cx="75" cy="25" r="2" fill="white" opacity="0.8" />
-          <circle cx="50" cy="20" r="1.5" fill="white" opacity="0.6" />
-          <circle cx="25" cy="75" r="1.5" fill="white" opacity="0.6" />
-          <circle cx="75" cy="75" r="1.5" fill="white" opacity="0.6" />
-          
-          {/* Gradients */}
+          {/* Gradients — theme purple/cyan to match site */}
           <defs>
             <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#6366f1" />
-              <stop offset="50%" stopColor="#8b5cf6" />
-              <stop offset="100%" stopColor="#ec4899" />
+              <stop offset="0%" stopColor="hsl(272, 76%, 53%)" />
+              <stop offset="50%" stopColor="hsl(280, 70%, 55%)" />
+              <stop offset="100%" stopColor="hsl(183, 100%, 50%)" />
             </linearGradient>
             <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#4f46e5" />
-              <stop offset="100%" stopColor="#be185d" />
+              <stop offset="0%" stopColor="hsl(272, 76%, 53%)" />
+              <stop offset="100%" stopColor="hsl(183, 100%, 50%)" />
             </linearGradient>
           </defs>
         </svg>
       </div>
-      
-      {/* Text logo */}
-      <div className="flex flex-col">
-        <span className="font-bold text-lg leading-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-          AstraSign
-        </span>
-        <span className="text-xs text-gray-500 leading-tight">
-          ASL Translation
-        </span>
-      </div>
+
+      {/* Text logo — theme aligned (hidden when iconOnly) */}
+      {!iconOnly && (
+        <div className="flex flex-col">
+          <span className="font-display font-bold text-lg leading-tight gradient-text-purple-cyan">
+            AstraSign
+          </span>
+          <span className="text-xs text-muted-foreground leading-tight">
+            ASL Translation
+          </span>
+        </div>
+      )}
     </div>
   );
 }

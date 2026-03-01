@@ -172,7 +172,7 @@ export default function VoiceGuidanceSystem({
   useEffect(() => {
     if (enabled) {
       const timer = setTimeout(() => {
-        speakGuidance('Welcome to NeuroSign AI. Voice guidance is enabled.', 'encouraging');
+        speakGuidance('Welcome to AstraSign. Voice guidance is enabled.', 'encouraging');
       }, 1000);
 
       return () => clearTimeout(timer);
