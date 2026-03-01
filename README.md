@@ -1,22 +1,116 @@
-# Welcome to your Lovable project
+# AstraSign - ASL Translation System
 
-## Project info
+Advanced ASL translation system with real-time sign detection and 3D avatar animation.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Features
 
-## How can I edit this code?
+- **Audio → ASL**: Speak naturally and see sign translations in real-time
+- **ASL → Audio**: Show signs and hear voice output with text-to-speech
+- **3D Avatar System**: Interactive 3D characters performing ASL signs
+- **Multiple ML Models**: Support for MobileNetV2, ResNet50, EfficientNetB0, InceptionV3, VGG16, DenseNet121
+- **Real-time Processing**: Live transcription and sign detection
+- **Training Pipeline**: Train custom models with your data
 
-There are several ways of editing your application.
+## Quick Start
 
-**Use Lovable**
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+2. **Start the development server**:
+   ```bash
+   npm run dev
+   ```
 
-Changes made via Lovable will be committed automatically to this repo.
+3. **Start the backend server**:
+   ```bash
+   cd backend
+   python main.py
+   ```
 
-**Use your preferred IDE**
+4. **Access the application**:
+   Open `http://localhost:8081` in your browser
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Project Structure
+
+- `src/components/astraign/` - React components for ASL features
+- `src/services/` - ML model services and API integrations
+- `src/data/` - ASL signs database and training data
+- `backend/` - FastAPI backend for transcription and TTS
+- `public/models/` - 3D model files for avatars
+
+## Technology Stack
+
+- **Frontend**: React + TypeScript + Three.js + TensorFlow.js
+- **Backend**: FastAPI with Python
+- **ML Models**: TensorFlow.js implementations
+- **3D Rendering**: Three.js with React Three Fiber
+- **UI**: Shadcn/ui with Tailwind CSS
+
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file in the backend directory:
+
+```env
+OPENAI_API_KEY=your_openai_key
+GEMINI_API_KEY=your_gemini_key
+ELEVENLABS_API_KEY=your_elevenlabs_key
+API_SECRET=your_secret_key
+```
+
+### Model Configuration
+
+The system supports multiple computer vision models:
+- MobileNetV2 (default, fast)
+- ResNet50 (balanced accuracy/speed)
+- EfficientNetB0 (high accuracy)
+- InceptionV3 (very high accuracy)
+- VGG16 (legacy support)
+- DenseNet121 (alternative architecture)
+
+## Usage
+
+### Audio → ASL Translation
+
+1. Click the "Audio → ASL" tab
+2. Select your preferred detection model
+3. Click the microphone button to start recording
+4. Speak naturally and watch the ASL translation appear
+5. Use the play button to see avatar animations
+
+### ASL → Audio Translation
+
+1. Click the "ASL → Audio" tab
+2. Enable camera access
+3. Start sign detection
+4. Show ASL signs to the camera
+5. Listen to the voice output
+
+### Avatar System
+
+1. Click the "Avatar" tab
+2. Choose your preferred avatar model and environment
+3. Select signs to animate or use quick actions
+4. Control playback speed and camera settings
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
+
+## Support
+
+For support and questions, please contact the AstraSign team.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 

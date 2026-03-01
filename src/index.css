@@ -7,7 +7,7 @@
 
 @layer base {
   :root {
-    /* NeuroSign Design System - Cyberpunk Dark */
+    /* AstraSign Design System - Cyberpunk Dark */
     --background: 240 20% 4%;
     --foreground: 210 40% 96%;
 
@@ -40,7 +40,7 @@
 
     --radius: 1rem;
 
-    /* NeuroSign Custom Tokens */
+    /* AstraSign Custom Tokens */
     --neon-purple: 272 76% 53%;
     --neon-cyan: 183 100% 50%;
     --neon-pink: 316 80% 60%;

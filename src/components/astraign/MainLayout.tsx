@@ -10,9 +10,9 @@ interface Props {
   onStartLive: () => void;
   onReverseMode: () => void;
   onCameraMode: () => void;
-  onEnhancedCameraMode: () => void;
   onConversation: () => void;
   onSettings: () => void;
+  onTranslationHub?: () => void;
   activeTab?: TabId;
   onTabChange?: (tab: TabId) => void;
 }
@@ -21,9 +21,9 @@ export default function MainLayout({
   onStartLive,
   onReverseMode,
   onCameraMode,
-  onEnhancedCameraMode,
   onConversation,
   onSettings,
+  onTranslationHub,
   activeTab: controlledTab,
   onTabChange,
 }: Props) {
@@ -46,9 +46,9 @@ export default function MainLayout({
               onStartLive={onStartLive}
               onReverseMode={onReverseMode}
               onCameraMode={onCameraMode}
-              onEnhancedCameraMode={onEnhancedCameraMode}
               onConversation={onConversation}
               onSettings={onSettings}
+              onTranslationHub={onTranslationHub}
             />
           )}
           {activeTab === "translate" && <TranslateTab />}
