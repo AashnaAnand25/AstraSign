@@ -66,14 +66,14 @@ export default function ChooseAvatar({ onBack, onAvatarSelect }: ChooseAvatarPro
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="relative w-full max-w-[430px] min-h-screen mx-auto overflow-hidden">
-        {/* Ambient glow */}
-        <div className="fixed inset-0 max-w-[430px] mx-auto pointer-events-none overflow-hidden">
-          <div className="absolute top-0 left-1/3 w-48 h-48 rounded-full bg-neon-purple/[0.06] blur-[90px]" />
-          <div className="absolute bottom-0 right-1/3 w-48 h-48 rounded-full bg-neon-cyan/[0.04] blur-[90px]" />
+        {/* Subtle gradient overlay */}
+        <div className="fixed inset-0 max-w-[430px] mx-auto pointer-events-none overflow-hidden opacity-30">
+          <div className="absolute top-0 left-1/3 w-64 h-64 rounded-full bg-primary/5 blur-3xl" />
+          <div className="absolute bottom-0 right-1/3 w-64 h-64 rounded-full bg-primary/3 blur-3xl" />
         </div>
 
         {/* Header */}
-        <div className="glass rounded-2xl p-4 m-4" style={{ border: "1px solid hsl(240 10% 14%)" }}>
+        <div className="bg-card border border-border rounded-xl p-4 m-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {onBack && (
@@ -83,7 +83,7 @@ export default function ChooseAvatar({ onBack, onAvatarSelect }: ChooseAvatarPro
               )}
               <h1 className="text-lg font-semibold text-foreground">Choose Avatar</h1>
             </div>
-            <Button variant="outline" size="sm" className="neon-border-purple text-neon-purple">
+            <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-accent-subtle">
               <Settings className="w-4 h-4 mr-2" />
               Settings
             </Button>
@@ -96,12 +96,11 @@ export default function ChooseAvatar({ onBack, onAvatarSelect }: ChooseAvatarPro
             {avatars.map((avatar) => (
               <div
                 key={avatar.id}
-                className={`glass rounded-2xl p-4 cursor-pointer transition-all active:scale-95 hover:scale-105 ${
+                className={`bg-card border rounded-xl p-4 cursor-pointer transition-all duration-200 active:scale-95 hover:shadow-md ${
                   selectedAvatar === avatar.id
-                    ? 'ring-2 ring-neon-purple'
-                    : ''
+                    ? 'border-primary ring-2 ring-primary/20'
+                    : 'border-border hover:border-primary/50'
                 }`}
-                style={{ border: "1px solid hsl(240 10% 14%)" }}
                 onClick={() => handleAvatarSelect(avatar.id)}
               >
                 {/* Preview */}
@@ -138,7 +137,7 @@ export default function ChooseAvatar({ onBack, onAvatarSelect }: ChooseAvatarPro
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 neon-border-cyan text-neon-cyan text-xs"
+                    className="flex-1 border-primary text-primary hover:bg-accent-subtle text-xs"
                     onClick={(e) => {
                       e.stopPropagation();
                       handlePreview(avatar.id);
@@ -148,7 +147,7 @@ export default function ChooseAvatar({ onBack, onAvatarSelect }: ChooseAvatarPro
                     Preview
                   </Button>
                   {selectedAvatar === avatar.id && (
-                    <div className="flex items-center gap-1 px-2 py-1 bg-neon-purple/20 text-neon-purple rounded-full text-xs">
+                    <div className="flex items-center gap-1 px-2 py-1 bg-accent-subtle text-primary rounded-full text-xs">
                       <User className="w-3 h-3" />
                       Selected
                     </div>
@@ -160,12 +159,12 @@ export default function ChooseAvatar({ onBack, onAvatarSelect }: ChooseAvatarPro
 
           {/* Selected Avatar Details */}
           {selectedAvatar && (
-            <div className="glass rounded-2xl p-4" style={{ border: "1px solid hsl(240 10% 14%)" }}>
+            <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-medium text-foreground text-sm">
                   Selected: {avatars.find(a => a.id === selectedAvatar)?.name}
                 </h3>
-                <Button onClick={() => onAvatarSelect?.(selectedAvatar)} className="neon-border-purple text-neon-purple text-sm">
+                <Button onClick={() => onAvatarSelect?.(selectedAvatar)} className="bg-primary text-primary-foreground hover:bg-primary-hover text-sm">
                   Use This Avatar
                 </Button>
               </div>
