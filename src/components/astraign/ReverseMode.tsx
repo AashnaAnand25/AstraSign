@@ -138,7 +138,7 @@ export default function ReverseMode({ onBack, onSettings }: Props) {
 
       <div className="flex-1" />
 
-      <div className={`relative z-10 mx-5 mb-8 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
+      <div className={`relative z-10 mx-5 mb-24 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
         <button
           onClick={speak}
           disabled={!text.trim()}

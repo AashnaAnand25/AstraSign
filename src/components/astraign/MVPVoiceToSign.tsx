@@ -16,9 +16,9 @@ const ANIMATION_MAP: Record<string, string> = {
     "NO": "/animations/NO.glb",
 };
 
-// Neon purple → cyan gradient (theme colors)
-const NEON_PURPLE = "#a855f7";
-const NEON_CYAN = "#22d3ee";
+// Cool Green primary color (matching new theme)
+const PRIMARY_GREEN = "#2F9E6F";
+const PRIMARY_LIGHT = "#40C48D";
 
 function useGradientTexture() {
     return React.useMemo(() => {
@@ -28,9 +28,9 @@ function useGradientTexture() {
         const ctx = canvas.getContext("2d");
         if (!ctx) return null;
         const g = ctx.createLinearGradient(0, 0, 128, 128);
-        g.addColorStop(0, NEON_PURPLE);
-        g.addColorStop(0.5, "#7c3aed");
-        g.addColorStop(1, NEON_CYAN);
+        g.addColorStop(0, PRIMARY_GREEN);
+        g.addColorStop(0.5, "#369E7A");
+        g.addColorStop(1, PRIMARY_LIGHT);
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, 128, 128);
         const tex = new THREE.CanvasTexture(canvas);
@@ -39,16 +39,16 @@ function useGradientTexture() {
     }, []);
 }
 
-// Hand material: neon purple–cyan gradient + subtle glow
+// Hand material: green gradient + subtle glow
 function HandMaterial({ gradientTex }: { gradientTex: THREE.CanvasTexture | null }) {
     return (
         <meshStandardMaterial
             map={gradientTex || undefined}
-            color={gradientTex ? "#ffffff" : "#a855f7"}
-            emissive={NEON_PURPLE}
-            emissiveIntensity={0.15}
-            roughness={0.4}
-            metalness={0.15}
+            color={gradientTex ? "#ffffff" : PRIMARY_GREEN}
+            emissive={PRIMARY_GREEN}
+            emissiveIntensity={0.12}
+            roughness={0.35}
+            metalness={0.1}
         />
     );
 }
@@ -418,7 +418,7 @@ export default function MVPVoiceToSign({ onBack, embedded }: Props) {
             )}
 
             {/* 3D Canvas — hands lower, centered, palms facing camera */}
-            <div className="relative bg-card border-b border-border h-[320px] flex-shrink-0">
+            <div className="relative mx-4 mt-4 mb-2 bg-card border border-border rounded-2xl h-[320px] flex-shrink-0 shadow-lg overflow-hidden">
                 <Canvas camera={{ position: [0, 0, 1.5], fov: 48 }} style={{ width: "100%", height: 320 }}>
                     <ambientLight intensity={0.7} />
                     <directionalLight position={[2, 3, 4]} intensity={1.3} />
@@ -432,11 +432,11 @@ export default function MVPVoiceToSign({ onBack, embedded }: Props) {
                 {/* Gloss Subtitles Overlay */}
                 {gloss.length > 0 && (
                     <div className="absolute inset-x-0 bottom-4 flex justify-center pointer-events-none">
-                        <div className="bg-card/90 backdrop-blur-md border border-border px-4 py-2 rounded-xl flex flex-wrap justify-center gap-2 max-w-[90%]">
+                        <div className="bg-card/95 backdrop-blur-sm border border-primary/50 px-4 py-2.5 rounded-2xl flex flex-wrap justify-center gap-2 max-w-[90%] shadow-md">
                             {gloss.map((word, i) => (
                                 <span
                                     key={i}
-                                    className={`text-sm font-bold transition-all ${word === currentWord
+                                    className={`text-sm font-bold transition-all duration-200 ${word === currentWord
                                         ? "text-primary scale-110"
                                         : "text-muted-foreground"
                                         }`}
@@ -450,9 +450,9 @@ export default function MVPVoiceToSign({ onBack, embedded }: Props) {
             </div>
 
             {/* Try a phrase — compact, moved down a little */}
-            <div className="shrink-0 pt-5 px-3 py-2 flex flex-col items-center gap-1.5">
-                <p className="text-[11px] text-muted-foreground">Try a phrase</p>
-                <div className="flex flex-wrap justify-center gap-1.5">
+            <div className="shrink-0 pt-4 px-4 py-3 flex flex-col items-center gap-2">
+                <p className="text-xs font-medium text-muted-foreground">Quick phrases</p>
+                <div className="flex flex-wrap justify-center gap-2">
                     {QUICK_PHRASES.map((phrase) => (
                         <button
                             key={phrase}
@@ -463,7 +463,7 @@ export default function MVPVoiceToSign({ onBack, embedded }: Props) {
                                 handleTranslate(phrase);
                             }}
                             disabled={isPlaying}
-                            className="px-2.5 py-1 rounded-full text-xs font-medium bg-muted/80 text-foreground border border-border hover:border-primary/50 hover:bg-muted transition-colors disabled:opacity-50"
+                            className="px-3 py-1.5 rounded-xl text-xs font-medium bg-secondary text-foreground border border-border hover:border-primary hover:bg-accent-subtle transition-all duration-200 disabled:opacity-50 active:scale-95"
                         >
                             {phrase}
                         </button>
@@ -472,14 +472,14 @@ export default function MVPVoiceToSign({ onBack, embedded }: Props) {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 pt-0 pb-6 bg-background border-t border-border shrink-0">
+            <div className="p-4 pt-3 pb-6 bg-background shrink-0">
                 <div className="flex gap-3 max-w-lg mx-auto">
                     <button
                         onClick={() => setIsListening(!isListening)}
                         disabled={isPlaying}
-                        className={`p-4 rounded-xl flex items-center justify-center transition-all ${isListening
-                            ? "bg-destructive/20 text-destructive animate-pulse border border-destructive"
-                            : "bg-muted text-foreground hover:bg-muted/80 border border-border"
+                        className={`p-4 rounded-2xl flex items-center justify-center transition-all duration-200 active:scale-95 ${isListening
+                            ? "bg-destructive/20 text-destructive animate-pulse border-2 border-destructive shadow-lg"
+                            : "bg-secondary text-foreground hover:bg-accent-subtle border border-border hover:border-primary"
                             } disabled:opacity-50`}
                     >
                         {isListening ? <MicOff size={24} /> : <Mic size={24} />}
@@ -493,12 +493,12 @@ export default function MVPVoiceToSign({ onBack, embedded }: Props) {
                             onKeyDown={(e) => e.key === "Enter" && handleTranslate()}
                             disabled={isPlaying}
                             placeholder="Type or speak a phrase..."
-                            className="w-full h-full bg-muted text-foreground placeholder-muted-foreground px-5 rounded-xl border border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="w-full h-full bg-secondary text-foreground placeholder-muted-foreground px-5 pr-14 rounded-2xl border border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200"
                         />
                         <button
                             onClick={() => handleTranslate()}
                             disabled={!inputText.trim() || isPlaying}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-primary text-primary-foreground rounded-lg disabled:opacity-50 hover:opacity-90"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-primary text-primary-foreground rounded-xl disabled:opacity-50 hover:bg-primary-hover transition-all duration-200 active:scale-95 shadow-sm"
                         >
                             <Type size={18} />
                         </button>

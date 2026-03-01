@@ -72,12 +72,6 @@ export default function HomeScreen({
 
       <div className="flex flex-col gap-4 flex-1">
         <BigCard
-          title="Hearing → Deaf"
-          subtitle="Voice to ASL"
-          desc="Speak or type Naturally and watch sign output update in real-time."
-          onClick={onVoiceToSign}
-        />
-        <BigCard
           title="Deaf → Hearing"
           subtitle="ASL to Voice"
           desc="Point camera at signing or type manually and watch/hear translations instantly."

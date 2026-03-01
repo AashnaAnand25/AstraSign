@@ -248,11 +248,11 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Single non-interactive layer: background + grid + hand guide + particles — never block clicks */}
       <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-[#0d0a15] to-[#080810]" />
+        <div className="absolute inset-0 bg-background" />
         <div
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-5"
           style={{
-            backgroundImage: "linear-gradient(hsl(272 76% 53% / 0.3) 1px, transparent 1px), linear-gradient(90deg, hsl(272 76% 53% / 0.3) 1px, transparent 1px)",
+            backgroundImage: "linear-gradient(hsl(var(--primary) / 0.15) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.15) 1px, transparent 1px)",
             backgroundSize: "30px 30px",
           }}
         />
@@ -260,23 +260,22 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
         {!isRecording && (
           <div className="absolute left-0 right-0 top-0 bottom-[50%] flex items-end justify-center pb-4">
             <div
-              className="relative rounded-3xl flex-shrink-0"
+              className="relative rounded-3xl flex-shrink-0 border-2 border-dashed border-primary/30 bg-card/30"
               style={{
                 width: "55%",
                 aspectRatio: "0.7",
-                border: "1.5px dashed hsl(272 76% 53% / 0.25)",
-                boxShadow: "inset 0 0 30px hsl(272 76% 53% / 0.03)",
+                boxShadow: "inset 0 0 30px hsl(var(--primary) / 0.05)",
               }}
             >
               {[["top-0 left-0", "border-t border-l"], ["top-0 right-0", "border-t border-r"], ["bottom-0 left-0", "border-b border-l"], ["bottom-0 right-0", "border-b border-r"]].map(([pos, border], i) => (
-                <div key={i} className={`absolute w-4 h-4 ${pos} ${border}`}
-                  style={{ borderColor: "hsl(183 100% 50% / 0.5)", margin: "-1px" }} />
+                <div key={i} className={`absolute w-4 h-4 ${pos} ${border} border-primary/60`}
+                  style={{ margin: "-2px" }} />
               ))}
               <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 100 100" fill="none">
                 <path d="M50 90 C30 90 20 75 20 60 L20 35 C20 30 24 27 28 27 C32 27 36 30 36 35 L36 50 L36 30 C36 25 40 22 44 22 C48 22 52 25 52 30 L52 48 L52 25 C52 20 56 17 60 17 C64 17 68 20 68 25 L68 48 L68 32 C68 27 72 24 76 24 C80 24 84 27 84 32 L84 62 C84 78 70 90 50 90Z"
-                  stroke="hsl(183 100% 50%)" strokeWidth="1.5" strokeLinejoin="round" />
+                  stroke="hsl(var(--primary))" strokeWidth="1.5" strokeLinejoin="round" />
                 {[[36, 27], [50, 22], [64, 18], [76, 27]].map(([x, y], i) => (
-                  <circle key={i} cx={x} cy={y} r="2.5" fill="hsl(183 100% 50%)" />
+                  <circle key={i} cx={x} cy={y} r="2.5" fill="hsl(var(--primary))" />
                 ))}
               </svg>
             </div>
@@ -290,12 +289,10 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
         {showParticles && Array.from({ length: 12 }).map((_, i) => (
           <div
             key={i}
-            className="absolute w-1.5 h-1.5 rounded-full"
+            className="absolute w-1.5 h-1.5 rounded-full bg-primary shadow-lg"
             style={{
               left: `${30 + Math.random() * 40}%`,
               top: `${40 + Math.random() * 20}%`,
-              background: i % 2 === 0 ? "hsl(272 76% 53%)" : "hsl(183 100% 50%)",
-              boxShadow: `0 0 6px ${i % 2 === 0 ? "hsl(272 76% 53%)" : "hsl(183 100% 50%)"}`,
               animation: `particle-float 1.5s ease-out ${i * 0.1}s forwards`,
               "--tx": `${(Math.random() - 0.5) * 80}px`,
             } as React.CSSProperties}
@@ -306,8 +303,7 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
       {/* Camera + MediaPipe when recording — constrained so it doesn't cover bottom controls */}
       {isRecording && (
         <div
-          className="absolute left-4 right-4 top-4 bottom-[320px] rounded-2xl overflow-hidden border border-border z-[5] pointer-events-auto"
-          style={{ boxShadow: "0 0 24px hsl(272 76% 53% / 0.15)" }}
+          className="absolute left-4 right-4 top-4 bottom-[320px] rounded-3xl overflow-hidden border-2 border-primary/50 bg-card z-[5] pointer-events-auto shadow-xl"
         >
           <HandTracker isActive={true} onGestureDetected={handleGestureDetected} />
         </div>
