@@ -20,6 +20,7 @@ interface Props {
   onTabChange?: (tab: TabId) => void;
   initialTranslateMode?: TranslateMode | null;
   onClearTranslateInitialMode?: () => void;
+  onInfo?: () => void;
 }
 
 export default function MainLayout({
@@ -35,6 +36,7 @@ export default function MainLayout({
   onTabChange,
   initialTranslateMode,
   onClearTranslateInitialMode,
+  onInfo,
 }: Props) {
   const [internalTab, setInternalTab] = useState<TabId>("home");
   const activeTab = controlledTab ?? internalTab;
@@ -60,6 +62,7 @@ export default function MainLayout({
               onConversation={onConversation}
               onSettings={onSettings}
               onTranslationHub={onTranslationHub}
+              onInfo={onInfo}
             />
           )}
           {activeTab === "translate" && (

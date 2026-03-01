@@ -1,4 +1,4 @@
-import { Settings, Users, ArrowLeftRight } from "lucide-react";
+import { Settings, Users, ArrowLeftRight, Info } from "lucide-react";
 
 interface Props {
   onStartLive: () => void;
@@ -9,6 +9,7 @@ interface Props {
   onConversation: () => void;
   onSettings: () => void;
   onTranslationHub?: () => void;
+  onInfo?: () => void;
 }
 
 
@@ -32,7 +33,7 @@ const BigCard = ({ title, subtitle, desc, onClick }: { title: string; subtitle: 
   );
 };
 
-export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, onEnhancedCameraMode, onVoiceToSign, onConversation, onSettings, onTranslationHub }: Props) {
+export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, onEnhancedCameraMode, onVoiceToSign, onConversation, onSettings, onTranslationHub, onInfo }: Props) {
   return (
     <div className="min-h-screen flex flex-col px-6 pt-16 pb-24">
       <div className="flex items-center justify-between mb-6">
@@ -43,12 +44,22 @@ export default function HomeScreen({ onStartLive, onReverseMode, onCameraMode, o
           </div>
           <h2 className="text-2xl font-bold text-foreground">Home</h2>
         </div>
-        <button
-          onClick={onSettings}
-          className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-all duration-200"
-        >
-          <Users size={18} />
-        </button>
+        <div className="flex gap-2">
+          {onInfo && (
+            <button
+              onClick={onInfo}
+              className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-all duration-200"
+            >
+              <Info size={18} />
+            </button>
+          )}
+          <button
+            onClick={onSettings}
+            className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-all duration-200"
+          >
+            <Users size={18} />
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-4 flex-1">

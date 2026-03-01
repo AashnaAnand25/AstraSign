@@ -24,7 +24,8 @@ export type Screen =
   | "voice-to-sign"
   | "conversation"
   | "translation-hub"
-  | "accessibility";
+  | "accessibility"
+  | "info";
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>("landing");
@@ -49,14 +50,13 @@ const Index = () => {
 
           {/* Landing Screen */}
           {screen === "landing" && (
-            <MinimalLandingScreen onStart={() => setScreen("onboarding-1")} />
+            <MinimalLandingScreen onStart={() => setScreen("home")} />
           )}
 
           {/* Onboarding */}
           {screen === "onboarding-1" && (
             <OnboardingOne
-              onNext={() => setScreen("onboarding-2")}
-              onSkip={() => setScreen("home")}
+              onBack={() => setScreen("home")}
             />
           )}
 
@@ -82,6 +82,7 @@ const Index = () => {
               onTabChange={setActiveTab}
               initialTranslateMode={initialTranslateMode}
               onClearTranslateInitialMode={() => setInitialTranslateMode(null)}
+              onInfo={() => setScreen("info")}
             />
           )}
 
@@ -125,6 +126,11 @@ const Index = () => {
           {/* Accessibility Settings */}
           {screen === "accessibility" && (
             <AccessibilitySettings onBack={() => setScreen("home")} />
+          )}
+
+          {/* Info Screen (How it works) */}
+          {screen === "info" && (
+            <OnboardingOne onBack={() => setScreen("home")} />
           )}
         </div>
       </div>
