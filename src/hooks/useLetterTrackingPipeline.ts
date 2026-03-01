@@ -26,10 +26,10 @@ export interface LetterTrackingPipelineResult {
 
 export function useLetterTrackingPipeline(
     videoRef: RefObject<HTMLVideoElement>,
-    landmarks: Landmark[][] | null
+    landmarks: Landmark[][] | null,
+    isActive: boolean = false
 ): LetterTrackingPipelineResult {
     const [spelledPhrase, setSpelledPhrase] = useState("");
-    const [isDetectingSign, setIsDetectingSign] = useState(false);
     const [status, setStatus] = useState("Awaiting hand sign…");
     const [detectedLetter, setDetectedLetter] = useState<string | null>(null);
     const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -40,11 +40,12 @@ export function useLetterTrackingPipeline(
     const historyRef = useRef<HandHistory>(new HandHistory());
     const confidenceAccumulator = useRef<Record<string, number>>({});
 
-    // Lower threshold for letters since they transition quickly
     const COMMIT_THRESHOLD = 2.0;
 
+    const cooldownRef = useRef(false);
+
     useEffect(() => {
-        if (!landmarks || landmarks.length === 0 || !isDetectingSign) {
+        if (!landmarks || landmarks.length === 0 || !isActive || cooldownRef.current) {
             if (!landmarks || landmarks.length === 0) setDetectedLetter(null);
             return;
         }
@@ -102,14 +103,14 @@ export function useLetterTrackingPipeline(
             confidenceAccumulator.current = {};
 
             // Introduce cooldown before next commit
-            setIsDetectingSign(false);
-            setTimeout(() => setIsDetectingSign(true), 1500);
+            cooldownRef.current = true;
+            setTimeout(() => { cooldownRef.current = false; }, 1500);
         }
 
-    }, [landmarks, isDetectingSign]);
+    }, [landmarks, isActive]);
 
     const beginSpelling = useCallback(() => {
-        setIsDetectingSign(true);
+        cooldownRef.current = false;
         setDetectedLetter(null);
         setStatus("Position hand and start spelling…");
         confidenceAccumulator.current = {};
@@ -168,11 +169,11 @@ export function useLetterTrackingPipeline(
 
     return {
         spelledPhrase,
-        isDetectingSign,
+        isDetectingSign: isActive,
         status,
         detectedLetter,
         suggestions,
-        beginSpelling,
+        beginSpelling: () => undefined, // Kept for backwards compatibility but does nothing now
         commitSegment,
         triggerTranslate,
         undoLastLetter,
