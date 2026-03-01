@@ -176,6 +176,8 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
 | OpenAI key quota exceeded (429) | Switched to Gemini |
 | Gemini OpenAI-compat shim → 404 "v1main" errors | Switched to native Gemini REST API via httpx in `gemini_service.py` |
 | Gemini 2.0 Flash free tier quota = 0 | Use `gemini-1.5-flash` |
+| Current API key only has 2.x models (gemini-1.5-flash → 404) | Use `gemini-2.0-flash-lite` (confirmed available via `/v1/models` list) |
+| `systemInstruction` not supported in v1 stable endpoint → 400 | Merged system+user prompt into single `contents` message |
 | Auto-segmentation false-triggering on hand entry | Replaced with push-to-sign (beginRecording/commitSegment) |
 | MediaPipe WASM/Vite bundling issues | Load WASM from CDN, not bundled |
 | Canvas skeleton mirrored wrong | Mirror x-coord: `px = (1 - lm.x) * w` to match `scaleX(-1)` video |

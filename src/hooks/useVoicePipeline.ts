@@ -71,14 +71,21 @@ export function useVoicePipeline() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: t }),
         });
-        if (!resp.ok) throw new Error(`Server error ${resp.status}`);
+        if (!resp.ok) {
+          let detail = `HTTP ${resp.status}`;
+          try {
+            const body = await resp.json();
+            detail = body.detail ?? detail;
+          } catch { /* ignore parse error */ }
+          throw new Error(detail);
+        }
         const data = await resp.json();
         setState(s => ({ ...s, status: "done", aslWords: data.asl_ordered ?? [] }));
       } catch (err) {
         setState(s => ({
           ...s,
           status: "error",
-          error: `Grammar conversion failed: ${String(err)}`,
+          error: String(err instanceof Error ? err.message : err),
         }));
       }
     };
