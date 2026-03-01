@@ -7,9 +7,10 @@ import { gestureToWord } from "@/utils/aslStaticPoses";
 interface HandTrackerProps {
   onGestureDetected: (gesture: string, confidence: number) => void;
   isActive: boolean;
+  externalStream?: MediaStream | null;
 }
 
-export default function HandTracker({ onGestureDetected, isActive }: HandTrackerProps) {
+export default function HandTracker({ onGestureDetected, isActive, externalStream }: HandTrackerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +31,7 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
     }
 
     const landmarks = results.multiHandLandmarks[0];
-    
+
     // Convert MediaPipe landmarks to our format
     const formattedLandmarks = landmarks.map(landmark => [
       landmark.x,
@@ -41,7 +42,7 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
     try {
       // Classify gesture using simple rules
       const result = handClassifier.classifyHand(formattedLandmarks);
-      
+
       if (result.confidence > 0.5) {
         setCurrentGesture(result.gesture);
         setConfidence(result.confidence);
@@ -58,13 +59,19 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
     setIsLoading(true);
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480 },
-        audio: false
-      });
+      // Prioritize external wearable stream if provided (e.g. Meta Ray-Bans POV camera)
+      let stream: MediaStream;
+      if (externalStream) {
+        stream = externalStream;
+      } else {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480 },
+          audio: false
+        });
+      }
 
       videoRef.current.srcObject = stream;
-      await videoRef.current.play().catch(() => {});
+      await videoRef.current.play().catch(() => { });
 
       // Initialize MediaPipe Hands
       const hands = new Hands({
@@ -92,10 +99,10 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
 
         canvasCtx.save();
         canvasCtx.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
-        
+
         // Draw video frame
         canvasCtx.drawImage(results.image, 0, 0, canvasRef.current!.width, canvasRef.current!.height);
-        
+
         // Draw hand landmarks
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
           for (const landmarks of results.multiHandLandmarks) {
@@ -125,7 +132,7 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
             landmarks.forEach((landmark, index) => {
               const x = landmark.x * canvasRef.current!.width;
               const y = landmark.y * canvasRef.current!.height;
-              
+
               canvasCtx.beginPath();
               canvasCtx.arc(x, y, 5, 0, 2 * Math.PI);
               canvasCtx.fillStyle = index === 0 ? '#ff006e' : '#00ffff'; // Wrist in different color
@@ -157,17 +164,20 @@ export default function HandTracker({ onGestureDetected, isActive }: HandTracker
       console.error('Camera initialization failed:', error);
       setIsLoading(false);
     }
-  }, [processHandResults]);
+  }, [processHandResults, externalStream]);
 
   const stopCamera = useCallback(() => {
     firstFrameRef.current = false;
     if (videoRef.current?.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
+      // Note: Only stop tracks if we own the stream (i.e. not an external wearable stream)
+      if (!externalStream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
       videoRef.current.srcObject = null;
     }
     setIsLoading(false);
-  }, []);
+  }, [externalStream]);
 
   useEffect(() => {
     if (isActive) {

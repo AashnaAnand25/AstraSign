@@ -79,11 +79,10 @@ export default function TranslateTab({ onAddToHistory, initialMode, onInitialMod
               setMode("audio-to-asl");
               onInitialModeConsumed?.();
             }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${
-              mode === "audio-to-asl"
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${mode === "audio-to-asl"
                 ? "bg-neon-cyan/20 text-neon-cyan"
                 : "text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
             style={
               mode === "audio-to-asl"
                 ? { border: "1px solid hsl(183 100% 50% / 0.4)" }
@@ -99,11 +98,10 @@ export default function TranslateTab({ onAddToHistory, initialMode, onInitialMod
               setMode("asl-to-audio");
               onInitialModeConsumed?.();
             }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${
-              mode === "asl-to-audio"
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${mode === "asl-to-audio"
                 ? "bg-neon-purple/20 text-neon-purple"
                 : "text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
             style={
               mode === "asl-to-audio"
                 ? { border: "1px solid hsl(272 76% 53% / 0.4)" }
@@ -141,13 +139,12 @@ export default function TranslateTab({ onAddToHistory, initialMode, onInitialMod
           }}
         >
           <div
-            className={`w-1.5 h-1.5 rounded-full ${
-              status === "listening"
+            className={`w-1.5 h-1.5 rounded-full ${status === "listening"
                 ? "bg-neon-cyan animate-pulse"
                 : status === "processing"
                   ? "bg-neon-purple animate-pulse"
                   : "bg-green-400"
-            }`}
+              }`}
           />
           {status === "listening" && "Listening…"}
           {status === "processing" && "Processing…"}
@@ -158,10 +155,9 @@ export default function TranslateTab({ onAddToHistory, initialMode, onInitialMod
       {/* Content — scrollable; buttons inside have pointer-events */}
       <div className="flex-1 overflow-y-auto min-h-0">
         {mode === "audio-to-asl" ? (
-          <MVPVoiceToSign embedded />
+          <MVPVoiceToSign />
         ) : (
           <SignToVoice
-            embedded
             onStatusChange={setStatus}
             onAddToHistory={addEntry}
           />

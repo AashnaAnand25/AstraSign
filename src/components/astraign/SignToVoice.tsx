@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ArrowLeft, Settings, Play, Pause, ToggleLeft, ToggleRight } from "lucide-react";
+import { ArrowLeft, Settings, Play, Pause, ToggleLeft, ToggleRight, Glasses } from "lucide-react";
 import { useAccessibility } from "@/accessibility/AccessibilityProvider";
 import HandTracker from "@/components/astraign/HandTracker";
 import { gestureToWord } from "@/utils/aslStaticPoses";
+import { useWearableDevice } from "@/hooks/useWearableDevice";
 
 interface Props {
   onBack?: () => void;
@@ -60,6 +61,20 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
   const lastGestureTimeRef = useRef<number>(0);
   const lastSpokenWordRef = useRef<string>("");
   const lastSpokenTimeRef = useRef<number>(0);
+
+  // Wearables Integration Pipeline
+  const { status: wearableStatus, connectToGlasses, disconnectFromGlasses, getGlassesVideoStream } = useWearableDevice();
+  const [glassesStream, setGlassesStream] = useState<MediaStream | null>(null);
+
+  useEffect(() => {
+    if (wearableStatus === "connected" && isRecording) {
+      getGlassesVideoStream().then(stream => {
+        if (stream) setGlassesStream(stream);
+      });
+    } else {
+      setGlassesStream(null);
+    }
+  }, [wearableStatus, isRecording, getGlassesVideoStream]);
 
   useEffect(() => {
     onStatusChange?.(isRecording ? "processing" : translation ? "ready" : "ready");
@@ -236,7 +251,11 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
           className="absolute left-4 right-4 top-4 bottom-[320px] rounded-2xl overflow-hidden border border-border z-[5] pointer-events-auto"
           style={{ boxShadow: "0 0 24px hsl(272 76% 53% / 0.15)" }}
         >
-          <HandTracker isActive={true} onGestureDetected={handleGestureDetected} />
+          <HandTracker
+            isActive={true}
+            onGestureDetected={handleGestureDetected}
+            externalStream={glassesStream}
+          />
         </div>
       )}
 
@@ -244,22 +263,24 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
       {!embedded && (
         <div className={`relative z-10 flex items-center justify-between px-5 pt-12 pb-4 transition-opacity duration-300 ${focusMode ? "a11y-focus-dim" : ""}`}
         >
-          <button
-            onClick={onBack}
-            className="w-9 h-9 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
-          >
-            <ArrowLeft size={16} />
-          </button>
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-neon-purple animate-glow-pulse" />
             <span className="font-display text-sm font-bold gradient-text-purple-cyan">AstraSign</span>
           </div>
-          <button
-            onClick={onSettings}
-            className="w-9 h-9 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
-          >
-            <Settings size={16} />
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={wearableStatus === "connected" ? disconnectFromGlasses : connectToGlasses}
+              title={wearableStatus === "connected" ? "Disconnect Glasses" : "Connect Smart Glasses"}
+              className={`w-9 h-9 rounded-xl glass flex items-center justify-center transition-colors ${wearableStatus === "connected"
+                ? "neon-border-cyan text-neon-cyan"
+                : wearableStatus === "connecting"
+                  ? "neon-border-purple text-neon-purple animate-pulse"
+                  : "border border-border text-muted-foreground hover:text-neon-purple"
+                }`}
+            >
+              <Glasses size={16} />
+            </button>
+          </div>
         </div>
       )}
 

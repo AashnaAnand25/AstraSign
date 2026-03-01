@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Environment } from "@react-three/drei";
 import * as THREE from "three";
-import { Mic, MicOff, Type, ArrowLeft } from "lucide-react";
+import { Mic, MicOff, Type, ArrowLeft, Glasses } from "lucide-react";
+import { useWearableDevice } from "@/hooks/useWearableDevice";
 
 // The Map the user requested
 const ANIMATION_MAP: Record<string, string> = {
@@ -329,9 +330,27 @@ export default function MVPVoiceToSign({ onBack, embedded }: Props) {
     const [isPlaying, setIsPlaying] = useState(false);
     const gradientTex = useGradientTexture();
 
+    // Wearables Integration Pipeline
+    const { status: wearableStatus, connectToGlasses, disconnectFromGlasses, getGlassesAudioStream } = useWearableDevice();
+    const [glassesAudioStream, setGlassesAudioStream] = useState<MediaStream | null>(null);
+
+    useEffect(() => {
+        if (wearableStatus === "connected" && isListening) {
+            getGlassesAudioStream().then(stream => {
+                if (stream) setGlassesAudioStream(stream);
+            });
+        } else {
+            setGlassesAudioStream(null);
+        }
+    }, [wearableStatus, isListening, getGlassesAudioStream]);
+
     // Web Speech API for voice input
     useEffect(() => {
         if (!isListening) return;
+
+        if (glassesAudioStream) {
+            console.log("[WearableToolkit] Injecting continuous audio stream from Meta Ray-Bans into MVP Speech pipeline...");
+        }
 
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         if (!SpeechRecognition) {
@@ -402,17 +421,31 @@ export default function MVPVoiceToSign({ onBack, embedded }: Props) {
     return (
         <div className="w-full min-h-screen bg-background flex flex-col overflow-y-auto">
             {!embedded && (
-            <div className="flex items-center p-4 border-b border-border shrink-0">
-                {onBack && (
-                    <button onClick={onBack} className="p-2 mr-3 rounded-lg bg-muted hover:bg-muted/80 text-foreground">
-                        <ArrowLeft size={20} />
+                <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
+                    <div className="flex items-center">
+                        {onBack && (
+                            <button onClick={onBack} className="p-2 mr-3 rounded-lg bg-muted hover:bg-muted/80 text-foreground">
+                                <ArrowLeft size={20} />
+                            </button>
+                        )}
+                        <div>
+                            <h1 className="text-xl font-bold text-foreground">AstraSign MVP</h1>
+                            <p className="text-xs text-muted-foreground">Text/Voice → ASL</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={wearableStatus === "connected" ? disconnectFromGlasses : connectToGlasses}
+                        title={wearableStatus === "connected" ? "Disconnect Glasses" : "Connect Smart Glasses"}
+                        className={`p-2 rounded-xl flex items-center justify-center transition-colors ${wearableStatus === "connected"
+                                ? "text-neon-cyan border border-neon-cyan bg-neon-cyan/20"
+                                : wearableStatus === "connecting"
+                                    ? "text-neon-purple border border-neon-purple bg-neon-purple/20 animate-pulse"
+                                    : "text-muted-foreground hover:text-foreground border border-border bg-muted"
+                            }`}
+                    >
+                        <Glasses size={20} />
                     </button>
-                )}
-                <div>
-                    <h1 className="text-xl font-bold text-foreground">AstraSign MVP</h1>
-                    <p className="text-xs text-muted-foreground">Text/Voice → ASL</p>
                 </div>
-            </div>
             )}
 
             {/* 3D Canvas — hands lower, centered, palms facing camera */}
