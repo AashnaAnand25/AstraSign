@@ -1,34 +1,12 @@
 import { Canvas } from "@react-three/fiber";
 import { Environment, ContactShadows } from "@react-three/drei";
-import { Suspense } from "react";
-import RealisticAvatarSystem from "./RealisticAvatarSystem";
-import { AvatarType } from "./AvatarSelector";
-import SigningAvatar from "./SigningAvatar";
-import type { ASLAnimationId } from "@/data/aslAnimationMap";
+import { Suspense, ReactNode } from "react";
 
 interface AvatarSceneProps {
-  currentLetter?: string;
-  currentWord?: string;
-  isAnimating?: boolean;
-  animationQueue?: ASLAnimationId[];
-  queueIndex?: number;
-  signMode?: "letters" | "words";
-  avatarType?: AvatarType;
+  children?: ReactNode;
 }
 
-export default function AvatarScene({
-  currentLetter,
-  currentWord,
-  isAnimating = false,
-  animationQueue = [],
-  queueIndex = 0,
-  signMode = "words",
-  avatarType = "person",
-}: AvatarSceneProps) {
-  const useWordQueue = signMode === "words" && animationQueue.length > 0;
-  const currentAnimation: ASLAnimationId = useWordQueue
-    ? (animationQueue[queueIndex] ?? "idle")
-    : "idle";
+export default function AvatarScene({ children }: AvatarSceneProps) {
 
   return (
     <div
@@ -49,23 +27,7 @@ export default function AvatarScene({
           shadow-mapSize={[1024, 1024]}
         />
         <Suspense fallback={null}>
-          {useWordQueue ? (
-            <SigningAvatar
-              currentAnimation={currentAnimation}
-              animationQueue={animationQueue}
-              queueIndex={queueIndex}
-              isAnimating={isAnimating}
-              position={[0, -0.3, 0]}
-            />
-          ) : (
-            <RealisticAvatarSystem
-              currentLetter={currentLetter}
-              currentWord={currentWord}
-              isAnimating={isAnimating}
-              position={[0, -0.3, 0]}
-              avatarType={avatarType}
-            />
-          )}
+          {children}
         </Suspense>
         <ContactShadows
           position={[0, -0.5, 0]}
