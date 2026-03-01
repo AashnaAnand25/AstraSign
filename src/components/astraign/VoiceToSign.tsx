@@ -28,10 +28,7 @@ const WaveBar = ({ i, active }: { i: number; active: boolean }) => {
       style={{
         width: "3px",
         height: `${h}px`,
-        background: active
-          ? `linear-gradient(to top, hsl(272 76% 53%), hsl(183 100% 50%))`
-          : "hsl(240 10% 20%)",
-        boxShadow: active ? "0 0 6px hsl(272 76% 53% / 0.5)" : "none",
+        background: active ? "hsl(var(--primary))" : "hsl(var(--muted))",
       }}
     />
   );
@@ -39,19 +36,16 @@ const WaveBar = ({ i, active }: { i: number; active: boolean }) => {
 
 const ASLCard = ({ letter, delay }: { letter: string; delay: number }) => (
   <div
-    className="glass neon-border-cyan rounded-2xl p-3 flex flex-col items-center gap-2 animate-fade-in-up"
+    className="bg-card border border-primary rounded-xl p-3 flex flex-col items-center gap-2"
     style={{ animationDelay: `${delay}ms`, minWidth: "64px" }}
   >
-    <div
-      className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold"
-      style={{ background: "hsl(183 100% 50% / 0.1)", color: "hsl(183 100% 50%)" }}
-    >
+    <div className="w-10 h-10 rounded-lg bg-accent-subtle flex items-center justify-center text-xs font-bold text-primary">
       {/* Simple hand shape indicator */}
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M8 16V8a2 2 0 014 0M12 16V6a2 2 0 014 0v2M16 16V9a2 2 0 014 0v7a6 6 0 01-12 0v-4a2 2 0 014 0" stroke="hsl(183 100% 50%)" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M8 16V8a2 2 0 014 0M12 16V6a2 2 0 014 0v2M16 16V9a2 2 0 014 0v7a6 6 0 01-12 0v-4a2 2 0 014 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     </div>
-    <span className="text-xs font-bold text-neon-cyan">{letter}</span>
+    <span className="text-xs font-bold text-primary">{letter}</span>
   </div>
 );
 
@@ -479,17 +473,17 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
         <div className={`relative z-10 flex items-center justify-between px-5 pt-12 pb-4 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
           <button
             onClick={onBack}
-            className="w-9 h-9 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
+            className="w-9 h-9 rounded-xl bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-all duration-200"
           >
             <ArrowLeft size={16} />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-glow-pulse" />
-            <span className="font-display text-sm font-bold gradient-text-purple-cyan">AstraSign</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-sm font-bold text-primary">AstraSign</span>
           </div>
           <button
             onClick={onSettings}
-            className="w-9 h-9 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
+            className="w-9 h-9 rounded-xl bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-all duration-200"
           >
             <Settings size={16} />
           </button>
@@ -499,25 +493,25 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
       {/* Mode pill - hidden when embedded */}
       {!embedded && (
         <div className={`relative z-10 flex flex-col items-center gap-3 mb-6 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
-          <div className="glass rounded-full px-4 py-1.5 neon-border-cyan flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="4" y="1" width="6" height="8" rx="3" fill="hsl(183 100% 50%)" />
-              <path d="M2 7a5 5 0 0010 0" stroke="hsl(183 100% 50%)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-              <line x1="7" y1="12" x2="7" y2="13.5" stroke="hsl(183 100% 50%)" strokeWidth="1.2" strokeLinecap="round" />
+          <div className="bg-card border border-primary rounded-full px-4 py-1.5 flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-primary">
+              <rect x="4" y="1" width="6" height="8" rx="3" fill="currentColor" />
+              <path d="M2 7a5 5 0 0010 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+              <line x1="7" y1="12" x2="7" y2="13.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
             </svg>
-            <span className="text-xs font-semibold text-neon-cyan tracking-wider">VOICE → SIGN</span>
+            <span className="text-xs font-semibold text-primary tracking-wider">VOICE → SIGN</span>
           </div>
         </div>
       )}
 
       {/* Avatar dropdown - contextual to Audio→ASL */}
       <div className={`relative z-10 flex flex-col items-center gap-3 mb-6 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
-        <div className="flex bg-[hsl(272,76%,53%,0.1)] rounded-xl p-1 mb-2 border border-[hsl(272,76%,53%,0.2)]">
+        <div className="flex bg-secondary rounded-xl p-1 mb-2 border border-border">
           <button
             onClick={() => setInputMode("text")}
-            className={`flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all ${inputMode === "text"
-              ? "bg-[hsl(183,100%,50%,0.2)] text-[hsl(183,100%,50%)] border border-[hsl(183,100%,50%,0.5)] shadow-[0_0_15px_rgba(0,255,255,0.15)]"
-              : "text-muted-foreground hover:text-white"
+            className={`flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all duration-200 ${inputMode === "text"
+              ? "bg-primary text-primary-foreground border border-primary shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
               }`}
           >
             <Type size={16} className="inline mr-2" />
@@ -525,9 +519,9 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
           </button>
           <button
             onClick={() => setInputMode('voice')}
-            className={`flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all ${inputMode === 'voice'
-              ? 'bg-[hsl(183,100%,50%,0.2)] text-[hsl(183,100%,50%)] border border-[hsl(183,100%,50%,0.5)] shadow-[0_0_15px_rgba(0,255,255,0.15)]'
-              : 'text-muted-foreground hover:text-white'
+            className={`flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all duration-200 ${inputMode === 'voice'
+              ? 'bg-primary text-primary-foreground border border-primary shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
               }`}
           >
             <Mic size={16} className="inline mr-2" />
@@ -535,9 +529,9 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
           </button>
           <button
             onClick={() => setInputMode('camera')}
-            className={`flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all ${inputMode === 'camera'
-              ? 'bg-[hsl(183,100%,50%,0.2)] text-[hsl(183,100%,50%)] border border-[hsl(183,100%,50%,0.5)] shadow-[0_0_15px_rgba(0,255,255,0.15)]'
-              : 'text-muted-foreground hover:text-white'
+            className={`flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all duration-200 ${inputMode === 'camera'
+              ? 'bg-primary text-primary-foreground border border-primary shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
               }`}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-camera">
@@ -556,10 +550,10 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
               onClick={() => setIsListening(!isListening)}
               className={`w-20 h-20 rounded-full transition-all active:scale-95 flex items-center justify-center ${isListening
                 ? 'bg-red-500/20 border-2 border-red-500 animate-pulse'
-                : 'bg-neon-cyan/20 border-2 border-neon-cyan'
+                : 'bg-accent-subtle border-2 border-primary'
                 }`}
             >
-              {isListening ? <MicOff size={28} className="text-red-400" /> : <Mic size={28} className="text-neon-cyan" />}
+              {isListening ? <MicOff size={28} className="text-red-400" /> : <Mic size={28} className="text-primary" />}
             </button>
             <p className="text-xs text-muted-foreground mt-3">
               {isListening ? "Listening..." : "Tap to speak"}
@@ -577,12 +571,12 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
                 onChange={(e) => setTextInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleTextSubmit()}
                 placeholder="Type text to translate..."
-                className="w-full px-4 py-3 rounded-2xl bg-background/50 border border-border focus:border-neon-cyan focus:outline-none transition-all"
+                className="w-full px-4 py-3 rounded-2xl bg-background/50 border border-border focus:border-primary focus:outline-none transition-all duration-200"
               />
               <button
                 onClick={handleTextSubmit}
                 disabled={!textInput.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 rounded-lg bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 rounded-lg bg-accent-subtle text-primary border border-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
                 Translate
               </button>
@@ -611,8 +605,8 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
             {detectedGesture && (
               <div className="mt-3 text-center">
                 <div className="text-xs text-muted-foreground">Detected Gesture:</div>
-                <div className="font-bold text-neon-cyan">{detectedGesture}</div>
-                <div className="text-xs text-gray-400">Confidence: {(gestureConfidence * 100).toFixed(0)}%</div>
+                <div className="font-bold text-primary">{detectedGesture}</div>
+                <div className="text-xs text-muted-foreground">Confidence: {(gestureConfidence * 100).toFixed(0)}%</div>
               </div>
             )}
           </div>
@@ -623,18 +617,18 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
           <div className="flex items-center justify-center gap-2 mb-4">
             <button
               onClick={() => setSignMode('letters')}
-              className={`text-xs font-medium px-2 py-1 rounded-full transition-all ${signMode === 'letters'
-                ? 'bg-neon-cyan text-white'
-                : 'text-muted-foreground hover:text-neon-cyan'
+              className={`text-xs font-medium px-3 py-1.5 rounded-full transition-all duration-200 ${signMode === 'letters'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground'
                 }`}
             >
               Letters
             </button>
             <button
               onClick={() => setSignMode('words')}
-              className={`text-xs font-medium px-2 py-1 rounded-full transition-all ${signMode === 'words'
-                ? 'bg-neon-purple text-white'
-                : 'text-muted-foreground hover:text-neon-purple'
+              className={`text-xs font-medium px-3 py-1.5 rounded-full transition-all duration-200 ${signMode === 'words'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground'
                 }`}
             >
               Words
@@ -733,11 +727,11 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
 
       {/* Transcript / Live Text Buffer - focus content when focus mode */}
       {transcript && (
-        <div className={`relative z-10 mx-5 mb-4 glass neon-border-purple rounded-2xl p-4 animate-fade-in-up ${settings.focusMode ? "a11y-focus-content" : ""}`}>
+        <div className={`relative z-10 mx-5 mb-4 bg-card border border-primary rounded-2xl p-4 ${settings.focusMode ? "a11y-focus-content" : ""}`}>
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-neon-purple animate-pulse" />
-              <span className="text-xs text-neon-purple font-medium tracking-wider">LIVE TEXT</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="text-xs text-primary font-medium tracking-wider">LIVE TEXT</span>
             </div>
             <button
               onClick={() => {
@@ -746,8 +740,7 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
                 setTextInput("");
                 setCurrentLetterIndex(0);
               }}
-              className="text-xs font-semibold px-3 py-1 rounded-lg hover:bg-white/5 transition-colors"
-              style={{ color: "hsl(var(--neon-purple))" }}
+              className="text-xs font-semibold px-3 py-1 rounded-lg hover:bg-secondary transition-colors duration-200 text-primary"
             >
               Clear
             </button>
@@ -762,14 +755,13 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
       <div className={`relative z-10 mx-5 mb-8 ${settings.focusMode ? "a11y-focus-dim" : ""}`}>
         {inputMode === 'text' ? (
           /* Text input mode */
-          <div className="glass-strong rounded-3xl p-5" style={{ boxShadow: "0 -10px 40px hsl(183 100% 50% / 0.1)" }}>
+          <div className="bg-card border border-border rounded-3xl p-5 shadow-lg">
             <div className="mb-4">
               <textarea
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
                 placeholder="Type text to translate to ASL..."
-                className="w-full h-20 p-3 rounded-2xl bg-background/50 border border-neon-cyan/30 text-foreground placeholder-muted-foreground resize-none focus:outline-none focus:border-neon-cyan focus:ring-2 focus:ring-neon-cyan/20"
-                style={{ backdropFilter: "blur(10px)" }}
+                className="w-full h-20 p-3 rounded-2xl bg-background/50 border border-border text-foreground placeholder-muted-foreground resize-none focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
               />
             </div>
             <div className="flex gap-3">
@@ -869,7 +861,7 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
               </div>
               <p className="text-sm text-muted-foreground text-center">
                 {isListening ? (
-                  <span className="text-neon-cyan animate-glow-pulse">Listening… speak naturally</span>
+                  <span className="text-primary animate-pulse">Listening… speak naturally</span>
                 ) : (
                   "Start Listening"
                 )}

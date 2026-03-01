@@ -15,12 +15,11 @@ interface Props {
 
 const HandLandmark = ({ x, y }: { x: number; y: number }) => (
   <div
-    className="absolute w-2.5 h-2.5 rounded-full border border-neon-cyan animate-glow-pulse"
+    className="absolute w-2.5 h-2.5 rounded-full border border-primary animate-pulse"
     style={{
       left: `${x}%`,
       top: `${y}%`,
-      background: "hsl(183 100% 50% / 0.4)",
-      boxShadow: "0 0 8px hsl(183 100% 50%)",
+      background: "hsl(var(--primary) / 0.4)",
       transform: "translate(-50%, -50%)",
     }}
   />
@@ -246,17 +245,17 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
         >
           <button
             onClick={onBack}
-            className="w-9 h-9 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
+            className="w-9 h-9 rounded-xl bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-all duration-200"
           >
             <ArrowLeft size={16} />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-neon-purple animate-glow-pulse" />
-            <span className="font-display text-sm font-bold gradient-text-purple-cyan">AstraSign</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-sm font-bold text-primary">AstraSign</span>
           </div>
           <button
             onClick={onSettings}
-            className="w-9 h-9 rounded-xl glass neon-border-purple flex items-center justify-center text-muted-foreground hover:text-neon-purple transition-colors"
+            className="w-9 h-9 rounded-xl bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-all duration-200"
           >
             <Settings size={16} />
           </button>
@@ -266,13 +265,13 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
       {/* Mode label - hidden when embedded */}
       {!embedded && (
         <div className={`relative z-10 flex justify-center mb-2 ${focusMode ? "a11y-focus-dim" : ""}`}>
-          <div className="glass rounded-full px-4 py-1.5 neon-border-purple flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="2" y="1" width="2.5" height="8" rx="1.25" fill="hsl(272 76% 53%)" />
-              <rect x="5.5" y="2.5" width="2.5" height="6.5" rx="1.25" fill="hsl(272 76% 53%)" opacity="0.8" />
-              <rect x="9" y="0.5" width="2.5" height="9" rx="1.25" fill="hsl(272 76% 53%)" opacity="0.6" />
+          <div className="bg-card border border-primary rounded-full px-4 py-1.5 flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-primary">
+              <rect x="2" y="1" width="2.5" height="8" rx="1.25" fill="currentColor" />
+              <rect x="5.5" y="2.5" width="2.5" height="6.5" rx="1.25" fill="currentColor" opacity="0.8" />
+              <rect x="9" y="0.5" width="2.5" height="9" rx="1.25" fill="currentColor" opacity="0.6" />
             </svg>
-            <span className="text-xs font-semibold text-neon-purple tracking-wider">SIGN → VOICE</span>
+            <span className="text-xs font-semibold text-primary tracking-wider">SIGN → VOICE</span>
           </div>
         </div>
       )}
@@ -301,13 +300,12 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
         {/* Translation text - focus content when focus mode */}
         {translation && (
           <div
-            className={`mx-5 mb-3 p-4 glass rounded-2xl neon-border-cyan animate-fade-in-up ${focusMode ? "a11y-focus-content" : ""}`}
-            style={{ boxShadow: "0 0 20px hsl(183 100% 50% / 0.1)" }}
+            className={`mx-5 mb-3 p-4 bg-card border border-primary rounded-2xl shadow-md ${focusMode ? "a11y-focus-content" : ""}`}
           >
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-neon-cyan animate-glow-pulse" />
-              <span className="text-xs text-neon-cyan tracking-wider font-medium">TRANSLATED</span>
-              <span className="ml-auto text-xs font-bold text-neon-cyan">{confidence}% Accuracy</span>
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-xs text-primary tracking-wider font-medium">TRANSLATED</span>
+              <span className="ml-auto text-xs font-bold text-primary">{confidence}% Accuracy</span>
             </div>
             <p className="text-foreground font-medium text-base leading-relaxed">{translation}</p>
           </div>
@@ -315,8 +313,7 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
 
         {/* Control Panel — sticky at bottom so it's always visible and clickable */}
         <div
-          className={`sticky bottom-0 mx-3 mb-6 mt-auto glass-strong rounded-3xl p-5 ${focusMode ? "a11y-focus-dim" : ""}`}
-          style={{ boxShadow: "0 -10px 40px hsl(272 76% 53% / 0.1)" }}
+          className={`sticky bottom-0 mx-3 mb-6 mt-auto bg-card border border-border rounded-3xl p-5 shadow-lg ${focusMode ? "a11y-focus-dim" : ""}`}
         >
           {/* Waveform */}
           {isPlaying && (
@@ -333,10 +330,10 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
             <button
               type="button"
               onClick={() => setLiveMode(!liveMode)}
-              className="flex items-center gap-2 glass rounded-full px-3 py-1.5 neon-border-purple transition-all cursor-pointer"
+              className="flex items-center gap-2 bg-secondary border border-border rounded-full px-3 py-1.5 transition-all duration-200 cursor-pointer hover:border-primary"
             >
-              {liveMode ? <ToggleRight size={16} className="text-neon-cyan" /> : <ToggleLeft size={16} className="text-muted-foreground" />}
-              <span className="text-xs font-medium" style={{ color: liveMode ? "hsl(183 100% 50%)" : "hsl(240 5% 55%)" }}>
+              {liveMode ? <ToggleRight size={16} className="text-primary" /> : <ToggleLeft size={16} className="text-muted-foreground" />}
+              <span className={`text-xs font-medium ${liveMode ? "text-primary" : "text-muted-foreground"}`}>
                 {liveMode ? "Live" : "Sentence"}
               </span>
             </button>
@@ -348,11 +345,11 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
             <div className="text-center group relative">
               <div className="relative w-12 h-12 mx-auto">
                 <svg viewBox="0 0 48 48" className="-rotate-90 w-12 h-12">
-                  <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(240 10% 18%)" strokeWidth="3" />
+                  <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
                   <circle
                     cx="24" cy="24" r="20"
                     fill="none"
-                    stroke={confidence >= 90 ? "hsl(142 70% 50%)" : confidence >= 70 ? "hsl(40 90% 55%)" : confidence > 0 ? "hsl(0 80% 55%)" : "hsl(272 76% 53%)"}
+                    stroke={confidence >= 90 ? "hsl(142 70% 50%)" : confidence >= 70 ? "hsl(40 90% 55%)" : confidence > 0 ? "hsl(0 80% 55%)" : "hsl(var(--primary))"}
                     strokeWidth="3"
                     strokeDasharray={`${(confidence / 100) * 125.6} 125.6`}
                     strokeLinecap="round"
@@ -361,7 +358,7 @@ export default function SignToVoice({ onBack, onSettings, focusMode: focusModePr
                 </svg>
                 <span
                   className="absolute inset-0 flex items-center justify-center text-[10px] font-bold"
-                  style={{ color: confidence >= 90 ? "hsl(142 70% 50%)" : confidence >= 70 ? "hsl(40 90% 55%)" : confidence > 0 ? "hsl(0 80% 55%)" : "hsl(var(--neon-purple))" }}
+                  style={{ color: confidence >= 90 ? "hsl(142 70% 50%)" : confidence >= 70 ? "hsl(40 90% 55%)" : confidence > 0 ? "hsl(0 80% 55%)" : "hsl(var(--primary))" }}
                 >
                   {confidence ? `${confidence}%` : "--"}
                 </span>

@@ -258,6 +258,14 @@ export default function SettingsTab() {
             </div>
           </div>
           <Toggle
+            label="Dark Mode"
+            description="Use dark color scheme"
+            enabled={settings.darkMode}
+            onToggle={() =>
+              updateSettings({ darkMode: !settings.darkMode })
+            }
+          />
+          <Toggle
             label="High Contrast"
             description="Boost visual contrast for clarity"
             enabled={settings.highContrast}
