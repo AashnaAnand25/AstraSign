@@ -11,6 +11,7 @@
 import { useCallback, useRef, useState, useEffect, Dispatch, SetStateAction, RefObject } from "react";
 import { Landmark, LandmarkSmoother, HandHistory, classifyAslSign, RecognitionResult } from "@/services/AslEngine";
 import { getContextBias, fuseScores } from "@/services/ContextModel";
+import { fetchSpeechUrl, speakNative } from "@/services/api";
 
 export interface FastSignPipelineResult {
   glossWords: string[];
@@ -165,41 +166,22 @@ export function useFastSignPipeline(
     setIsTranslating(true);
     setStatus("Converting to speech…");
 
+    // Simple grammar: join with spaces for now
+    const text = glossWords.join(" ");
+    setTranslatedText(text);
+
     try {
-      // Simple grammar: join with spaces for now
-      const text = glossWords.join(" ");
-      setTranslatedText(text);
-
-      // Call ElevenLabs for TTS
-      const resp = await fetch("/api/speak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, voice_id: "21m00Tcm4TlvDq8ikWAM" }),
-      });
-
-      if (!resp.ok) {
-        throw new Error("ElevenLabs TTS failed; falling back to native speech");
-      }
-
-      const blob = await resp.blob();
-      setAudioUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return URL.createObjectURL(blob);
-      });
-
-      setStatus("Done! Tap play to hear");
-    } catch (err) {
-      console.warn("TTS fallback triggered:", err);
-      // Fallback to native Web Speech API
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(glossWords.join(" "));
-        // Use playbackSpeed setting if available
-        u.rate = 1.0;
-        window.speechSynthesis.speak(u);
-        setStatus("Done (using native voice)");
+      const url = await fetchSpeechUrl(text);
+      if (url) {
+        setAudioUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return url;
+        });
+        setStatus("Done! Tap play to hear");
       } else {
-        setStatus(`Error: ${String(err)}`);
+        // No backend (or TTS failed) — speak with the browser's own voice.
+        speakNative(text);
+        setStatus("Done (using native voice)");
       }
     } finally {
       setIsTranslating(false);

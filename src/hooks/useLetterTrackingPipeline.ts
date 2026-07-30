@@ -7,6 +7,7 @@
 import { useCallback, useRef, useState, useEffect, Dispatch, SetStateAction, RefObject } from "react";
 import { Landmark, LandmarkSmoother, HandHistory } from "@/services/AslEngine";
 import { classifyAslLetter } from "@/services/AslLetterEngine";
+import { fetchSpeechUrl, speakNative } from "@/services/api";
 
 export interface LetterTrackingPipelineResult {
     spelledPhrase: string;
@@ -128,7 +129,10 @@ export function useLetterTrackingPipeline(
 
     const clearSpelling = useCallback(() => {
         setSpelledPhrase("");
-        setAudioUrl(null);
+        setAudioUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return null;
+        });
         setStatus("Ready");
     }, []);
 
@@ -137,29 +141,17 @@ export function useLetterTrackingPipeline(
         setIsTranslating(true);
         setStatus("Converting to speech…");
         try {
-            const resp = await fetch("/api/speak", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: spelledPhrase, voice_id: "21m00Tcm4TlvDq8ikWAM" }),
-            });
-            if (!resp.ok) {
-                throw new Error("ElevenLabs TTS failed; falling back to native speech");
-            }
-            const blob = await resp.blob();
-            setAudioUrl(URL.createObjectURL(blob));
-            setStatus("Done!");
-        } catch (err) {
-            console.warn("TTS fallback triggered:", err);
-            // Fallback to native Web Speech API
-            if (typeof window !== "undefined" && "speechSynthesis" in window) {
-                window.speechSynthesis.cancel();
-                const u = new SpeechSynthesisUtterance(spelledPhrase);
-                // Use default rate or pull from CSS if available
-                u.rate = 1.0;
-                window.speechSynthesis.speak(u);
-                setStatus("Done (using native voice)");
+            const url = await fetchSpeechUrl(spelledPhrase);
+            if (url) {
+                setAudioUrl((prev) => {
+                    if (prev) URL.revokeObjectURL(prev);
+                    return url;
+                });
+                setStatus("Done!");
             } else {
-                setStatus(`Error: ${String(err)}`);
+                // No backend (or TTS failed) — speak with the browser's own voice.
+                speakNative(spelledPhrase);
+                setStatus("Done (using native voice)");
             }
         } finally {
             setIsTranslating(false);

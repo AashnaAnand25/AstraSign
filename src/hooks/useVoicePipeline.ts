@@ -1,4 +1,10 @@
 import { useState, useRef, useCallback } from "react";
+import { toAslGloss } from "@/services/api";
+import {
+  getSpeechRecognition,
+  joinTranscript,
+  type SpeechRecognitionLike,
+} from "@/lib/speechRecognition";
 
 export type PipelineStatus = "idle" | "listening" | "processing" | "done" | "error";
 
@@ -18,10 +24,10 @@ export function useVoicePipeline() {
   });
 
   const transcriptRef = useRef("");
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   const start = useCallback(() => {
-    const SR = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
+    const SR = getSpeechRecognition();
     if (!SR) {
       setState(s => ({
         ...s,
@@ -42,15 +48,13 @@ export function useVoicePipeline() {
       setState({ status: "listening", transcript: "", aslWords: [], error: null });
     };
 
-    recognition.onresult = (event: any) => {
-      const t = Array.from(event.results as any[])
-        .map((r: any) => r[0].transcript)
-        .join("");
+    recognition.onresult = (event) => {
+      const t = joinTranscript(event.results);
       transcriptRef.current = t;
       setState(s => ({ ...s, transcript: t }));
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event) => {
       if (event.error === "no-speech" || event.error === "aborted") {
         setState(s => ({ ...s, status: "idle" }));
       } else {
@@ -65,22 +69,10 @@ export function useVoicePipeline() {
         return;
       }
       setState(s => ({ ...s, status: "processing" }));
-      try {
-        const resp = await fetch("/api/grammar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: t }),
-        });
-        if (!resp.ok) throw new Error(`Server error ${resp.status}`);
-        const data = await resp.json();
-        setState(s => ({ ...s, status: "done", aslWords: data.asl_ordered ?? [] }));
-      } catch (err) {
-        setState(s => ({
-          ...s,
-          status: "error",
-          error: `Grammar conversion failed: ${String(err)}`,
-        }));
-      }
+      // toAslGloss falls back to local rules when no backend is reachable,
+      // so this never leaves the user stuck on a static deploy.
+      const aslWords = await toAslGloss(t);
+      setState(s => ({ ...s, status: "done", aslWords }));
     };
 
     recognition.start();

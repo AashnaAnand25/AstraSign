@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { RotateCcw, Mic, MicOff } from "lucide-react";
 import { useAccessibility } from "@/accessibility/AccessibilityProvider";
 import { useHistory } from "@/context/HistoryContext";
-import VoiceToSign from "./VoiceToSign";
 import MVPVoiceToSign from "./MVPVoiceToSign";
 import SignToVoice from "./SignToVoice";
 

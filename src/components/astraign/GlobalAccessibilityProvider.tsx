@@ -40,7 +40,7 @@ interface AccessibilitySettings {
 
 interface AccessibilityContextType {
   settings: AccessibilitySettings;
-  updateSetting: (key: keyof AccessibilitySettings, value: any) => void;
+  updateSetting: (key: keyof AccessibilitySettings, value: AccessibilitySettings[keyof AccessibilitySettings]) => void;
   resetSettings: () => void;
 }
 
@@ -99,7 +99,7 @@ export function GlobalAccessibilityProvider({ children }: AccessibilityProviderP
     return defaultSettings;
   });
 
-  const updateSetting = (key: keyof AccessibilitySettings, value: any) => {
+  const updateSetting = (key: keyof AccessibilitySettings, value: AccessibilitySettings[keyof AccessibilitySettings]) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
     
@@ -116,7 +116,7 @@ export function GlobalAccessibilityProvider({ children }: AccessibilityProviderP
     applyAllSettings(defaultSettings);
   };
 
-  const applyGlobalStyles = (key: keyof AccessibilitySettings, value: any) => {
+  const applyGlobalStyles = (key: keyof AccessibilitySettings, value: AccessibilitySettings[keyof AccessibilitySettings]) => {
     const root = document.documentElement;
     
     switch (key) {
@@ -124,7 +124,7 @@ export function GlobalAccessibilityProvider({ children }: AccessibilityProviderP
         root.style.setProperty('--accessibility-text-size', `${0.8 + (Number(value) * 0.1)}rem`);
         break;
       case 'contentScaling':
-        root.style.setProperty('--accessibility-scaling', Number(value) / 100);
+        root.style.setProperty('--accessibility-scaling', String(Number(value) / 100));
         break;
       case 'highContrast':
         root.classList.toggle('high-contrast', Boolean(value));

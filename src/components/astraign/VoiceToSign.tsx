@@ -67,24 +67,9 @@ const processTextToASL = (text: string): { letters: string[], words: string[] } 
 };
 
 // API Configuration
-const API_BASE_URL = "http://localhost:8001/api";
+// Same origin in dev (proxied by Vite); set VITE_API_URL for a deployed backend.
+const API_BASE_URL = `${(import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "")}/api`;
 const API_SECRET = "AstraSign-secret-key-123";
-
-// Define generic types for SpeechRecognition to prevent typescript errors
-interface SpeechRecognitionEvent {
-  resultIndex: number;
-  results: {
-    [index: number]: {
-      [index: number]: {
-        transcript: string;
-      };
-    };
-  };
-}
-
-interface SpeechRecognitionErrorEvent {
-  error: string;
-}
 
 // API call helper
 const apiCall = async (endpoint: string, data: Record<string, unknown>) => {
@@ -177,6 +162,7 @@ const translateWithSignMTPipeline = async (text: string): Promise<{ letters: str
 };
 
 import { restructureToASLGrammar } from "@/data/aslGrammar";
+import { getSpeechRecognition } from "@/lib/speechRecognition";
 import { getGestureForCharacter, getGestureForWord } from "@/data/aslGestures";
 import {
   textToAnimationQueue,
@@ -250,7 +236,8 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
   useEffect(() => {
     if (!isListening) return;
 
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    const SpeechRecognition = getSpeechRecognition();
+    if (!SpeechRecognition) {
       console.error('Speech recognition not supported');
       // Fallback to simulation for demo
       const t = setTimeout(() => {
@@ -265,15 +252,13 @@ export default function VoiceToSign({ onBack, onSettings, embedded, onStatusChan
       return () => clearTimeout(t);
     }
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
 
     recognition.continuous = true;
     recognition.interimResults = false;
     recognition.lang = 'en-US';
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event) => {
       const current = event.resultIndex;
       const rawText = event.results[current][0].transcript;
       setTranscript(rawText);

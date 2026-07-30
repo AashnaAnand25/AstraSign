@@ -1,5 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 
+type VoiceEmotion = 'neutral' | 'happy' | 'excited' | 'calm' | 'encouraging';
+
+/** Published on `window` so components outside this tree can trigger guidance. */
+export interface VoiceGuidanceApi {
+  speak: (text: string, emotion?: VoiceEmotion) => void;
+  speakSuccess: (message: string) => void;
+  speakError: (message: string) => void;
+  speakEncouragement: (message: string) => void;
+  stop: () => void;
+}
+
+declare global {
+  interface Window {
+    voiceGuidance?: VoiceGuidanceApi;
+  }
+}
+
 interface VoiceGuidanceSystemProps {
   enabled: boolean;
   onGestureChange?: (gesture: string) => void;
@@ -88,7 +105,7 @@ export default function VoiceGuidanceSystem({
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   // Voice guidance for different events
-  const speakGuidance = (text: string, emotion: 'neutral' | 'happy' | 'excited' | 'calm' | 'encouraging' = 'neutral') => {
+  const speakGuidance = (text: string, emotion: VoiceEmotion = 'neutral') => {
     if (enabled) {
       setIsSpeaking(true);
       voiceSystem.current.speak(text, emotion);
@@ -181,7 +198,7 @@ export default function VoiceGuidanceSystem({
 
   // Error handling
   useEffect(() => {
-    const handleError = (e: any) => {
+    const handleError = () => {
       if (enabled) {
         speakGuidance('An error occurred. Please try again.', 'calm');
       }
@@ -210,7 +227,7 @@ export default function VoiceGuidanceSystem({
   useEffect(() => {
     if (enabled) {
       // Make methods available globally for other components
-      (window as any).voiceGuidance = {
+      window.voiceGuidance = {
         speak: speakGuidance,
         speakSuccess,
         speakError,
@@ -220,7 +237,7 @@ export default function VoiceGuidanceSystem({
     }
 
     return () => {
-      delete (window as any).voiceGuidance;
+      delete window.voiceGuidance;
     };
   }, [enabled]);
 

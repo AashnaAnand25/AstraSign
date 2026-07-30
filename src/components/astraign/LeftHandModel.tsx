@@ -56,7 +56,7 @@ type GLTFResult = GLTF & {
   materials: {
     Default_Material: THREE.MeshStandardMaterial
   }
-  animations: any[]
+  animations: THREE.AnimationClip[]
 }
 
 export function LeftHandModel({ config, ...props }: JSX.IntrinsicElements['group'] & HandConfigProps) {

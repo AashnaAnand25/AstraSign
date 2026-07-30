@@ -23,6 +23,8 @@ interface AccessibilitySettingsProps {
   onBack?: () => void;
 }
 
+type SettingValue = string | number | boolean;
+
 export default function AccessibilitySettings({ onBack }: AccessibilitySettingsProps) {
   const [settings, setSettings] = useState({
     // Display Settings
@@ -62,14 +64,14 @@ export default function AccessibilitySettings({ onBack }: AccessibilitySettingsP
     metaGlassesConnected: false
   });
 
-  const updateSetting = (key: string, value: any) => {
+  const updateSetting = (key: string, value: SettingValue) => {
     setSettings(prev => ({ ...prev, [key]: value }));
     
     // Apply global styles immediately
     applyGlobalStyles(key, value);
   };
 
-  const applyGlobalStyles = (key: string, value: any) => {
+  const applyGlobalStyles = (key: string, value: SettingValue) => {
     const root = document.documentElement;
     
     switch (key) {
@@ -77,7 +79,7 @@ export default function AccessibilitySettings({ onBack }: AccessibilitySettingsP
         root.style.setProperty('--accessibility-text-size', `${0.8 + (Number(value) * 0.1)}rem`);
         break;
       case 'contentScaling':
-        root.style.setProperty('--accessibility-scaling', Number(value) / 100);
+        root.style.setProperty('--accessibility-scaling', String(Number(value) / 100));
         break;
       case 'highContrast':
         root.classList.toggle('high-contrast', Boolean(value));

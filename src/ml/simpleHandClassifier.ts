@@ -7,6 +7,27 @@ export interface GestureResult {
   description: string;
 }
 
+/** Geometric features derived from one frame of 21 hand landmarks. */
+export interface HandFeatures {
+  wrist: number[];
+  thumbTip: number[];
+  indexTip: number[];
+  middleTip: number[];
+  ringTip: number[];
+  pinkyTip: number[];
+  thumbToIndex: number;
+  indexToMiddle: number;
+  middleToRing: number;
+  ringToPinky: number;
+  thumbExtended: boolean;
+  indexExtended: boolean;
+  middleExtended: boolean;
+  ringExtended: boolean;
+  pinkyExtended: boolean;
+  palmFacing: string;
+  handHeight: number;
+}
+
 export class SimpleHandClassifier {
   private isInitialized = false;
 
@@ -45,7 +66,7 @@ export class SimpleHandClassifier {
   }
 
   // Extract features from hand landmarks
-  private extractHandFeatures(landmarks: number[][]): any {
+  private extractHandFeatures(landmarks: number[][]): HandFeatures | null {
     if (!landmarks || landmarks.length === 0) {
       return null;
     }
@@ -109,7 +130,7 @@ export class SimpleHandClassifier {
   }
 
   // Simple rule-based classification
-  private classifyByRules(features: any): GestureResult {
+  private classifyByRules(features: HandFeatures | null): GestureResult {
     if (!features) {
       return {
         gesture: 'UNKNOWN',

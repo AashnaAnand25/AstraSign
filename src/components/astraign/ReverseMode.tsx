@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Settings, Volume2 } from "lucide-react";
 import { useAccessibility } from "@/accessibility/AccessibilityProvider";
+import { fetchSpeechUrl } from "@/services/api";
 
 interface Props {
   onBack: () => void;
@@ -38,36 +39,30 @@ export default function ReverseMode({ onBack, onSettings }: Props) {
     if (!text.trim()) return;
     setSpeaking(true);
 
+    // Try the backend (ElevenLabs) first; null means no backend is reachable.
+    const url = await fetchSpeechUrl(text.trim());
+    if (!url) {
+      speakNative();
+      return;
+    }
+
+    const audio = new Audio(url);
+    audio.onplay = () => setSpeaking(true);
+    audio.onended = () => {
+      setSpeaking(false);
+      URL.revokeObjectURL(url);
+    };
+    audio.onerror = () => {
+      setSpeaking(false);
+      URL.revokeObjectURL(url);
+      speakNative(); // Final fallback inside audio error
+    };
+
     try {
-      // Try ElevenLabs backend first
-      const resp = await fetch("/api/speak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: text.trim(), voice_id: "21m00Tcm4TlvDq8ikWAM" }),
-      });
-
-      if (!resp.ok) {
-        throw new Error("ElevenLabs backend failed");
-      }
-
-      const blob = await resp.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-
-      audio.onplay = () => setSpeaking(true);
-      audio.onended = () => {
-        setSpeaking(false);
-        URL.revokeObjectURL(url);
-      };
-      audio.onerror = () => {
-        setSpeaking(false);
-        URL.revokeObjectURL(url);
-        speakNative(); // Final fallback inside audio error
-      };
-
       await audio.play();
     } catch (err) {
-      console.warn("ElevenLabs failed, using native fallback:", err);
+      console.warn("Audio playback failed, using native fallback:", err);
+      URL.revokeObjectURL(url);
       speakNative();
     }
   };

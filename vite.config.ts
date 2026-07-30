@@ -23,4 +23,17 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Three.js and MediaPipe together are most of the bundle. Splitting
+        // them out keeps the first paint small on mobile and lets them cache
+        // across app deploys.
+        manualChunks: {
+          three: ["three", "@react-three/fiber", "@react-three/drei"],
+          mediapipe: ["@mediapipe/tasks-vision", "@mediapipe/hands", "@mediapipe/camera_utils"],
+        },
+      },
+    },
+  },
 }));

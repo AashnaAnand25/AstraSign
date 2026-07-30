@@ -3,6 +3,8 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import { Mic, MicOff, Type, ArrowLeft } from "lucide-react";
+import { restructureToASLGrammar } from "@/data/aslGrammar";
+import { getSpeechRecognition } from "@/lib/speechRecognition";
 
 // The Map the user requested
 const ANIMATION_MAP: Record<string, string> = {
@@ -333,7 +335,7 @@ export default function MVPVoiceToSign({ onBack, embedded }: Props) {
     useEffect(() => {
         if (!isListening) return;
 
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        const SpeechRecognition = getSpeechRecognition();
         if (!SpeechRecognition) {
             alert("Browser speech recognition not supported in this browser.");
             setIsListening(false);
@@ -345,7 +347,7 @@ export default function MVPVoiceToSign({ onBack, embedded }: Props) {
         recognition.interimResults = false;
         recognition.lang = 'en-US';
 
-        recognition.onresult = (event: any) => {
+        recognition.onresult = (event) => {
             const text = event.results[0][0].transcript;
             setInputText(text);
             handleTranslate(text);
@@ -366,9 +368,11 @@ export default function MVPVoiceToSign({ onBack, embedded }: Props) {
         };
     }, [isListening]);
 
-    // Text -> Gloss
+    // Text -> Gloss. Rule-based and local, so this works with no backend.
+    // Falls back to a plain uppercase split if every word got dropped.
     const textToGloss = (text: string) => {
-        return text.toUpperCase().split(/\s+/).filter(Boolean);
+        const gloss = restructureToASLGrammar(text).split(/\s+/).filter(Boolean);
+        return gloss.length > 0 ? gloss : text.toUpperCase().split(/\s+/).filter(Boolean);
     };
 
     // Playback Loop

@@ -20,9 +20,9 @@ export class SimpleHandAnimator {
     this.handElement = document.getElementById(handElementId);
   }
 
-  // Apply ASL pose to hand
-  applyASLPose(sign: string): void {
-    if (!this.handElement) return;
+  // Apply ASL pose to hand. Returns false when the sign has no pose defined.
+  applyASLPose(sign: string): boolean {
+    if (!this.handElement) return false;
 
     const poses = {
       'A': () => this.setFist(),
@@ -67,8 +67,11 @@ export class SimpleHandAnimator {
     return false;
   }
 
-  // Set finger positions (0=curled, 1=extended)
-  private setFingers(thumb: number, index: number, middle: number, ring: number, pinky: number) {
+  // Set finger positions (0=curled, 1=extended).
+  // ponytail: every pose below passes four values, so `pinky` follows `ring`
+  // rather than becoming NaN and emitting invalid CSS. The pose table itself
+  // still needs a real ASL review — give each pose its own pinky value then.
+  private setFingers(thumb: number, index: number, middle: number, ring: number, pinky: number = ring) {
     if (!this.handElement) return;
 
     const fingers = [
@@ -89,7 +92,7 @@ export class SimpleHandAnimator {
 
     fingers.forEach((finger, i) => {
       if (finger && positions[i]) {
-        finger.style.transform = `rotateX(${positions[i]}) translateY(${finger ? '0px' : '-20px'})`;
+        finger.style.transform = `rotateX(${positions[i]})`;
         finger.style.transition = 'transform 0.3s ease';
       }
     });

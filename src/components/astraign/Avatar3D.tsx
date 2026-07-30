@@ -73,7 +73,7 @@ export default function Avatar3D({
     const handPosition = isRight ? [0.3, 0.5, 0] : [-0.3, 0.5, 0];
     
     // Finger positions based on gesture
-    let fingerConfig = {
+    const fingerConfig = {
       thumb: { pos: [0.04, 0.02, 0], size: 0.015 },
       index: { pos: [0.02, 0.08, 0], size: 0.012 },
       middle: { pos: [0, 0.08, 0], size: 0.012 },

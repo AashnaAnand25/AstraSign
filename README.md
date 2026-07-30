@@ -7,9 +7,7 @@ Advanced ASL translation system with real-time sign detection and 3D avatar anim
 - **Audio → ASL**: Speak naturally and see sign translations in real-time
 - **ASL → Audio**: Show signs and hear voice output with text-to-speech
 - **3D Avatar System**: Interactive 3D characters performing ASL signs
-- **Multiple ML Models**: Support for MobileNetV2, ResNet50, EfficientNetB0, InceptionV3, VGG16, DenseNet121
 - **Real-time Processing**: Live transcription and sign detection
-- **Training Pipeline**: Train custom models with your data
 
 ## Quick Start
 
@@ -18,33 +16,30 @@ Advanced ASL translation system with real-time sign detection and 3D avatar anim
    npm install
    ```
 
-2. **Start the development server**:
+2. **Start everything** (frontend + backend, creates the Python venv for you):
    ```bash
-   npm run dev
+   ./run.sh          # or ./run.sh --front for the frontend alone
    ```
 
-3. **Start the backend server**:
-   ```bash
-   cd backend
-   python main.py
-   ```
+3. **Access the application**:
+   Open `http://localhost:8080` in your browser
 
-4. **Access the application**:
-   Open `http://localhost:8081` in your browser
+The backend is optional. Sign detection, the 3D avatar and English->ASL gloss
+all run in the browser; without a backend the app falls back to the device's
+own speech synthesis and local grammar rules.
 
 ## Project Structure
 
 - `src/components/astraign/` - React components for ASL features
 - `src/services/` - ML model services and API integrations
 - `src/data/` - ASL signs database and training data
-- `backend/` - FastAPI backend for transcription and TTS
+- `signbridge/backend/` - FastAPI backend for transcription and TTS (optional)
 - `public/models/` - 3D model files for avatars
 
 ## Technology Stack
 
 - **Frontend**: React + TypeScript + Three.js + TensorFlow.js
 - **Backend**: FastAPI with Python
-- **ML Models**: TensorFlow.js implementations
 - **3D Rendering**: Three.js with React Three Fiber
 - **UI**: Shadcn/ui with Tailwind CSS
 
@@ -52,24 +47,23 @@ Advanced ASL translation system with real-time sign detection and 3D avatar anim
 
 ### Environment Variables
 
-Create a `.env` file in the backend directory:
+Backend keys — create `signbridge/backend/.env` (only `GEMINI_API_KEY` is
+required; each other key enables one endpoint):
 
 ```env
-OPENAI_API_KEY=your_openai_key
-GEMINI_API_KEY=your_gemini_key
-ELEVENLABS_API_KEY=your_elevenlabs_key
-API_SECRET=your_secret_key
+GEMINI_API_KEY=your_gemini_key          # required: grammar + recognition
+WHISPERAI_KEY=your_openai_key           # optional: /api/transcribe
+ELEVENLABS_API_KEY=your_elevenlabs_key  # optional: /api/speak
 ```
 
-### Model Configuration
+Frontend — set `VITE_API_URL` to your deployed backend's origin, or leave it
+unset to run fully client-side. See `.env.example`.
 
-The system supports multiple computer vision models:
-- MobileNetV2 (default, fast)
-- ResNet50 (balanced accuracy/speed)
-- EfficientNetB0 (high accuracy)
-- InceptionV3 (very high accuracy)
-- VGG16 (legacy support)
-- DenseNet121 (alternative architecture)
+### Recognition
+
+Sign recognition is rule-based geometry over MediaPipe hand landmarks
+(`src/services/AslEngine.ts`), not a trained network. The TensorFlow.js
+wrapper in `src/services/ASLModelService.ts` is present but unused.
 
 ## Usage
 

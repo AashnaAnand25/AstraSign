@@ -3,10 +3,11 @@ import { Camera } from "@mediapipe/camera_utils";
 import { Hands, Results } from "@mediapipe/hands";
 import SimpleHandClassifier from "@/ml/simpleHandClassifier";
 import { gestureToWord } from "@/utils/aslStaticPoses";
+import type { Landmark } from "@/hooks/useHandTracking";
 
 interface HandTrackerProps {
   onGestureDetected?: (gesture: string, confidence: number) => void;
-  onLandmarks?: (landmarks: any[][]) => void;
+  onLandmarks?: (landmarks: Landmark[][]) => void;
   isActive: boolean;
 }
 

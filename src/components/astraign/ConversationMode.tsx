@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { ArrowLeft, Play, Square, Volume2 } from "lucide-react";
 import ASLHandDisplay from "./ASLHandDisplay";
 import { hasASLAnimation } from "@/data/aslWordAnimations";
+import { getSpeechRecognition, type SpeechRecognitionLike } from "@/lib/speechRecognition";
 
 const CONVERSATION_MODES = [
   { id: "general", label: "General Chat", color: "bg-blue-500", icon: "💬", desc: "Everyday conversations" },
@@ -40,7 +41,7 @@ export default function ConversationMode({ onBack }: Props) {
   const [deafInput, setDeafInput] = useState("");
   const [context, setContext] = useState<string[]>([]);
 
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -48,12 +49,12 @@ export default function ConversationMode({ onBack }: Props) {
   }, [messages]);
 
   const initSpeechRecognition = useCallback(() => {
-    if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+    const SpeechRecognition = getSpeechRecognition();
+    if (!SpeechRecognition) {
       console.error("Speech recognition not supported");
       return null;
     }
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
 
     recognition.continuous = true;
@@ -62,7 +63,7 @@ export default function ConversationMode({ onBack }: Props) {
 
     recognition.onstart = () => setCurrentStatus("LISTENING");
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event) => {
       let finalTranscript = "";
       let interimTranscript = "";
 
@@ -79,7 +80,7 @@ export default function ConversationMode({ onBack }: Props) {
       if (finalTranscript) handleHearingPersonSpeech(finalTranscript);
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event) => {
       console.error("Speech recognition error:", event.error);
       setCurrentStatus("IDLE");
     };

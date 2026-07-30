@@ -214,7 +214,10 @@ class ASLModelService {
     return labelMap[originalLabel.toLowerCase()] || 'unknown';
   }
 
-  async trainModel(trainingData: any, labels: any): Promise<tf.History> {
+  async trainModel(
+    trainingData: number[][][][],
+    labels: number[][],
+  ): Promise<tf.History> {
     if (!this.model || !(this.model instanceof tf.LayersModel)) {
       throw new Error('Model not loaded for training or is not a LayersModel');
     }
